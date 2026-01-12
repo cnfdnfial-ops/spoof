@@ -10,35 +10,31 @@
 
 <h2>Attacker Origin</h2>
 <p id="origin"></p>
-<p id="status">Checking permission state…</p>
+<p id="status">Checking permission…</p>
 
 <script>
-// Explicitly show current origin
 document.getElementById('origin').textContent =
   'Current origin: ' + location.origin;
 
-// Show permission state ON LOAD
 if (navigator.permissions) {
   navigator.permissions.query({ name: 'geolocation' })
     .then(p => {
       document.getElementById('status').textContent =
         'Permission state on load: ' + p.state;
+
+      // ⚠️ ONLY read location if already granted
+      if (p.state === 'granted') {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            document.getElementById('status').textContent +=
+              '\nGot location: ' +
+              pos.coords.latitude + ', ' +
+              pos.coords.longitude;
+          }
+        );
+      }
     });
 }
-
-// Attempt to read location WITHOUT triggering a new prompt
-navigator.geolocation.getCurrentPosition(
-  pos => {
-    document.getElementById('status').textContent +=
-      '\nGot location: ' +
-      pos.coords.latitude + ', ' +
-      pos.coords.longitude;
-  },
-  err => {
-    document.getElementById('status').textContent =
-      'Error: ' + err.message;
-  }
-);
 </script>
 
 </body>

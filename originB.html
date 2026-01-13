@@ -3,28 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page - OffscreenCanvas WebGL</title>
+  <title>Child Page - OffscreenCanvas</title>
 </head>
 <body>
-  <h1>Child Page</h1>
+  <h1>Child Page (Origin B)</h1>
+
   <script>
     window.addEventListener("message", (event) => {
+      // Pastikan kita mendapatkan objek yang valid
       const offscreen = event.data.offscreen;
 
-      // Coba buat WebGL context di OffscreenCanvas
-      const gl = offscreen.getContext('webgl');
-
-      if (!gl) {
-        console.error("Tidak bisa membuat WebGL context");
+      if (!offscreen) {
+        console.error("Tidak menerima offscreen canvas yang valid");
         return;
       }
 
-      // Lakukan operasi WebGL sederhana
-      gl.clearColor(Math.random(), Math.random(), Math.random(), 1.0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      // Coba akses context dan periksa apakah valid
+      const ctx = offscreen.getContext('2d');
+      if (!ctx) {
+        console.error("Gagal mendapatkan 2D context");
+        return;
+      }
 
-      // Ini biasanya crash di Chrome iOS untuk cross-origin OffscreenCanvas
-      console.log("WebGL clear berhasil");
+      // Lakukan sesuatu dengan context
+      ctx.fillStyle = "blue";
+      ctx.fillRect(50, 50, 200, 200);  // Ini akan menggambar di canvas
+
+      console.log("Gambar berhasil");
     });
   </script>
 </body>

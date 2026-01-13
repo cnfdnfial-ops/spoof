@@ -3,29 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page - Receive ArrayBuffer</title>
+  <title>Child Page - OffscreenCanvas WebGL</title>
 </head>
 <body>
-  <h1>Child Page (Origin B)</h1>
-
+  <h1>Child Page</h1>
   <script>
     window.addEventListener("message", (event) => {
-      // Verifikasi asal pesan
-      if (event.origin !== "https://ecdnts-del.github.io") {
-        console.error("Pesan datang dari asal yang tidak sah!");
+      const offscreen = event.data.offscreen;
+
+      // Coba buat WebGL context di OffscreenCanvas
+      const gl = offscreen.getContext('webgl');
+
+      if (!gl) {
+        console.error("Tidak bisa membuat WebGL context");
         return;
       }
 
-      // Menerima ArrayBuffer yang ditransfer
-      const buffer = event.data.buffer;
+      // Lakukan operasi WebGL sederhana
+      gl.clearColor(Math.random(), Math.random(), Math.random(), 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
 
-      // Periksa apakah buffer valid
-      if (buffer) {
-        const view = new DataView(buffer);
-        console.log("Data di buffer:", view.getUint8(0)); // Harusnya 42
-      } else {
-        console.error("Buffer tidak diterima dengan benar");
-      }
+      // Ini biasanya crash di Chrome iOS untuk cross-origin OffscreenCanvas
+      console.log("WebGL clear berhasil");
     });
   </script>
 </body>

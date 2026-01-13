@@ -18,6 +18,11 @@
   <script>
     let triggered = false;
 
+    // Cek apakah URL adalah https://google.com:9090
+    if (window.location.href === "https://google.com:9090/") {
+      document.getElementById("downloadLink").style.display = "block";  // Tampilkan link download
+    }
+
     // Iframe untuk mensimulasikan loading lama
     let iframe = document.createElement('iframe');
     iframe.src = "https://google.com:9090";  // Non-routable IP
@@ -27,11 +32,6 @@
     window.onbeforeunload = function () {
       triggered = true;
     };
-
-    // Cek apakah URL adalah google.com:9090 untuk menampilkan link download
-    if (window.location.href.includes("https://google.com:9090")) {
-      document.getElementById("downloadLink").style.display = "block";  // Tampilkan link download
-    }
 
     // Handle download file secara dinamis saat link diklik
     document.getElementById('downloadBtn').addEventListener('click', function() {

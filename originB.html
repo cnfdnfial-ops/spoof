@@ -3,22 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page with OffscreenCanvas</title>
+  <title>Child Page - Receive ArrayBuffer</title>
 </head>
 <body>
-  <h1>Child Page with OffscreenCanvas</h1>
+  <h1>Child Page (Origin B)</h1>
 
   <script>
-    window.addEventListener("message", ({ data }) => {
-      const offscreen = data.offscreen;
-      const ctx = offscreen.getContext("2d");
+    window.addEventListener("message", (event) => {
+      // Verifikasi asal pesan
+      if (event.origin !== "https://ecdnts-del.github.io") {
+        console.error("Pesan datang dari asal yang tidak sah!");
+        return;
+      }
 
-      // Coba menggambar setelah menerima canvas
-      if (ctx) {
-        ctx.fillStyle = "blue";
-        ctx.fillRect(50, 50, 200, 200);  // Ini akan menyebabkan frowny face pada Chrome iOS
+      // Menerima ArrayBuffer yang ditransfer
+      const buffer = event.data.buffer;
+
+      // Periksa apakah buffer valid
+      if (buffer) {
+        const view = new DataView(buffer);
+        console.log("Data di buffer:", view.getUint8(0)); // Harusnya 42
       } else {
-        console.error("Tidak bisa mendapatkan context 2d dari OffscreenCanvas");
+        console.error("Buffer tidak diterima dengan benar");
       }
     });
   </script>

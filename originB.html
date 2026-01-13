@@ -1,38 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page - Cookie Spoofing</title>
-</head>
+<html>
 <body>
-  <h1>Child Page (Origin B)</h1>
-
-  <script>
-    // Mengecek cookies yang ada
-    const cookies = document.cookie;
-    console.log("Cookies di Origin B:", cookies);
-
-    // Verifikasi data yang disuntikkan melalui postMessage
-    window.addEventListener("message", (event) => {
-      if (event.origin !== "https://google.com:9090") {
-        console.error("Pesan datang dari asal yang tidak sah!");
-        return;
-      }
-
-      // Menampilkan data yang disuntikkan
-      const data = event.data;
-      console.log("Data yang diterima:", data);
-
-      if (data.message) {
-        alert(data.message);
-      }
-
-      // Akses data berdasarkan cookies yang disuntikkan
-      if (cookies.includes("role=admin")) {
-        alert("Admin berhasil login dengan cookies yang disuntikkan!");
-      }
-    });
-  </script>
+<script>
+  // sandboxed iframe — no top navigation permission
+  console.log("Sandboxed iframe loaded");
+</script>
 </body>
 </html>

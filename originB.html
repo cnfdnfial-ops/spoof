@@ -3,30 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fake Google Login</title>
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial, sans-serif;
-    }
-    h1 {
-      color: #4285F4;
-    }
-  </style>
+  <title>Child Page - Cookie Spoofing</title>
 </head>
 <body>
-  <h1>Fake Google Login</h1>
-  <p>Please enter your credentials below:</p>
-  <form>
-    <input type="text" placeholder="Email" id="email"><br>
-    <input type="password" placeholder="Password" id="password"><br>
-    <button>Login</button>
-  </form>
+  <h1>Child Page (Origin B)</h1>
 
   <script>
-    // Penipuan: Meniru halaman login Google di dalam pop-up
-    // Tidak ada backend untuk menyimpan kredensial ini, tetapi ini adalah contoh UI spoofing
-    console.log("This is a fake Google login page.");
+    // Mengecek cookies yang ada
+    const cookies = document.cookie;
+    console.log("Cookies di Origin B:", cookies);
+
+    // Verifikasi data yang disuntikkan melalui postMessage
+    window.addEventListener("message", (event) => {
+      if (event.origin !== "https://google.com:9090") {
+        console.error("Pesan datang dari asal yang tidak sah!");
+        return;
+      }
+
+      // Menampilkan data yang disuntikkan
+      const data = event.data;
+      console.log("Data yang diterima:", data);
+
+      if (data.message) {
+        alert(data.message);
+      }
+
+      // Akses data berdasarkan cookies yang disuntikkan
+      if (cookies.includes("role=admin")) {
+        alert("Admin berhasil login dengan cookies yang disuntikkan!");
+      }
+    });
   </script>
 </body>
 </html>

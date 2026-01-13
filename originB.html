@@ -3,14 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sandboxed Iframe</title>
+  <title>Child Page - Cookie Spoofing</title>
 </head>
 <body>
+  <h1>Child Page (Origin B)</h1>
 
-<script>
-  // Simulating an iframe load without much content, just for the race condition to trigger
-  console.log("Sandboxed iframe loaded.");
-</script>
+  <script>
+    window.addEventListener("message", (event) => {
+      // Verifikasi asal pesan (untuk keamanan)
+      if (event.origin !== "https://ecdnts-del.github.io") {
+        console.error("Pesan datang dari asal yang tidak sah!");
+        return;
+      }
 
+      // Membaca cookies yang telah disuntikkan
+      const cookies = document.cookie;
+      console.log("Cookies yang diterima:", cookies);
+
+      // Manipulasi atau penggunaan data cookies
+      if (cookies.includes("role=admin")) {
+        alert("Admin berhasil login! Data cookies diterima.");
+      } else {
+        alert("Data cookies tidak valid.");
+      }
+    });
+  </script>
 </body>
 </html>

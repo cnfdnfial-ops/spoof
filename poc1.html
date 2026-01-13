@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoC - Download Dialog After Google</title>
+  <title>PoC - Google Redirect and Iframe</title>
 </head>
 <body>
   <div id="content">
     <h1>Step 1: Klik untuk pergi ke Google.com</h1>
-    <p>Klik tombol di bawah untuk mengunjungi <b>Google.com</b> dan setelahnya, dialog download akan muncul:</p>
+    <p>Klik tombol di bawah untuk mengunjungi <b>Google.com</b> dan setelahnya, iframe akan muncul di bawah:</p>
     
     <!-- Tombol untuk mengarahkan ke Google.com -->
     <button onclick="redirectToGoogle()">Go to Google.com</button>
 
-    <!-- Iframe (akan muncul setelah redirect) -->
+    <!-- Iframe yang akan muncul setelah redirect -->
     <div style="margin-top: 20px;">
       <iframe 
         id="iframeExample" 
@@ -30,28 +30,12 @@
       // Redirect ke Google.com di tab yang sama
       window.location.href = "https://www.google.com";
 
-      // Tunggu 2 detik setelah pengalihan, baru muncul iframe dan trigger download
+      // Tunggu 2 detik setelah pengalihan, baru muncul iframe
       setTimeout(function() {
         // Tampilkan iframe setelah pengalihan ke Google
         const iframe = document.getElementById('iframeExample');
         iframe.style.display = "block";  // Menampilkan iframe
-        
-        // Trigger dialog download
-        triggerDownload();
       }, 2000);  // Delay 2 detik setelah redirect ke Google.com
-    }
-
-    function triggerDownload() {
-      // File PHP yang akan diunduh
-      const php = `<?php
-echo "wkwkwk ini file php bebas 😁";
-?>`;
-
-      const blob = new Blob([php], { type: "application/php" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "login.php";
-      a.click();  // Trigger download
     }
   </script>
 </body>

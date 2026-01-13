@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Child Page with OffscreenCanvas</title>
+</head>
+<body>
+  <h1>Child Page with OffscreenCanvas</h1>
+
+  <script>
+    window.addEventListener("message", ({ data }) => {
+      const offscreen = data.offscreen;
+      const ctx = offscreen.getContext("2d");
+
+      // Coba menggambar setelah menerima canvas
+      if (ctx) {
+        ctx.fillStyle = "blue";
+        ctx.fillRect(50, 50, 200, 200);  // Ini akan menyebabkan frowny face pada Chrome iOS
+      } else {
+        console.error("Tidak bisa mendapatkan context 2d dari OffscreenCanvas");
+      }
+    });
+  </script>
+</body>
+</html>

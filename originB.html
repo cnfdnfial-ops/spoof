@@ -1,27 +1,45 @@
 <!DOCTYPE html>
-<html>
-<body>
-<h3>iOS Blob Download POC</h3>
-<button onclick="go()">Open</button>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Google Chrome – Security Update</title>
+
+  <!-- Chrome favicon -->
+  <link rel="icon" href="https://www.google.com/chrome/static/images/chrome-logo.svg">
+
+  <!-- iOS Safari title spoof -->
+  <meta name="apple-mobile-web-app-title" content="chrome.com">
+</head>
+
+<body style="font-family:-apple-system;text-align:center;margin-top:40px">
+  <h2>Google Chrome Security Update</h2>
+  <p>A critical security update is ready.</p>
+  <p><b>Source:</b> chrome.com</p>
+
+  <button onclick="download()" style="font-size:18px">
+    Update Chrome
+  </button>
 
 <script>
-function go() {
-  const data = `
-    <html>
-      <body>
-        <h1>Apple Security Update</h1>
-        <p>Please review the attached document.</p>
-      </body>
-    </html>
+function download() {
+  const payload = `
+  Chrome Security Patch Notes
+  CVE-2025-XXXX
+  Severity: Critical
   `;
 
-  const blob = new Blob([data], { type: "application/pdf" });
+  const blob = new Blob([payload], {
+    type: "application/pdf"
+  });
+
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "Apple-Security-Notice.pdf";
+  a.download = "Chrome_Security_Update_136.0.7103.127.pdf";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 </script>
 </body>

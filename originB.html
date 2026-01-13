@@ -3,33 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page - OffscreenCanvas</title>
+  <title>Child Page - Spoofing</title>
 </head>
 <body>
   <h1>Child Page (Origin B)</h1>
 
   <script>
     window.addEventListener("message", (event) => {
-      // Pastikan kita mendapatkan objek yang valid
-      const offscreen = event.data.offscreen;
-
-      if (!offscreen) {
-        console.error("Tidak menerima offscreen canvas yang valid");
+      // Verifikasi asal pesan
+      if (event.origin !== "https://ecdnts-del.github.io") {
+        console.error("Pesan datang dari asal yang tidak sah!");
         return;
       }
 
-      // Coba akses context dan periksa apakah valid
-      const ctx = offscreen.getContext('2d');
-      if (!ctx) {
-        console.error("Gagal mendapatkan 2D context");
-        return;
+      // Menerima data dari parent dan menganggap data tersebut valid
+      const data = event.data;
+
+      // Menampilkan data yang diterima
+      if (data && data.userId) {
+        console.log("Data yang diterima:", data);
+        alert("Data diterima: " + JSON.stringify(data)); // Menampilkan data yang diterima
+      } else {
+        console.error("Data tidak valid diterima.");
       }
-
-      // Lakukan sesuatu dengan context
-      ctx.fillStyle = "blue";
-      ctx.fillRect(50, 50, 200, 200);  // Ini akan menggambar di canvas
-
-      console.log("Gambar berhasil");
     });
   </script>
 </body>

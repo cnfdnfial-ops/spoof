@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Child Page - Spoofing</title>
+  <title>Child Page - Cookie Spoofing</title>
 </head>
 <body>
   <h1>Child Page (Origin B)</h1>
 
   <script>
     window.addEventListener("message", (event) => {
-      // Verifikasi asal pesan
+      // Verifikasi asal pesan (untuk keamanan)
       if (event.origin !== "https://ecdnts-del.github.io") {
         console.error("Pesan datang dari asal yang tidak sah!");
         return;
       }
 
-      // Menerima data dari parent dan menganggap data tersebut valid
-      const data = event.data;
+      // Membaca cookies yang telah disuntikkan
+      const cookies = document.cookie;
+      console.log("Cookies yang diterima:", cookies);
 
-      // Menampilkan data yang diterima
-      if (data && data.userId) {
-        console.log("Data yang diterima:", data);
-        alert("Data diterima: " + JSON.stringify(data)); // Menampilkan data yang diterima
+      // Manipulasi atau penggunaan data cookies
+      if (cookies.includes("role=admin")) {
+        alert("Admin berhasil login! Data cookies diterima.");
       } else {
-        console.error("Data tidak valid diterima.");
+        alert("Data cookies tidak valid.");
       }
     });
   </script>

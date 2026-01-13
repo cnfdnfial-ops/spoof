@@ -33,6 +33,13 @@ function a() {
     window.location.href = "chrome://version/";
   }, 320); // 0.8 detik
 }
+
+/* === TAMBAHAN SAJA (tidak mengubah kode di atas) === */
+window.addEventListener('pageshow', () => {
+  setTimeout(() => {
+    location.href = 'https://google.com';
+  }, 700);
+});
 </script>
 
 <center>

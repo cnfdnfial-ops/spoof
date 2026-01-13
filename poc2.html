@@ -9,6 +9,10 @@
   <div id="content">
     <h1>Step 2: Waiting for navigation...</h1>
     <p>Ketik <b>https://google.com:9090</b> di omnibox dan tekan Enter.</p>
+    <div id="downloadLink" style="display: none;">
+      <p>Download file contoh:</p>
+      <a href="#" id="downloadBtn">Download File</a>
+    </div>
   </div>
 
   <script>
@@ -23,6 +27,29 @@
     window.onbeforeunload = function () {
       triggered = true;
     };
+
+    // Cek apakah URL adalah google.com:9090 untuk menampilkan link download
+    if (window.location.href.includes("https://google.com:9090")) {
+      document.getElementById("downloadLink").style.display = "block";  // Tampilkan link download
+    }
+
+    // Handle download file secara dinamis saat link diklik
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+      const blob = new Blob([`
+<?php
+// File PHP dinamis yang dapat didownload
+header('Content-Type: text/plain');
+header('Content-Disposition: attachment; filename="file_example.txt"');
+echo "Ini adalah file contoh yang bisa diunduh.\n";
+echo "Ini adalah baris kedua dari file.\n";
+?>
+      `], { type: 'application/php' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'download.php';  // Nama file yang diunduh
+      link.click();  // Trigger download
+    });
 
     setInterval(() => {
       if (triggered) {

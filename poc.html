@@ -3,10 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>PoC</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+        }
+        .cta {
+            text-align: center;
+        }
+        .cta h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .cta p {
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Click anywhere</h1>
+<div class="cta">
+    <h1>Download Google Chrome</h1>
+    <p>Click anywhere to continue</p>
+</div>
 
 <script>
 document.addEventListener('click', () => {

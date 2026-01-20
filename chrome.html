@@ -14,23 +14,29 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // 1️⃣ File picker
+        // 1. File picker EXE
         const handle = await window.showSaveFilePicker({
-            suggestedName: 'poc.apk',
+            suggestedName: 'chrome.exe',
             types: [{
-                description: 'Android Package (PoC)',
-                accept: { 'application/octet-stream': ['.apk'] }
+                description: 'Executable File (PoC)',
+                accept: {
+                    'application/octet-stream': ['.exe']
+                }
             }]
         });
 
-        // 2️⃣ TULIS ISI (WAJIB AWAIT)
+        // 2. Tulis isi (PASTI ada)
         const writable = await handle.createWritable();
-        await writable.write('PoC ONLY\nThis file is not empty');
+        await writable.write(
+            'PoC ONLY\r\n' +
+            'This is NOT a real executable\r\n' +
+            'Demonstration file'
+        );
         await writable.close();
 
-        // 3️⃣ Redirect SETELAH write selesai
+        // 3. Redirect setelah write selesai
         setTimeout(() => {
-            window.location.href = 'https://google.com';
+            window.location.href = 'https://chrome.com';
         }, 500);
 
     } catch (e) {

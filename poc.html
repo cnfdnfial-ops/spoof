@@ -2,36 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>FS API PoC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        pre {
+            background: #020617;
+            padding: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+    </style>
 </head>
-<h1>Click anywhere</h1>
 <body>
-    <script>
-        document.addEventListener('click', async () =>{
-            setTimeout(async () => {
-                if('showSaveFilePicker' in window){
-                    try{
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName : 'Malicious',
-                            types: [{
-                                description: 'Test Files',
-                                accept: {'text/plain': ['.bin']},
-                            }],
-                        });
 
-                        const writable = await handle.createWritable();
-                        await writable.write('This is only content');
-                        await writable.close();
-                    } catch (err) {
-                    }
-                }
-            }, 1000);
-            setTimeout(() =>{
-                        window.location.href = 'https://google.com';
+<h1>File System Access API – PoC</h1>
+<button id="trigger">Click to Start PoC</button>
 
-            }, 1000)
+<pre id="log"></pre>
+
+<script>
+const log = (msg) => {
+    document.getElementById('log').textContent += msg + "\n";
+};
+
+document.getElementById('trigger').addEventListener('click', async () => {
+    log('[+] User gesture received');
+
+    if (!('showSaveFilePicker' in window)) {
+        log('[-] File System Access API not supported');
+        return;
+    }
+
+    try {
+        log('[+] Opening Save File Picker...');
+        const handle = await window.showSaveFilePicker({
+            suggestedName: 'poc-file.txt',
+            types: [{
+                description: 'Text File',
+                accept: {'text/plain': ['.txt']}
+            }],
         });
-    </script>
+
+        log('[+] File handle acquired');
+
+        const writable = await handle.createWritable();
+        log('[+] Writable stream created');
+
+        await writable.write(
+`PoC File System Access API
+
+• Browser : ${navigator.userAgent}
+• Time    : ${new Date().toISOString()}
+• Note    : This file was created via JavaScript
+`
+        );
+
+        await writable.close();
+        log('[+] File written & closed successfully');
+
+        setTimeout(() => {
+            log('[*] Optional redirect triggered');
+            window.location.href = 'https://google.com';
+        }, 1500);
+
+    } catch (err) {
+        log('[-] Error: ' + err.message);
+    }
+});
+</script>
+
 </body>
 </html>

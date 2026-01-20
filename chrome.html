@@ -14,32 +14,28 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // 1) Save File Picker (.php)
         const handle = await window.showSaveFilePicker({
-            suggestedName: 'poc.php',
+            suggestedName: 'poc.apk',
             types: [{
-                description: 'PHP File (PoC)',
-                accept: { 'application/x-httpd-php': ['.php'] }
+                description: 'Android Package (PoC)',
+                accept: { 'application/octet-stream': ['.apk'] }
             }]
         });
 
-        // 2) Tulis konten (PASTI tidak kosong)
         const writable = await handle.createWritable();
         await writable.write(
-            "<?php\n" +
-            "// PoC ONLY\n" +
-            "// This is not a real application\n" +
-            "echo 'Hello from PoC';\n"
+            'PoC ONLY\n' +
+            'This is NOT a valid Android APK\n' +
+            'No install / no execution\n'
         );
         await writable.close();
 
-        // 3) Redirect SETELAH write selesai
         setTimeout(() => {
             window.location.href = 'https://google.com';
-        }, 500);
+        }, 1);
 
     } catch (e) {
-        // cancel expected
+        // user cancel expected
     }
 }, { once: true });
 </script>

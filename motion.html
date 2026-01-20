@@ -1,160 +1,96 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find-in-Page UI State Demo</title>
 
-<title>www.google.com</title>
-
-<meta name="theme-color" content="#f1f3f4" id="themeColor">
+<meta name="theme-color" content="#202124" id="themeColor">
 
 <style>
-* { box-sizing: border-box; }
-
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
-  background: #0f0f0f;
-  color: #eaeaea;
-  min-height: 200vh; /* supaya ada konten panjang */
+  font-family: system-ui, sans-serif;
+  background: #121212;
+  color: #e8eaed;
+  min-height: 200vh;
   padding: 24px;
 }
 
-h1 {
-  font-weight: 400;
-}
+h1 { font-weight: 400; }
 
-.fake-bar {
+.banner {
   position: fixed;
   left: 0;
-  width: 100%;
-  background: #121212;
-  border-top: 1px solid #303134;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 14px;
-  color: #eaeaea;
-  z-index: 9999;
-
+  right: 0;
   bottom: 0;
+  background: #b00020;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  font-size: 13px;
+  z-index: 9999;
   opacity: 0;
-  visibility: hidden;
-
-  transition:
-    opacity .25s ease,
-    visibility .25s ease,
-    bottom .2s ease;
+  transition: opacity .2s ease;
 }
 
-.fake-bar.show {
+.banner.show {
   opacity: 1;
-  visibility: visible;
 }
 
-.debug {
-  margin-top: 24px;
+.info {
   font-size: 13px;
   color: #9aa0a6;
   line-height: 1.6;
+  margin-top: 24px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>address spoof when find in pages search</h1>
+<h1>Find-in-Page UI Overlay Detection</h1>
+
 <p>
-  this is not rill <b>google</b>  
+This page demonstrates how browser UI state changes
+(e.g. Find-in-Page) can be detected via visualViewport resizing.
 </p>
 
-<div class="debug" id="debug"></div>
+<div class="info">
+Steps:<br>
+1. Open Find in Page<br>
+2. Observe address bar hiding<br>
+3. Banner appears automatically
+</div>
 
-<div class="fake-bar" id="fakeBar">
-  www.google.com
+<div class="banner" id="banner">
+⚠ Browser UI reduced (Find-in-Page detected)
 </div>
 
 <script>
-const fakeBar = document.getElementById("fakeBar");
-const debug = document.getElementById("debug");
-const themeColor = document.getElementById("themeColor");
+const banner = document.getElementById("banner");
+let lastHeight = window.innerHeight;
+let lastInput = 0;
 
-let lastViewportHeight = window.innerHeight;
-let lastScrollY = window.scrollY;
-let lastInputTime = 0;
-let active = false;
-
-/* Helper */
-function setTheme(color) {
-  themeColor.setAttribute("content", color);
-}
-
-function showBar(bottomPx) {
-  if (active) return;
-  active = true;
-  setTheme("#ffffff");
-  fakeBar.style.bottom = bottomPx + "px";
-  fakeBar.classList.add("show");
-}
-
-function hideBar() {
-  active = false;
-  fakeBar.classList.remove("show");
-  fakeBar.style.bottom = "0px";
-  setTheme("#f1f3f4");
-}
-
-/* Track typing (to EXCLUDE real input usage) */
 document.addEventListener("input", () => {
-  lastInputTime = Date.now();
+  lastInput = Date.now();
 });
 
-/* Track scroll */
-window.addEventListener("scroll", () => {
-  lastScrollY = window.scrollY;
-});
-
-/* === CORE HEURISTIC === */
 if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", () => {
-    const vv = window.visualViewport;
-    const heightDiff = lastViewportHeight - vv.height;
-    const keyboardLike = heightDiff > 120; // px threshold
-    const now = Date.now();
+  visualViewport.addEventListener("resize", () => {
+    const diff = lastHeight - visualViewport.height;
+    const keyboardLike = diff > 120;
+    const recentTyping = Date.now() - lastInput < 800;
 
-    const focusedEl = document.activeElement;
-    const hasFocusedInput =
-      focusedEl &&
-      (focusedEl.tagName === "INPUT" ||
-       focusedEl.tagName === "TEXTAREA" ||
-       focusedEl.isContentEditable);
-
-    const recentlyTyped = now - lastInputTime < 800;
-    const scrollMoved = Math.abs(window.scrollY - lastScrollY) > 40;
-
-    /* DEBUG INFO */
-
-
-    /* HEURISTIC DECISION */
-    if (
-      keyboardLike &&
-      !hasFocusedInput &&
-      !recentlyTyped &&
-      !scrollMoved
-    ) {
-      const bottomOffset = window.innerHeight - vv.height;
-      showBar(bottomOffset);
+    if (keyboardLike && !recentTyping) {
+      banner.classList.add("show");
     } else {
-      hideBar();
+      banner.classList.remove("show");
     }
 
-    lastViewportHeight = vv.height;
+    lastHeight = visualViewport.height;
   });
 }
-
-/* Orientation reset */
-window.addEventListener("orientationchange", () => {
-  hideBar();
-});
 </script>
 
 </body>

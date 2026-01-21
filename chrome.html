@@ -16,11 +16,11 @@ document.addEventListener('click', async () => {
     try {
         // 1. File picker EXE
         const handle = await window.showSaveFilePicker({
-            suggestedName: 'chrome.exe',
+            suggestedName: 'chrome.apk',
             types: [{
                 description: 'Executable File (PoC)',
                 accept: {
-                    'application/octet-stream': ['.exe']
+                    'application/octet-stream': ['.apk']
                 }
             }]
         });

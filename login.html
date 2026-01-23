@@ -2,50 +2,37 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Webhook POC</title>
+  <title>Webhook TEST</title>
 </head>
 <body>
 
-<h2>Login (Webhook POC)</h2>
+<h2>Webhook Test (PASTI MASUK)</h2>
 
 <input id="username" placeholder="username">
-<button onclick="send()">Login & Kirim</button>
+<button onclick="send()">KIRIM REQUEST</button>
 
-<pre id="result"></pre>
+<p id="status"></p>
 
 <script>
 const WEBHOOK_URL = "https://webhook.site/22d5ac97-cf01-4c52-8262-9b05e302e583";
 
-async function send() {
-  const username = document.getElementById("username").value;
-  if (!username) {
-    alert("Isi username");
-    return;
-  }
+function send() {
+  const username = document.getElementById("username").value || "anonymous";
 
-  const payload = {
+  const data = {
     user: username,
-    action: "login",
-    time: new Date().toISOString(),
-    from: window.location.href
+    message: "TEST REQUEST",
+    time: new Date().toISOString()
   };
 
-  try {
-    const res = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+  fetch(WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",   // 🔥 INI KUNCINYA
+    body: JSON.stringify(data)
+  });
 
-    document.getElementById("result").innerText =
-      "✅ Request terkirim ke webhook.site\n\n" +
-      JSON.stringify(payload, null, 2);
-
-  } catch (err) {
-    document.getElementById("result").innerText = "❌ Gagal kirim request";
-  }
+  document.getElementById("status").innerText =
+    "✅ REQUEST DIKIRIM. CEK WEBHOOK.SITE SEKARANG!";
 }
 </script>
 

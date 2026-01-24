@@ -3,11 +3,11 @@
 function test() {
   var w = window.open();
   w.opener = null;
-  w.document.write('<b>𝐷ℎ𝑎𝑓𝑦</b><br><iframe src="https://ecdnts-del.github.io/spoof/TODD.jpg" style="width:600px;height:400px;border:0;"></iframe>');
+  w.document.write('<iframe src="https://ecdnts-del.github.io/spoof/TODD.jpg" style="width:600px;height:400px;border:0;"></iframe>');
   
   // Redirect setelah 2 detik supaya user sempat lihat konten
   setTimeout(() => {
-    w.location = 'https://localhost.com:90';
+    w.location = 'https://instagram.com:90';
   }, 2000);
 }
 </script>

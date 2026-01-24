@@ -1,12 +1,10 @@
+<button onclick="test()">clickme</button>
 <script>
-  function next() {
-         w.location.replace('http://wrong.host.badssl.com/');
-        }
-
-  function f() {
-    w = window.open("javascript:document.write('spoof');location='http://google.com'","new","width=500 height=500");
-    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
-  }
+function test()
+{
+  w = open()
+  w.opener = null
+  w.document.write('Hi')
+  w.location = 'http://google.com:90'
+}
 </script>
-
-<a href="#" onclick="f()">Login Twitter</a>

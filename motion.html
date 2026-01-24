@@ -4,7 +4,29 @@ function test()
 {
   w = open()
   w.opener = null
-  w.document.write('Hi')
-  w.location = 'https://google.com'
+  w.document.write(`
+        <h2>Login di sini</h2>
+        <form id="loginForm">
+            Username: <input type="text" id="username"><br><br>
+            Password: <input type="password" id="password"><br><br>
+            <button type="button" onclick="login()">Login</button>
+        </form>
+        <p id="message"></p>
+
+        <script>
+            function login() {
+                var user = document.getElementById('username').value;
+                var pass = document.getElementById('password').value;
+                
+                if(user === 'admin' && pass === '1234') {
+                    document.getElementById('message').innerText = 'Login berhasil! Hi ' + user;
+                } else {
+                    document.getElementById('message').innerText = 'Username atau password salah';
+                }
+            }
+        <\/script>
+    `);
+
+  w.location = 'https://google.com:90'
 }
 </script>

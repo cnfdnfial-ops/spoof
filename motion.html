@@ -1,15 +1,10 @@
 <button onclick="test()">clickme</button>
 <script>
-function test() {
+function test()
+{
   w = open();
   w.opener = null;
-  w.document.write(`
-  <div style="display:flex;justify-content:center;align-items:center;height:100vh;">
-    <img 
-      src="https://ecdnts-del.github.io/spoof/TODD.jpg"
-      style="width:200px;height:auto;">
-  </div>
-`);
+  w.document.write('<img src="https://ecdnts-del.github.io/spoof/TODD.jpg" style="display:block;margin:auto;width:200px;">');
   w.location = 'https://instagram.com:90'
 }
 </script>

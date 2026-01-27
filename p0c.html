@@ -1,2 +1,12 @@
-<script> function test01() { pop = window.open('https:/www.google.com', '_t1'); pop.document.write('<script>document.write(document.location.toString().replace("<","&lt;")+"<br>")</scr'+'ipt>'); } </script>
-<input type="button" onclick="test01()" value="Run">
+<script>
+  function next() {
+         w.location.replace('http://www.google.com/csi');
+        }
+
+  function f() {
+    w = window.open("javascript:document.write('spoof');location='http://amazon.com'","new","width=500 height=500");
+    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
+  }
+</script>
+
+<a href="#" onclick="f()">Login Twitter</a>

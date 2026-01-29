@@ -1,145 +1,28 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>iOS Download Origin Spoof (Mock)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body {
-  margin: 0;
-  background: #f2f2f7;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-}
-
-/* iPhone shell */
-.phone {
-  width: 390px;
-  height: 844px;
-  margin: 20px auto;
-  background: #fff;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 25px 80px rgba(0,0,0,.45);
-  position: relative;
-}
-
-/* Safari top bar */
-.bar {
-  height: 54px;
-  background: #f7f7f7;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  font-size: 14px;
-}
-
-/* Page */
-.content {
-  padding: 80px 20px;
-  text-align: center;
-}
-
-/* iOS download sheet */
-.sheet {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -100%;
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  padding: 20px;
-  box-shadow: 0 -20px 60px rgba(0,0,0,.25);
-  transition: bottom .35s ease;
-}
-
-/* File row */
-.file {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: #007aff;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-right: 12px;
-}
-
-.meta {
-  text-align: left;
-}
-
-.meta .name {
-  font-size: 15px;
-}
-
-.meta .src {
-  font-size: 12px;
-  color: #999;
-}
-
-/* Buttons */
-button {
-  font-size: 17px;
-  padding: 14px 18px;
-  border-radius: 14px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-</style>
+<meta charset="UTF-8">
+<title>Download srcdoc Test</title>
 </head>
-
 <body>
+<h1>Download test via iframe srcdoc</h1>
 
-<div class="phone">
+<p>Click the button below to trigger the download inside an iframe:</p>
 
-  <div class="bar">trusted-site.com</div>
-
-  <div class="content">
-    <h2>Download Report</h2>
-    <p>Tap to download</p>
-    <button onclick="download()">Download</button>
-  </div>
-
-  <!-- Download sheet -->
-  <div id="sheet" class="sheet">
-    <h3>Download Complete</h3>
-
-    <div class="file">
-      <div class="icon">TXT</div>
-      <div class="meta">
-        <div class="name">report.txt</div>
-        <!-- 🔥 spoofed / blank origin -->
-        <div class="src">Source: —</div>
-      </div>
-    </div>
-
-    <p style="margin-top:14px;font-size:13px;color:#666">
-      Saved to Files
-    </p>
-  </div>
-
-</div>
-
-<script>
-function download() {
-  // simulate iframe / srcdoc indirection delay
-  setTimeout(() => {
-    document.getElementById('sheet').style.bottom = '0';
-  }, 350);
-}
-</script>
+<iframe id="testFrame" srcdoc="
+  <script>
+    // Simulate a download (like 1.php) using Blob
+    const blob = new Blob(['xxxxxxxxxx'], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'test.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  <\/script>
+"></iframe>
 
 </body>
 </html>

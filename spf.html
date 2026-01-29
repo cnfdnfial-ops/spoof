@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Mock iOS FaceTime Permission PoC</title>
+<title>iOS FaceTime Blank-Origin Prompt (Mock)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 html, body {
   margin: 0;
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
   background: #000;
 }
 
-/* ===== iPhone frame ===== */
+/* iPhone frame */
 .phone {
   width: 390px;
   height: 844px;
@@ -21,23 +21,23 @@ html, body {
   border-radius: 28px;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 25px 70px rgba(0,0,0,.5);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
   position: relative;
 }
 
-/* ===== Fake FaceTime video ===== */
+/* Fake FaceTime video */
 .video {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, #222, #000),
-    radial-gradient(circle at 30% 20%, #333, transparent 60%);
+    radial-gradient(circle at 70% 20%, #333, transparent 50%),
+    linear-gradient(180deg, #111, #000);
 }
 
-/* Caller label */
+/* Incoming call label */
 .caller {
   position: absolute;
-  top: 80px;
+  top: 90px;
   width: 100%;
   text-align: center;
   color: #fff;
@@ -52,10 +52,10 @@ html, body {
 .caller p {
   margin-top: 6px;
   font-size: 15px;
-  opacity: .8;
+  opacity: .75;
 }
 
-/* ===== iOS permission sheet ===== */
+/* Permission sheet */
 .sheet {
   position: absolute;
   bottom: 0;
@@ -64,14 +64,34 @@ html, body {
   height: 360px;
   background: #f9f9f9;
   border-radius: 22px 22px 0 0;
-  box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  box-shadow: 0 -14px 40px rgba(0,0,0,.45);
   padding: 24px;
   z-index: 10;
 }
 
+/* BLANK origin area */
+.origin {
+  height: 22px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+}
+
+/* faint placeholder line (looks like missing text) */
+.origin::after {
+  content: "";
+  display: inline-block;
+  width: 140px;
+  height: 10px;
+  background: linear-gradient(90deg, #e5e5ea, #f2f2f7);
+  border-radius: 6px;
+}
+
+/* Text */
 .sheet h3 {
   text-align: center;
-  margin-top: 6px;
+  margin-top: 10px;
   font-size: 18px;
 }
 
@@ -79,12 +99,12 @@ html, body {
   text-align: center;
   font-size: 14px;
   color: #555;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 /* Buttons */
 .actions {
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 button {
@@ -97,15 +117,15 @@ button {
 }
 
 .allow {
-  background: #34c759; /* iOS green */
+  background: #34c759;
   color: #fff;
 }
 
-.decline {
+.deny {
   background: #e5e5ea;
 }
 
-/* Notice */
+/* Warning label */
 .notice {
   position: absolute;
   bottom: 380px;
@@ -121,28 +141,27 @@ button {
 <body>
 <div class="phone">
 
-  <!-- Fake FaceTime background -->
   <div class="video"></div>
 
-  <!-- Caller info -->
   <div class="caller">
     <h1>Incoming FaceTime</h1>
-    <p>from John Appleseed</p>
+    <p>Video Call</p>
   </div>
 
-  <!-- Security note -->
   <div class="notice">
-    Autofill / origin context hidden beneath permission UI
+    Permission prompt shown with missing / blank origin
   </div>
 
-  <!-- Permission sheet -->
   <div class="sheet">
-    <h3>“example.com” Would Like to Access</h3>
+    <!-- intentionally blank origin -->
+    <div class="origin"></div>
+
+    <h3>Would Like to Access</h3>
     <p>Camera and Microphone</p>
 
     <div class="actions">
       <button class="allow">Allow</button>
-      <button class="decline">Don’t Allow</button>
+      <button class="deny">Don’t Allow</button>
     </div>
   </div>
 

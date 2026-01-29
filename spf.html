@@ -1,31 +1,30 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
-<title>iOS Validation Bubble Spoof (Mock)</title>
+<title>iOS Download Origin Spoof (Mock)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-html, body {
+body {
   margin: 0;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
   background: #f2f2f7;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
 }
 
-/* iPhone frame */
+/* iPhone shell */
 .phone {
   width: 390px;
   height: 844px;
   margin: 20px auto;
+  background: #fff;
   border-radius: 28px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  box-shadow: 0 25px 80px rgba(0,0,0,.45);
   position: relative;
 }
 
-/* Safari bar */
+/* Safari top bar */
 .bar {
   height: 54px;
   background: #f7f7f7;
@@ -33,52 +32,60 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   color: #666;
+  font-size: 14px;
 }
 
-/* Page content */
+/* Page */
 .content {
   padding: 80px 20px;
   text-align: center;
 }
 
-/* Hidden input (simulating invisible field) */
-input {
+/* iOS download sheet */
+.sheet {
   position: absolute;
-  opacity: 0;
-}
-
-/* Fake validation bubble */
-.bubble {
-  position: absolute;
-  top: 140px;
-  left: 20px;
-  right: 20px;
+  left: 0;
+  right: 0;
+  bottom: -100%;
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.25);
-  padding: 16px;
-  font-size: 14px;
-  display: none;
-  z-index: 20;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  box-shadow: 0 -20px 60px rgba(0,0,0,.25);
+  transition: bottom .35s ease;
 }
 
-.bubble::before {
-  content: "";
-  position: absolute;
-  top: -8px;
-  left: 40px;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  transform: rotate(45deg);
-  box-shadow: -2px -2px 4px rgba(0,0,0,.05);
+/* File row */
+.file {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
 }
 
-/* Warning look */
-.bubble strong {
-  color: #ff3b30;
+.icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #007aff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.meta {
+  text-align: left;
+}
+
+.meta .name {
+  font-size: 15px;
+}
+
+.meta .src {
+  font-size: 12px;
+  color: #999;
 }
 
 /* Buttons */
@@ -94,34 +101,43 @@ button {
 </head>
 
 <body>
+
 <div class="phone">
 
-  <div class="bar">example.com</div>
+  <div class="bar">trusted-site.com</div>
 
   <div class="content">
-    <h2>Account Settings</h2>
-    <p>Tap to continue</p>
-    <button onclick="trigger()">Continue</button>
+    <h2>Download Report</h2>
+    <p>Tap to download</p>
+    <button onclick="download()">Download</button>
   </div>
 
-  <!-- invisible required input -->
-  <input id="hidden" required>
+  <!-- Download sheet -->
+  <div id="sheet" class="sheet">
+    <h3>Download Complete</h3>
 
-  <!-- Validation bubble -->
-  <div id="bubble" class="bubble">
-    <strong>WARNING</strong><br><br>
-    Your device may be at risk.<br>
-    Please contact support immediately.
+    <div class="file">
+      <div class="icon">TXT</div>
+      <div class="meta">
+        <div class="name">report.txt</div>
+        <!-- 🔥 spoofed / blank origin -->
+        <div class="src">Source: —</div>
+      </div>
+    </div>
+
+    <p style="margin-top:14px;font-size:13px;color:#666">
+      Saved to Files
+    </p>
   </div>
 
 </div>
 
 <script>
-function trigger() {
-  // simulate tab / context change delay
+function download() {
+  // simulate iframe / srcdoc indirection delay
   setTimeout(() => {
-    document.getElementById('bubble').style.display = 'block';
-  }, 400);
+    document.getElementById('sheet').style.bottom = '0';
+  }, 350);
 }
 </script>
 

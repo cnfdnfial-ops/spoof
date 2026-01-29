@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>iOS File Picker Blank Context – Mock PoC</title>
+<title>iOS Validation Bubble Spoof (Mock)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -21,11 +21,11 @@ html, body {
   border-radius: 28px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 30px 80px rgba(0,0,0,.4);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
   position: relative;
 }
 
-/* Safari top bar */
+/* Safari bar */
 .bar {
   height: 54px;
   background: #f7f7f7;
@@ -37,96 +37,58 @@ html, body {
   color: #666;
 }
 
-/* Content */
+/* Page content */
 .content {
-  padding: 40px 20px;
+  padding: 80px 20px;
   text-align: center;
 }
 
-button.main {
+/* Hidden input (simulating invisible field) */
+input {
+  position: absolute;
+  opacity: 0;
+}
+
+/* Fake validation bubble */
+.bubble {
+  position: absolute;
+  top: 140px;
+  left: 20px;
+  right: 20px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  padding: 16px;
+  font-size: 14px;
+  display: none;
+  z-index: 20;
+}
+
+.bubble::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 40px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0,0,0,.05);
+}
+
+/* Warning look */
+.bubble strong {
+  color: #ff3b30;
+}
+
+/* Buttons */
+button {
   font-size: 17px;
   padding: 14px 18px;
   border-radius: 14px;
   border: none;
   background: #007aff;
   color: #fff;
-}
-
-/* iOS picker sheet */
-.sheet {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 420px;
-  background: #f9f9f9;
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -16px 50px rgba(0,0,0,.35);
-  padding: 20px;
-  z-index: 10;
-}
-
-/* BLANK app / origin */
-.origin {
-  height: 20px;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-.origin::after {
-  content: "";
-  display: inline-block;
-  width: 160px;
-  height: 10px;
-  background: linear-gradient(90deg,#e5e5ea,#f2f2f7);
-  border-radius: 6px;
-}
-
-/* Picker list */
-.item {
-  padding: 14px;
-  border-radius: 12px;
-  background: #fff;
-  margin-bottom: 10px;
-  text-align: left;
-  box-shadow: 0 1px 3px rgba(0,0,0,.12);
-  font-size: 15px;
-}
-
-/* Footer buttons */
-.actions {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-}
-
-.actions button {
-  width: 100%;
-  padding: 16px;
-  font-size: 17px;
-  border-radius: 14px;
-  border: none;
-}
-
-.upload {
-  background: #34c759;
-  color: #fff;
-}
-
-.cancel {
-  margin-top: 10px;
-  background: #e5e5ea;
-}
-
-/* Warning text */
-.notice {
-  position: absolute;
-  bottom: 450px;
-  width: 100%;
-  text-align: center;
-  font-size: 12px;
-  color: #ff3b30;
 }
 </style>
 </head>
@@ -137,30 +99,31 @@ button.main {
   <div class="bar">example.com</div>
 
   <div class="content">
-    <h2>Export Report</h2>
-    <p>Tap below to choose destination</p>
-    <button class="main">Select Location</button>
+    <h2>Account Settings</h2>
+    <p>Tap to continue</p>
+    <button onclick="trigger()">Continue</button>
   </div>
 
-  <div class="notice">
-    Picker shown with missing context (origin/app)
-  </div>
+  <!-- invisible required input -->
+  <input id="hidden" required>
 
-  <!-- iOS-style picker -->
-  <div class="sheet">
-    <!-- intentionally blank -->
-    <div class="origin"></div>
-
-    <div class="item">📁 Downloads</div>
-    <div class="item">📁 Desktop</div>
-    <div class="item">📁 Documents</div>
-
-    <div class="actions">
-      <button class="upload">Continue</button>
-      <button class="cancel">Cancel</button>
-    </div>
+  <!-- Validation bubble -->
+  <div id="bubble" class="bubble">
+    <strong>WARNING</strong><br><br>
+    Your device may be at risk.<br>
+    Please contact support immediately.
   </div>
 
 </div>
+
+<script>
+function trigger() {
+  // simulate tab / context change delay
+  setTimeout(() => {
+    document.getElementById('bubble').style.display = 'block';
+  }, 400);
+}
+</script>
+
 </body>
 </html>

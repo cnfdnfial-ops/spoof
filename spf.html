@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>iOS FaceTime Blank-Origin Prompt (Mock)</title>
+<title>iOS File Picker Blank Context – Mock PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -10,7 +10,7 @@ html, body {
   margin: 0;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #000;
+  background: #f2f2f7;
 }
 
 /* iPhone frame */
@@ -20,120 +20,113 @@ html, body {
   margin: 20px auto;
   border-radius: 28px;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  background: #fff;
+  box-shadow: 0 30px 80px rgba(0,0,0,.4);
   position: relative;
 }
 
-/* Fake FaceTime video */
-.video {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 70% 20%, #333, transparent 50%),
-    linear-gradient(180deg, #111, #000);
+/* Safari top bar */
+.bar {
+  height: 54px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
 }
 
-/* Incoming call label */
-.caller {
-  position: absolute;
-  top: 90px;
-  width: 100%;
+/* Content */
+.content {
+  padding: 40px 20px;
   text-align: center;
+}
+
+button.main {
+  font-size: 17px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: none;
+  background: #007aff;
   color: #fff;
 }
 
-.caller h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.caller p {
-  margin-top: 6px;
-  font-size: 15px;
-  opacity: .75;
-}
-
-/* Permission sheet */
+/* iOS picker sheet */
 .sheet {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 360px;
+  height: 420px;
   background: #f9f9f9;
   border-radius: 22px 22px 0 0;
-  box-shadow: 0 -14px 40px rgba(0,0,0,.45);
-  padding: 24px;
+  box-shadow: 0 -16px 50px rgba(0,0,0,.35);
+  padding: 20px;
   z-index: 10;
 }
 
-/* BLANK origin area */
+/* BLANK app / origin */
 .origin {
-  height: 22px;
-  margin-bottom: 10px;
+  height: 20px;
+  margin-bottom: 12px;
   text-align: center;
-  font-size: 14px;
-  color: #999;
 }
 
-/* faint placeholder line (looks like missing text) */
 .origin::after {
   content: "";
   display: inline-block;
-  width: 140px;
+  width: 160px;
   height: 10px;
-  background: linear-gradient(90deg, #e5e5ea, #f2f2f7);
+  background: linear-gradient(90deg,#e5e5ea,#f2f2f7);
   border-radius: 6px;
 }
 
-/* Text */
-.sheet h3 {
-  text-align: center;
-  margin-top: 10px;
-  font-size: 18px;
+/* Picker list */
+.item {
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 10px;
+  text-align: left;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  font-size: 15px;
 }
 
-.sheet p {
-  text-align: center;
-  font-size: 14px;
-  color: #555;
-  margin-top: 6px;
-}
-
-/* Buttons */
+/* Footer buttons */
 .actions {
-  margin-top: 30px;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
 }
 
-button {
+.actions button {
   width: 100%;
   padding: 16px;
-  margin-bottom: 12px;
   font-size: 17px;
   border-radius: 14px;
   border: none;
 }
 
-.allow {
+.upload {
   background: #34c759;
   color: #fff;
 }
 
-.deny {
+.cancel {
+  margin-top: 10px;
   background: #e5e5ea;
 }
 
-/* Warning label */
+/* Warning text */
 .notice {
   position: absolute;
-  bottom: 380px;
+  bottom: 450px;
   width: 100%;
   text-align: center;
   font-size: 12px;
-  color: #ff453a;
-  opacity: .9;
+  color: #ff3b30;
 }
 </style>
 </head>
@@ -141,27 +134,30 @@ button {
 <body>
 <div class="phone">
 
-  <div class="video"></div>
+  <div class="bar">example.com</div>
 
-  <div class="caller">
-    <h1>Incoming FaceTime</h1>
-    <p>Video Call</p>
+  <div class="content">
+    <h2>Export Report</h2>
+    <p>Tap below to choose destination</p>
+    <button class="main">Select Location</button>
   </div>
 
   <div class="notice">
-    Permission prompt shown with missing / blank origin
+    Picker shown with missing context (origin/app)
   </div>
 
+  <!-- iOS-style picker -->
   <div class="sheet">
-    <!-- intentionally blank origin -->
+    <!-- intentionally blank -->
     <div class="origin"></div>
 
-    <h3>Would Like to Access</h3>
-    <p>Camera and Microphone</p>
+    <div class="item">📁 Downloads</div>
+    <div class="item">📁 Desktop</div>
+    <div class="item">📁 Documents</div>
 
     <div class="actions">
-      <button class="allow">Allow</button>
-      <button class="deny">Don’t Allow</button>
+      <button class="upload">Continue</button>
+      <button class="cancel">Cancel</button>
     </div>
   </div>
 

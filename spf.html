@@ -1,7 +1,151 @@
-<a id="a1" href="tel:0/https://google.com:90"></a>
-<a id="a2" href="#"></a>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock iOS FaceTime Permission PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script>
-	document.getElementById('a1').click();
-	document.getElementById('a2').click();
-</script>
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui;
+  background: #000;
+}
+
+/* ===== iPhone frame ===== */
+.phone {
+  width: 390px;
+  height: 844px;
+  margin: 20px auto;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 25px 70px rgba(0,0,0,.5);
+  position: relative;
+}
+
+/* ===== Fake FaceTime video ===== */
+.video {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, #222, #000),
+    radial-gradient(circle at 30% 20%, #333, transparent 60%);
+}
+
+/* Caller label */
+.caller {
+  position: absolute;
+  top: 80px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+}
+
+.caller h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.caller p {
+  margin-top: 6px;
+  font-size: 15px;
+  opacity: .8;
+}
+
+/* ===== iOS permission sheet ===== */
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 360px;
+  background: #f9f9f9;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  padding: 24px;
+  z-index: 10;
+}
+
+.sheet h3 {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.sheet p {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 8px;
+}
+
+/* Buttons */
+.actions {
+  margin-top: 28px;
+}
+
+button {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 12px;
+  font-size: 17px;
+  border-radius: 14px;
+  border: none;
+}
+
+.allow {
+  background: #34c759; /* iOS green */
+  color: #fff;
+}
+
+.decline {
+  background: #e5e5ea;
+}
+
+/* Notice */
+.notice {
+  position: absolute;
+  bottom: 380px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #ff453a;
+  opacity: .9;
+}
+</style>
+</head>
+
+<body>
+<div class="phone">
+
+  <!-- Fake FaceTime background -->
+  <div class="video"></div>
+
+  <!-- Caller info -->
+  <div class="caller">
+    <h1>Incoming FaceTime</h1>
+    <p>from John Appleseed</p>
+  </div>
+
+  <!-- Security note -->
+  <div class="notice">
+    Autofill / origin context hidden beneath permission UI
+  </div>
+
+  <!-- Permission sheet -->
+  <div class="sheet">
+    <h3>“example.com” Would Like to Access</h3>
+    <p>Camera and Microphone</p>
+
+    <div class="actions">
+      <button class="allow">Allow</button>
+      <button class="decline">Don’t Allow</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

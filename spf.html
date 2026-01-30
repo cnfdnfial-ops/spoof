@@ -1,28 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Download srcdoc Test</title>
-</head>
-<body>
-<h1>Download test via iframe srcdoc</h1>
 
-<p>Click the button below to trigger the download inside an iframe:</p>
-
-<iframe id="testFrame" srcdoc="
-  <script>
-    // Simulate a download (like 1.php) using Blob
-    const blob = new Blob(['xxxxxxxxxx'], {type: 'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'test.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  <\/script>
-"></iframe>
-
-</body>
-</html>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<meta charset="utf-8">
+<ol>
+<li>
+    Click <a href="nonexistant:12121">this link to nonexistant:12121</a> 
+</li>
+<li>Click <a href="https://www.google.com/">this HTTPS link</a></li>
+<li>PASS if address bar shows google.com address</li>
+</ol>

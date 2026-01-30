@@ -1,23 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <body>
-    <!-- Button yang memicu fungsi bb() saat diklik -->
-    <button onclick="bb()">Click Here</button>
+<body>
+<input type="button" value="Click here"
+onclick="
+setTimeout(function() {
+  window.open('https://www.apple.com/contact/');
+}, 3000);
 
-    <script>
-      function bb() {
-        // Membuat elemen link untuk FaceTime dengan nomor telepon valid
-        var link = document.createElement('a');
-        link.href = 'facetime:+12125551234'; // Nomor FaceTime yang valid
-        
-        // Menunda eksekusi selama 3 detik sebelum mengeksekusi link.click()
-        setTimeout(function() {
-          link.click(); // Simulasikan klik untuk FaceTime
-
-          // Redirect ke halaman lain setelah 3 detik
-          window.location = 'https://www.apple.com/contact';  // Redirect ke halaman Apple setelah eksekusi
-        }, 5000); // Delay 3 detik
-      }
-    </script>
-  </body>
+setTimeout(function() {
+  document.location = 'facetime-audio:+apple.com';
+}, 700);
+">
+</body>
 </html>

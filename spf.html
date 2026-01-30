@@ -1,25 +1,20 @@
 <!DOCTYPE html>
 <html>
   <body>
-    <!-- Button yang memicu fungsi bb() saat diklik -->
     <button onclick="bb()">Click Here</button>
 
     <script>
       function bb() {
-        // Menyusun teks yang ingin dimasukkan ke dalam URL
-        var message = 'https∶⧸⧸google.com says:%0a%0dMetaDown!%0aGo%20to%20fake.meta.net%20Call%20Center%0a%0dCall:0987-65432';
-        
-        // Encode seluruh URL agar aman untuk digunakan dalam href
-        var encodedMessage = encodeURIComponent(message);
-        
-        // Membuat elemen link untuk FaceTime
-        var link = document.createElement('a');
-        link.href = 'facetime:' + encodedMessage;
-        
-        // Menunda eksekusi selama 5 detik sebelum mengeksekusi link.click()
+        // Delay 5 detik sebelum trigger tel:
         setTimeout(function() {
-          link.click(); // Simulasikan klik untuk FaceTime (meskipun ini tidak akan berhasil karena format invalid)
-        }, 5000); // Delay 5 detik (5000 ms)
+          // Trigger panggilan telepon
+          window.location.href = 'tel:+12125551234';
+
+          // Redirect ke halaman lain setelah itu
+          setTimeout(function() {
+            window.location.href = 'https://www.apple.com/contact/';
+          }, 2500); // 5 detik setelah tel:
+        }, 1900); // 5 detik setelah klik
       }
     </script>
   </body>

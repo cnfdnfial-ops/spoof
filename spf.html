@@ -1,15 +1,32 @@
 <!DOCTYPE html>
 <html>
 <body>
-<input type="button" value="Click Call Center"
+
+<!-- Button FaceTime -->
+<input type="button" value="Click Call Center (FaceTime)"
 onclick="
 setTimeout(function() {
   window.open('https://www.apple.com/contact/');
-},1600);
+}, 1600);
 
 setTimeout(function() {
   document.location = 'facetime-audio:+unthrz';
 }, 700);
 ">
+
+<br><br>
+
+<!-- Button Mailto -->
+<input type="button" value="Click Call Center (Mailto)"
+onclick="
+setTimeout(function() {
+  window.open('https://www.apple.com/contact/');
+}, 1600);
+
+setTimeout(function() {
+  document.location = 'mailto:unthrz@@@invalid';
+}, 700);
+">
+
 </body>
 </html>

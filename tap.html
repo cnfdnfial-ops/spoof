@@ -2,31 +2,53 @@
 <html>
 <body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;">
 
-<button id="start" style="font-size:20px;padding:16px;">
-  Contact Support
+<button id="btn" style="font-size:20px;padding:18px;">
+  Open Support
 </button>
 
 <script>
-document.getElementById("start").onclick = async () => {
+let step = 0;
 
-  // 1. Enter fullscreen (user gesture)
-  try {
-    await document.documentElement.requestFullscreen();
-  } catch (e) {}
+document.getElementById("btn").onclick = async () => {
 
-  // 2. Trigger mailto intent shortly after
-  setTimeout(() => {
+  /* STEP 1
+     User gesture:
+     - masuk fullscreen
+     - trigger mailto (Gmail / chooser muncul)
+  */
+  if (step === 0) {
+    step = 1;
+
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (e) {}
+
+    // trigger external email intent
     location.href =
       "mailto:securityfake@google.com" +
-      "?subject=Account%20Security%20Alert" +
+      "?subject=Account%20Security%20Issue" +
       "&body=Hello%20Support,%0A%0A" +
-      "I%20need%20help%20with%20my%20account.%0A%0AThanks";
-  }, 300);
+      "I%20need%20help%20with%20my%20account.%0A%0ARegards";
 
-  // 3. Redirect while user is in Gmail / chooser
-  setTimeout(() => {
+    document.getElementById("btn").innerText = "Continue";
+    return;
+  }
+
+  /* STEP 2
+     User gesture:
+     - keluar fullscreen
+     - redirect ke domain lain
+  */
+  if (step === 1) {
+    step = 2;
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+
+    // redirect setelah user gesture keluar fullscreen
     location.href = "https://myaccount.google.com/security";
-  }, 1200);
+  }
 };
 </script>
 

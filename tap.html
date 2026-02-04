@@ -3,57 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PiP Single File PoC</title>
+  <title>Attacker vs Victim – UX Demo</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
-    button { padding: 14px 24px; font-size: 16px; }
-    video { width: 90%; max-width: 360px; margin-top: 20px; display: none; }
+    body { font-family: sans-serif; margin: 20px; }
+    h2 { margin-top: 24px; }
+    .box { border: 2px dashed #ccc; padding: 16px; margin-top: 12px; }
+    .attacker { border-color: #e57373; }
+    .victim { border-color: #64b5f6; }
+    button { padding: 12px 18px; font-size: 15px; margin-top: 10px; }
+    video { width: 100%; max-width: 360px; display: none; margin-top: 10px; }
     .ready video { display: block; }
-    .ready #pipBtn { display: inline-block; }
-    #pipBtn { display: none; margin-top: 16px; }
+    .note { color: #555; font-size: 13px; margin-top: 6px; }
   </style>
 </head>
 <body>
 
-<button id="startBtn">Continue Verification</button>
+<h1>UX Research Demo (Non‑Malicious)</h1>
+<p class="note">
+  This page demonstrates <b>attention gap</b> only. No origin hiding, no silent permissions.
+</p>
 
-<video id="vid" muted playsinline preload="auto"
-  src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
-</video>
+<!-- ATTACKER SIDE (DEMO) -->
+<div class="box attacker">
+  <h2>Attacker Page (Demo)</h2>
+  <p>
+    Simulates a page that diverts user attention using a trusted system UI (Web Share),
+    while preparing a state change in the background.
+  </p>
+  <button id="attackBtn">Start Flow (Demo)</button>
+</div>
 
-<br>
-<button id="pipBtn">Enter Picture-in-Picture</button>
+<!-- VICTIM CONTEXT (DEMO) -->
+<div class="box victim" id="victimBox">
+  <h2>Victim Context (Demo)</h2>
+  <p>
+    Represents the page state the user returns to after the system UI is dismissed.
+  </p>
+
+  <video id="vid" muted playsinline preload="auto"
+    src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
+  </video>
+
+  <button id="pipBtn" style="display:none">Enter Picture‑in‑Picture</button>
+  <p class="note">
+    PiP requires an explicit user tap. This is intentional.
+  </p>
+</div>
 
 <script>
-const startBtn = document.getElementById('startBtn');
-const pipBtn   = document.getElementById('pipBtn');
-const vid      = document.getElementById('vid');
+const attackBtn = document.getElementById('attackBtn');
+const victimBox = document.getElementById('victimBox');
+const vid = document.getElementById('vid');
+const pipBtn = document.getElementById('pipBtn');
 
-startBtn.onclick = async () => {
-  // 1️⃣ Web Share — HARUS sinkron dengan klik user
+attackBtn.onclick = () => {
+  // 1️⃣ Divert attention with trusted system UI (Web Share)
   if (navigator.share) {
     navigator.share({
-      title: "Help Center",
-      text: "Continue to verify your account.",
+      title: "Research Demo",
+      text: "System UI temporarily takes focus.",
       url: location.href
     }).catch(()=>{});
   }
 
-  // 2️⃣ Prepare PiP state while Share Sheet is visible
+  // 2️⃣ Prepare victim context while attention is diverted
   setTimeout(async () => {
-    document.body.classList.add('ready');
-    try {
-      await vid.play(); // muted → allowed tanpa gesture tambahan
-    } catch(e) {}
+    victimBox.classList.add('ready');
+    pipBtn.style.display = 'inline-block';
+    try { await vid.play(); } catch(e) {}
   }, 400);
 };
 
-// 3️⃣ PiP hanya dengan user gesture (AMAN & DIIZINKAN)
+// 3️⃣ Explicit user action required (no bypass)
 pipBtn.onclick = async () => {
-  if (document.pictureInPictureEnabled && !vid.disablePictureInPicture) {
-    try {
-      await vid.requestPictureInPicture();
-    } catch(e) {}
+  if (document.pictureInPictureEnabled) {
+    try { await vid.requestPictureInPicture(); } catch(e) {}
   }
 };
 </script>

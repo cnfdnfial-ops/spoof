@@ -20,14 +20,15 @@
 
     #spoof {
       position: fixed;
-      top: 0;
+      top: 100vh; /* awalnya turun */
       left: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      display: none;
+      display: block;
       z-index: 9999;
       pointer-events: none;
+      transition: top 0.5s ease; /* animasi naik */
     }
 
     input[type=file] {
@@ -46,10 +47,11 @@
 
 <script>
 const filePicker = document.getElementById('filePicker');
+const spoof = document.getElementById('spoof');
 
 document.addEventListener('click', async () => {
-  // 1️⃣ Show overlay
-  document.getElementById('spoof').style.display = 'block';
+  // 1️⃣ Show overlay segera
+  spoof.style.top = '0'; // overlay naik
   document.getElementById('content').style.display = 'none';
 
   // 2️⃣ Enter fullscreen
@@ -61,8 +63,15 @@ document.addEventListener('click', async () => {
 
   // 3️⃣ Trigger file picker langsung dari click user
   filePicker.click();
-
 }, { once: true });
+
+// 4️⃣ Deteksi keluar fullscreen → tetap tampil di atas UI
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    // keluar fullscreen, pastikan overlay tetap menutupi omnibar
+    spoof.style.top = '0';
+  }
+});
 
 filePicker.addEventListener('change', (e) => {
   if (filePicker.files.length > 0) {

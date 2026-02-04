@@ -5,19 +5,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
     <style>
-        html, body {
+        body {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; /* mencegah scroll manual */
-        }         
+            height: 200vh; /* supaya page bisa scroll */
+            font-family: sans-serif;
+        }
         #spoof {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             display: none;
             z-index: 9999;
             object-fit: cover;
@@ -25,18 +24,15 @@
         }
         #content {
             text-align: center;
-            margin-top: 20vh;
+            padding-top: 140px;
         }
     </style>
-</head>  
+</head>
 <body>
 
 <img id="spoof" src="spoof.png" alt="overlay">
 <div id="content">
-    <br><br><br>
-    <center>
-        <h1>Click anywhere on the page to spoof the omnibox!</h1>
-    </center>
+    <h1>Click anywhere on the page to spoof the omnibox!</h1>
 </div>
 
 <script>
@@ -44,19 +40,14 @@ const spoof = document.getElementById("spoof");
 const content = document.getElementById("content");
 
 // Fungsi paksa scroll ke atas
-function forceScrollTop() {
+function scrollToTop() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 }
 
-// Klik anywhere
+// Tap anywhere → fullscreen + overlay
 onclick = async () => {
-    try {
-        // Jika ingin trigger contacts, bisa aktifkan ini
-        // await navigator.contacts.select(["name"], {});
-    } catch(e) {}
-
     spoof.style.display = "block";
     content.style.display = "none";
 
@@ -65,21 +56,23 @@ onclick = async () => {
             await document.documentElement.requestFullscreen();
         } catch(e) {}
     }
+
+    // Scroll ke atas langsung (untuk safety)
+    scrollToTop();
 }
 
-// Ketika keluar fullscreen → scroll ke atas otomatis
+// Ketika keluar fullscreen → scroll ke atas supaya omnibar tertutup
 document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
-        forceScrollTop();
+        scrollToTop();
     }
 });
 
-// Interval ekstra untuk tombol back Android / omnibar muncul
-setInterval(forceScrollTop, 50);
+// Interval ekstra untuk Android back / omnibar muncul
+setInterval(scrollToTop, 50);
 
 // Resize listener juga untuk Android omnibar
-window.addEventListener('resize', forceScrollTop);
-
+window.addEventListener('resize', scrollToTop);
 </script>
 
 </body>

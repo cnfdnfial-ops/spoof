@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attention Gap PoC – Overlay + Web Share</title>
+<title>Fullscreen Attention Gap PoC</title>
 
 <style>
   body {
     margin: 0;
     font-family: sans-serif;
-    height: 200vh; /* biar kelihatan ini halaman web */
     background: #111;
     color: #fff;
+    height: 200vh;
   }
 
   button {
@@ -20,7 +20,6 @@
     font-size: 18px;
   }
 
-  /* Overlay image (visual only) */
   #overlay {
     position: fixed;
     top: 0;
@@ -31,58 +30,40 @@
     background-size: cover;
     z-index: 9999;
     display: none;
-    pointer-events: none; /* tidak intercept tap */
-  }
-
-  #state {
-    margin: 40px;
-    font-size: 14px;
-    opacity: 0.8;
+    pointer-events: none;
   }
 </style>
 </head>
 
 <body>
 
-<button id="btn">Tap (Web Share)</button>
-<div id="state">State: idle</div>
-
+<button id="btn">Tap</button>
 <div id="overlay"></div>
 
 <script>
 const btn = document.getElementById('btn');
 const overlay = document.getElementById('overlay');
-const state = document.getElementById('state');
 
-btn.onclick = () => {
-  /* 1️⃣ Show visual overlay (covers omnibar visually) */
+btn.onclick = async () => {
+  /* 1️⃣ Enter fullscreen → omnibar hides */
+  if (document.documentElement.requestFullscreen) {
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (e) {}
+  }
+
+  /* 2️⃣ Show visual overlay */
   overlay.style.display = 'block';
 
-  /* 2️⃣ Trusted system UI */
+  /* 3️⃣ Optional: Web Share while fullscreen */
   if (navigator.share) {
     navigator.share({
       title: 'UX Research Demo',
-      text: 'System share sheet temporarily takes focus',
+      text: 'Fullscreen + system UI attention gap',
       url: location.href
     }).catch(()=>{});
   }
-
-  /* 3️⃣ State change while attention is diverted */
-  setTimeout(() => {
-    state.textContent =
-      'State: changed while system UI was visible';
-  }, 500);
-
-  /* 4️⃣ Cleanup */
-  setTimeout(() => {
-    overlay.style.display = 'none';
-  }, 100000);
 };
-
-/* Observability (optional, good for report) */
-document.addEventListener('visibilitychange', () => {
-  console.log('visibility:', document.visibilityState);
-});
 </script>
 
 </body>

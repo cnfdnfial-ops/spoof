@@ -1,28 +1,25 @@
-
-
 <!DOCTYPE html>
-<html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta http-equiv="X-UA-Compatible" content="ie=edge"> <title>My Cool App</title> </head> <body> <div id="redirect-div" onclick="navigate()"> <h1>Opening My Cool App...</h1> </div>
-<div style="margin-top:100px">
-<button onclick="p()">go to google</button>
-</div>
-</body> 
-<script type="text/javascript"> 
-function navigate() { 
-window.location = "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
-setTimeout('window.location = url',1300); 
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoC</title>
+</head>
+<body>
 
-} 
-var w=0;
-function p(){
-  
- 
-  
-   setTimeout('navigate()',1);
-  
- setTimeout("window.location.replace('http://google.com')",1)
- 
+<button onclick="start()">Open</button>
+
+<script>
+function start() {
+  // 1. Trigger Gmail chooser
+  location.href = "mailto:test@gmail.com";
+
+  // 2. After chooser shows, redirect to Instagram
+  setTimeout(() => {
+    location.href =
+      "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
+  }, 800);
 }
+</script>
 
-
-
-</script> </html>
+</body>
+</html>

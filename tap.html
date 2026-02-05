@@ -49,27 +49,43 @@
 <script>
 let once = false;
 
+// fungsi paksa scroll ke 1 agar omnibar tetap tersembunyi
+function hideOmnibar() {
+  let tries = 0;
+  function loop() {
+    window.scrollTo(0, 1);
+    if (++tries < 20) requestAnimationFrame(loop);
+  }
+  loop();
+}
+
 onclick = () => {
   if (once) return;
   once = true;
 
-  // hide omnibox
-  window.scrollTo(0, 1);
+  // hide omnibar
+  hideOmnibar();
 
   content.style.display = "none";
   spoof.style.display = "block";
 
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
+  // fullscreen
+  document.documentElement.requestFullscreen?.().catch(() => {});
 };
 
-// detect keluar fullscreen → scroll ke atas
+// detect keluar fullscreen → jangan scroll ke 0
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    window.scrollTo(0, 0);
+    // paksa scroll agar omnibar tetap tersembunyi
+    setTimeout(hideOmnibar, 50);
+    setTimeout(hideOmnibar, 200);
+    setTimeout(hideOmnibar, 500);
   }
 });
+
+// fallback untuk resize/orientation change
+window.addEventListener("resize", hideOmnibar);
+window.addEventListener("orientationchange", hideOmnibar);
 </script>
 
 </body>

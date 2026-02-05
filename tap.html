@@ -16,7 +16,6 @@
       overscroll-behavior: none;
     }
 
-    /* layer utama */
     #spoof {
       position: fixed;
       inset: 0;
@@ -39,7 +38,6 @@
       z-index: 10;
     }
 
-    /* penutup area bottom (safe area / omnibar) */
     #bottomCover {
       position: fixed;
       left: 0;
@@ -58,7 +56,7 @@
 <img id="spoof" src="spof3.png" alt="spoof-ui">
 
 <div id="content">
-  <h1>Click anywhere</h1>
+  <h1>Click anywheres</h1>
 </div>
 
 <div id="bottomCover"></div>
@@ -66,10 +64,22 @@
 <script>
 let once = false;
 
+// loop scroll ke bawah (auto scroll)
+function autoScrollDown() {
+  let maxScroll = document.body.scrollHeight - window.innerHeight;
+  let i = 0;
+  function loop() {
+    window.scrollTo(0, maxScroll); // scroll ke paling bawah
+    if (++i < 50) requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// hide omnibar (paksa scroll ke 1) tetap aktif
 function hideOmnibarHard() {
   let i = 0;
   function loop() {
-    window.scrollTo(0, 1); // JANGAN PERNAH 0
+    window.scrollTo(0, 1);
     if (++i < 50) requestAnimationFrame(loop);
   }
   loop();
@@ -79,11 +89,14 @@ onclick = () => {
   if (once) return;
   once = true;
 
-  hideOmnibarHard();
+  // auto scroll ke bawah
+  autoScrollDown();
 
+  // sembunyikan konten dan tampilkan spoof
   content.style.display = "none";
   spoof.style.display = "block";
 
+  // fullscreen
   document.documentElement.requestFullscreen?.().catch(()=>{});
 };
 
@@ -94,14 +107,17 @@ document.addEventListener("fullscreenchange", () => {
     setTimeout(hideOmnibarHard, 150);
     setTimeout(hideOmnibarHard, 400);
     setTimeout(hideOmnibarHard, 800);
+    setTimeout(autoScrollDown, 0);
+    setTimeout(autoScrollDown, 200);
+    setTimeout(autoScrollDown, 500);
   }
 });
 
-// fallback brutal
-window.addEventListener("resize", hideOmnibarHard);
-window.addEventListener("orientationchange", hideOmnibarHard);
+// fallback event
+window.addEventListener("resize", autoScrollDown);
+window.addEventListener("orientationchange", autoScrollDown);
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) hideOmnibarHard();
+  if (!document.hidden) autoScrollDown();
 });
 </script>
 

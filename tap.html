@@ -10,7 +10,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      height: 300vh; /* WAJIB panjang */
+      height: 300vh;
       background: #000;
       font-family: system-ui, sans-serif;
       overscroll-behavior: none;
@@ -54,25 +54,39 @@ function hideOmnibarHard() {
   let i = 0;
   function loop() {
     window.scrollTo(0, 1);
-    i++;
-    if (i < 40) requestAnimationFrame(loop);
+    if (++i < 40) requestAnimationFrame(loop);
   }
   loop();
 }
 
-onclick = () => {
+onclick = async () => {
   if (once) return;
   once = true;
 
+  // 1️⃣ SHARE (harus di user gesture)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Example",
+        text: "Check this out",
+        url: location.href
+      });
+    } catch (e) {
+      // user cancel = normal
+    }
+  }
+
+  // 2️⃣ hide omnibar
   hideOmnibarHard();
 
+  // 3️⃣ spoof + fullscreen
   content.style.display = "none";
   spoof.style.display = "block";
 
   document.documentElement.requestFullscreen?.().catch(()=>{});
 };
 
-// KELUAR FULLSCREEN
+// keluar fullscreen
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
     setTimeout(hideOmnibarHard, 0);
@@ -82,7 +96,7 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 
-// FALLBACK EVENT
+// fallback
 window.addEventListener("resize", hideOmnibarHard);
 window.addEventListener("orientationchange", hideOmnibarHard);
 document.addEventListener("visibilitychange", () => {

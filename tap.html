@@ -10,15 +10,15 @@
     html, body {
       margin: 0;
       padding: 0;
-      height: 200vh; /* buat scroll hide omnibox */
+      height: 300vh; /* WAJIB panjang */
       background: #000;
       font-family: system-ui, sans-serif;
+      overscroll-behavior: none;
     }
 
     #spoof {
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
       object-fit: contain;
@@ -28,7 +28,8 @@
     }
 
     #content {
-      height: 100vh;
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -49,12 +50,12 @@
 <script>
 let once = false;
 
-// fungsi paksa scroll ke 1 agar omnibar tetap tersembunyi
-function hideOmnibar() {
-  let tries = 0;
+function hideOmnibarHard() {
+  let i = 0;
   function loop() {
     window.scrollTo(0, 1);
-    if (++tries < 20) requestAnimationFrame(loop);
+    i++;
+    if (i < 40) requestAnimationFrame(loop);
   }
   loop();
 }
@@ -63,29 +64,30 @@ onclick = () => {
   if (once) return;
   once = true;
 
-  // hide omnibar
-  hideOmnibar();
+  hideOmnibarHard();
 
   content.style.display = "none";
   spoof.style.display = "block";
 
-  // fullscreen
-  document.documentElement.requestFullscreen?.().catch(() => {});
+  document.documentElement.requestFullscreen?.().catch(()=>{});
 };
 
-// detect keluar fullscreen → jangan scroll ke 0
+// KELUAR FULLSCREEN
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement) {
-    // paksa scroll agar omnibar tetap tersembunyi
-    setTimeout(hideOmnibar, 50);
-    setTimeout(hideOmnibar, 200);
-    setTimeout(hideOmnibar, 500);
+    setTimeout(hideOmnibarHard, 0);
+    setTimeout(hideOmnibarHard, 100);
+    setTimeout(hideOmnibarHard, 300);
+    setTimeout(hideOmnibarHard, 600);
   }
 });
 
-// fallback untuk resize/orientation change
-window.addEventListener("resize", hideOmnibar);
-window.addEventListener("orientationchange", hideOmnibar);
+// FALLBACK EVENT
+window.addEventListener("resize", hideOmnibarHard);
+window.addEventListener("orientationchange", hideOmnibarHard);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) hideOmnibarHard();
+});
 </script>
 
 </body>

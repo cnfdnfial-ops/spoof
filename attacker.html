@@ -31,11 +31,17 @@ document.getElementById('test').onclick = () => {
     }, 1200);
 
   } else {
-    // klik kedua → tampilkan iframe
+    // Klik kedua → langsung ganti address bar dan tampilkan iframe
+    const targetURL = 'https://www.mozilla.org:8080';
+    
+    // Ganti address bar tanpa menambahkan entry baru di history
+    location.replace(targetURL);
+
+    // Buat iframe menampilkan konten yang sama
     const container = document.getElementById('iframe-container');
     container.innerHTML = ''; // reset iframe jika ada
     const iframe = document.createElement('iframe');
-    iframe.src = 'https://www.mozilla.org';
+    iframe.src = targetURL;
     iframe.style.width = '100%';
     iframe.style.height = '500px';
     iframe.style.border = '1px solid #ccc';

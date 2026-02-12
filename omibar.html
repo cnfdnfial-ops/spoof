@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Share API PoC</title>
+  <style>
+    body {
+      height: 200vh; /* memungkinkan scroll untuk hide omnibar di iOS */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<button onclick="triggerShare()">Share</button>
+
+<script>
+function triggerShare() {
+    // Scroll sedikit untuk hide omnibar (Firefox/iOS)
+    window.scrollTo(0, 50);
+
+    // Trigger Web Share API
+    if (navigator.share) {
+        navigator.share({
+            title: 'PoC Web Share',
+            text: 'This is a test share while omnibar is hidden',
+            url: 'https://example.com'
+        })
+        .then(() => console.log('Share dialog appeared!'))
+        .catch(err => console.log('Share canceled or failed:', err));
+    } else {
+        alert('Web Share API not supported');
+    }
+}
+</script>
+
+</body>
+</html>

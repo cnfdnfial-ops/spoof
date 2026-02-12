@@ -1,69 +1,23 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Fullscreen Redirect + Download</title>
-<style>
-body{
-    font-family: Arial;
-    text-align:center;
-    margin-top:100px;
-}
-button, a{
-    padding:12px 25px;
-    border:none;
-    border-radius:5px;
-    text-decoration:none;
-    cursor:pointer;
-    display:inline-block;
-    margin:10px;
-}
-.btn-full{
-    background:#007bff;
-    color:white;
-}
-.btn-download{
-    background:green;
-    color:white;
-}
-</style>
-</head>
-<body>
 
-<div id="mainPage">
-    <h1>Demo Fullscreen</h1>
-    <button class="btn-full" onclick="openFullscreen()">Masuk Fullscreen</button>
-</div>
-
-<div id="downloadPage" style="display:none;">
-    <h2>Download Aplikasi</h2>
-    <p>Klik tombol di bawah untuk mengunduh APK.</p>
-    <a class="btn-download" window.open="http://ecdnts-del.github.io/test-apk/chrome.apk">
-        Download Sekarang
-    </a>
-</div>
-
+<html onclick=main()>
+<center>
+<h1> Click On Screen <h1>
 <script>
-function openFullscreen(){
-    if(document.documentElement.requestFullscreen){
-        document.documentElement.requestFullscreen();
-    }
-}
+    function main() {
 
-// Saat keluar fullscreen
-document.addEventListener("fullscreenchange", function(){
-    if(!document.fullscreenElement){
-        // Redirect ke localhost (file yang sama)
-        window.location.href = "http://chrome.com/";
-    }
-});
+pointerLockElement.requestPointerLock();
+            fullscreenElement.appendChild(pointerLockElement)
 
-// Jika sudah di localhost, tampilkan halaman download
-if(window.location.hostname === "localhost"){
-    document.getElementById("mainPage").style.display = "none";
-    document.getElementById("downloadPage").style.display = "block";
-}
+        fullscreenElement.requestFullscreen();
+
+
+    }
 </script>
 
-</body>
+
+<div id="pointerLockElement"></div>
+
+<div id="fullscreenElement">
+</div>
+
 </html>

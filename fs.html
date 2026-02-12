@@ -1,28 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Base64 Content</title>
+  <title>iOS Web Share + Warning</title>
   <style>
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
+    #aaa {
+      position: absolute;
+      left: 35%;
     }
   </style>
 </head>
 <body>
 
-<button id="shareBtn">Share</button>
+<button id="startBtn">Start & Share</button>
+<div>Click the button, check warning, then print manually</div>
+
+<form>
+    <input placeholder="aaa" required id="aaa" />
+</form>
 
 <script>
-document.getElementById("shareBtn").onclick = async function() {
-    // 1. Web Share Bubble
+document.getElementById('startBtn').onclick = async function() {
+    const aaa = document.getElementById("aaa");
+    // Custom warning untuk input
+    aaa.oninvalid = function(e) {
+        e.target.setCustomValidity(
+            "WARNING: YOU MAY BE AT RISK. COMPLETE COMPUTER CHECK!"
+        );
+    };
+
+    // Periksa input dan munculkan warning jika invalid
+    if (!aaa.checkValidity()) {
+        aaa.reportValidity();
+    }
+
+    // Web Share API
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'Example Share',
+                title: 'Security Check',
                 text: 'Coba Web Share API!',
                 url: 'https://example.com'
             });
@@ -34,12 +49,8 @@ document.getElementById("shareBtn").onclick = async function() {
         alert('Web Share API tidak didukung di browser ini.');
     }
 
-    // 2. Tampilkan konten base64 setelah 1 detik
-    setTimeout(function() {
-        document.write(atob(
-            'PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uKGVkKSB7CmVkLnRhcmdldC5zZXRDdXN0b21WYWxpZGl0eSgiV0FSTklORyFcbllPVVIgQ09NUFVURVIgTUFZIENBIFRBUiBSSVNLIik7Cn0Kc2V0SW50ZXJ2YWwoImRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdiYmInKS5jbGljaygpIiwxMDAwKTsKfTs8L3NjcmlwdD4KPGZvcm0+CiAgICA8aW5wdXQgcGxhY2Vob2xkZXI9ImFhYSIgcmVxdWlyZWQgaWQ9ImFhYSIgLz4KICAgIDxpbnB1dCBpZD0iYmJiIiB0eXBlPSJzdWJtaXQiIG5hbWU9InN1Ym1pdCI+CiAgICA8L2Zvcm0+'
-        ));
-    }, 1000);
+    // Optional: buka URL baru (popup friendly karena berasal dari klik user)
+    window.open('https://www.google.com', '_blank');
 };
 </script>
 

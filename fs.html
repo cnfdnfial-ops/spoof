@@ -1,32 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Redirect</title>
+  <title>Redirect + Web Share</title>
 </head>
 <body style="height:100vh; display:flex; justify-content:center; align-items:center;">
 
-<button id="shareBtn">Click to Share & Go</button>
-
 <script>
-document.getElementById("shareBtn").onclick = async function() {
-    // Web Share API
+function showShare() {
+    // Memanggil Web Share API
     if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'Call Center Google Security',
-                url: 'https://google.com'
-            });
-            console.log('Sharing success!');
-        } catch (err) {
-            console.log('Sharing canceled or failed:', err);
-        }
+        navigator.share({
+            title: 'Example Site',
+            text: 'Check out this website!',
+            url: window.location.href
+        })
+        .then(() => console.log('Sharing success!'))
+        .catch(err => console.log('Sharing canceled or failed:', err));
     } else {
         alert('Web Share API not supported on this browser.');
     }
+}
 
-    // Redirect ke example.com
-    window.location.href = "https://google.com";
-};
+// Cek query parameter
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('share') === 'true') {
+    // Buat tombol agar user klik → aman di browser
+    const btn = document.createElement('button');
+    btn.textContent = "Click to Share This Page";
+    btn.onclick = showShare;
+    document.body.appendChild(btn);
+} else {
+    // Tombol awal → redirect ke "example.com?share=true"
+    const btn = document.createElement('button');
+    btn.textContent = "Go to Example.com & Share";
+    btn.onclick = function() {
+        // Redirect
+        window.location.href = "https://example.com?share=true";
+    };
+    document.body.appendChild(btn);
+}
 </script>
 
 </body>

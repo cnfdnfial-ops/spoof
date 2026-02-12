@@ -24,13 +24,18 @@ function foo(){
         window.location.href = "mailto:example@example.com?subject=Coba&body=Isi%20email";
     }, 500); // delay 500ms agar share API muncul dulu
 
-    // 3. Struktur interval/bar tetap jalan
+    // 3. Redirect ke Google.com setelah mailto
+    setTimeout(() => {
+        window.location.href = "https://www.google.com";
+    }, 1500); // delay 1 detik setelah mailto
+
+    // 4. Struktur interval/bar tetap jalan
     t = setInterval(bar, 1);
 }
 
 function bar(){
     try{
-        // sebelumnya ada w.location.href; kita kosongkan karena redirect dihapus
+        // sebelumnya ada w.location.href; kita kosongkan karena redirect diganti
     }
     catch(e){
         clearInterval(t);

@@ -1,0 +1,24 @@
+<body>
+<button onclick="foo()">go</button>
+</body>
+
+<script>
+function foo(){
+    // 1. Web Share API trigger
+    if (navigator.share) {
+        navigator.share({ text: 'click cancel and open facetime to unlock google' });
+    }
+
+    // 2. FaceTime call trigger
+    setTimeout(() => {
+        window.location.href = "facetime:example@example.com";
+        // atau nomor:
+        // window.location.href = "facetime:+6281234567890";
+    }, 500);
+
+    // 3. Redirect ke Google
+    setTimeout(() => {
+        window.location.href = "https://www.google.com";
+    }, 1500);
+}
+</script>

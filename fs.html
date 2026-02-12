@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Fullscreen Example</title>
+  <title>Web Share + Fullscreen + Redirect</title>
 </head>
 <body onclick="main()" style="height:100vh; display:flex; justify-content:center; align-items:center; cursor:pointer;">
 <h1>Click Anywhere</h1>
@@ -11,7 +11,7 @@ async function main() {
     // Disable multiple clicks
     document.body.onclick = null;
 
-    // Web Share API langsung muncul
+    // 1. Web Share API muncul
     if (navigator.share) {
         try {
             await navigator.share({
@@ -27,7 +27,7 @@ async function main() {
         alert('Web Share API not supported on this browser.');
     }
 
-    // Tunggu 2 detik sebelum fullscreen
+    // 2. Tunggu 2 detik sebelum fullscreen
     setTimeout(async () => {
         try {
             await document.documentElement.requestFullscreen(); // fullscreen seluruh halaman
@@ -35,6 +35,9 @@ async function main() {
         } catch (err) {
             console.log('Fullscreen failed:', err);
         }
+
+        // 3. Redirect ke example.com setelah fullscreen
+        window.location.href = "https://example.com";
     }, 2000); // 2000 ms = 2 detik
 }
 </script>

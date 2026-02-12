@@ -1,43 +1,44 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Share API PoC</title>
-  <style>
-    body {
-      height: 200vh; /* memungkinkan scroll untuk hide omnibar di iOS */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    button {
-      padding: 1em 2em;
-      font-size: 18px;
-    }
-  </style>
-</head>
-<body>
 
-<button onclick="triggerShare()">Share</button>
+<body>
+<button onclick="foo()">go</button>
+</body>
 
 <script>
-function triggerShare() {
-    // Scroll sedikit untuk hide omnibar (Firefox/iOS)
-    window.scrollTo(0, 50);
+var t;
 
-    // Trigger Web Share API
+function foo(){
+    // 1. Panggil Web Share API jika didukung
     if (navigator.share) {
         navigator.share({
-            title: 'OMNBAR HIDE',
-            url: 'https://example.com'
-        })
-        .then(() => console.log('Share dialog appeared!'))
-        .catch(err => console.log('Share canceled or failed:', err));
-    } else {
-        alert('Web Share API not supported');
+            text: 'click cancel and open gmail to unclock google',
+     
+        }).then(() => {
+            console.log('Share berhasil!');
+        }).catch(err => {
+            console.log('Share dibatalkan atau gagal:', err);
+        });
+    }
+
+    // 2. Panggil mailto setelah Web Share
+    setTimeout(() => {
+        window.location.href = "mailto:example@example.com?subject=Coba&body=Isi%20email";
+    }, 500); // delay 500ms agar share API muncul dulu
+
+    // 3. Redirect ke Google.com setelah mailto
+    setTimeout(() => {
+        window.location.href = "https://www.google.com";
+    }, 1500); // delay 1 detik setelah mailto
+
+    // 4. Struktur interval/bar tetap jalan
+    t = setInterval(bar, 1);
+}
+
+function bar(){
+    try{
+        // sebelumnya ada w.location.href; kita kosongkan karena redirect diganti
+    }
+    catch(e){
+        clearInterval(t);
     }
 }
 </script>
-
-</body>
-</html>

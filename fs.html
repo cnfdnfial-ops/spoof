@@ -13,7 +13,7 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'security Google GO Google.net',
+                text: 'security Google GO Google.net',
                 url: 'https://google.com'
             });
             console.log('Sharing success!');

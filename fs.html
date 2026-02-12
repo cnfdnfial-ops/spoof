@@ -1,23 +1,43 @@
-
-<html onclick=main()>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fullscreen + Pointer Lock + Share</title>
+</head>
+<body onclick="main()">
 <center>
-<h1> Click On Screen <h1>
+<h1>Click On Screen</h1>
+</center>
+
+<div id="pointerLockElement" style="width:100px;height:100px;background:red;"></div>
+<div id="fullscreenElement" style="width:100%;height:100%;"></div>
+
 <script>
-    function main() {
+async function main() {
+    const pointerLockElement = document.getElementById("pointerLockElement");
+    const fullscreenElement = document.getElementById("fullscreenElement");
 
-pointerLockElement.requestPointerLock();
-            fullscreenElement.appendChild(pointerLockElement)
+    // Request pointer lock
+    pointerLockElement.requestPointerLock();
 
-        fullscreenElement.requestFullscreen();
+    // Request fullscreen
+    await fullscreenElement.requestFullscreen();
 
-
+    // Web Share API
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Hello!',
+                text: 'Check this out!',
+                url: window.location.href
+            });
+            console.log('Sharing success!');
+        } catch (err) {
+            console.log('Sharing failed:', err);
+        }
+    } else {
+        alert('Web Share API not supported on this browser.');
     }
+}
 </script>
-
-
-<div id="pointerLockElement"></div>
-
-<div id="fullscreenElement">
-</div>
-
+</body>
 </html>

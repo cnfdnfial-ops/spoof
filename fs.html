@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Share + Open APK</title>
+  <title>Web Share + Auto Download</title>
 </head>
 <body style="height:100vh; display:flex; justify-content:center; align-items:center;">
 
-<button id="shareDownloadBtn">Share & Open APK</button>
+<button id="shareDownloadBtn">Share & Auto Download File</button>
 
 <script>
 document.getElementById("shareDownloadBtn").onclick = async function() {
@@ -13,8 +13,8 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'Example APK File',
-                text: 'Check out this APK!',
+                title: 'Example File',
+                text: 'Check out this file!',
                 url: 'https://example.com'
             });
             console.log('Sharing success!');
@@ -25,8 +25,14 @@ document.getElementById("shareDownloadBtn").onclick = async function() {
         alert('Web Share API not supported on this browser.');
     }
 
-    // 2. Buka file APK di tab baru
-    window.open('https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3', 'x');
+    // 2. Auto-download file
+    const fileUrl = 'https://frozzipies.github.io/test.apk'; // file eksternal
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = 'test.apk'; // nama file yang akan di-download
+    document.body.appendChild(a);
+    a.click();               // trigger download otomatis
+    document.body.removeChild(a);
 };
 </script>
 

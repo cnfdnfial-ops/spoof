@@ -4,57 +4,24 @@
 
 <script>
 var w;
-var t;
-var z;
-
-if(location.href.indexOf("fake") !== -1){
-    document.body.innerHTML = "<h1>This website has moved to http://fake.com</h1>";
-}
 
 function foo(){
     document.getElementById("test").href="#";
+
+    // buka window fake
     w = window.open("?fake");
-    t = setInterval(bar, 10);
-}
 
-function bar(){
-    try{
-        if(w.location.href !== 'about:blank'){
-            alert("Redirecting");
-            document.body.innerHTML = "<h1>Redirecting</h1>";
-            slow();
-            w.location.href = 'https://www.amazon.com/';
-            clearInterval(t);
-            z = setInterval(baz, 10);
-        }
-    } catch(e){}
-}
+    // langsung ganti halaman utama
+    document.body.innerHTML = "<h1>Redirecting...</h1>";
 
-function baz(){
-    try{
-        w.location.href;
-    } catch (e){
-        clearInterval(z);
+    // redirect child ke amazon
+    setTimeout(function(){
+        w.location.href = "https://www.amazon.com/";
+    }, 500);
 
-        setTimeout(function(){
-            alert("ok");
-
-            // INI BAGIAN YANG KAMU MAU
-            document.open();
-            document.write("<h1>document write not amazon</h1>");
-            document.close();
-
-        }, 3000);
-    }
-}
-
-// slow down
-function slow() {
-    for (var i=0; i<10; i++ ) {
-        var iframe = document.createElement("iframe");
-        iframe.src = 'https://www.amazon.com/';
-        iframe.style = 'display:none';
-        document.body.appendChild(iframe);
-    }
+    // setelah 3 detik ganti isi halaman utama
+    setTimeout(function(){
+        document.body.innerHTML = "<h1>document write not amazon</h1>";
+    }, 3000);
 }
 </script>

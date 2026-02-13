@@ -1,76 +1,41 @@
-
 <body>
-<a id=test href="https://www.amazon.com/" onclick=foo()>TAP/</a>
+<a id="test" href="https://www.amazon.com/" onclick="foo()">TAP</a>
+<h1 id="status"></h1>
 </body>
 
 <script>
-
 var w;
 var t;
-var z;
 
-if(location.href.indexOf("fake") !== -1){
-document.body.innerHTML = "<h1>This website has moved to http://fake.com</h1>";
+if (location.href.indexOf("fake") !== -1) {
+    document.body.innerHTML = "<h1 id='halo'>halo</h1>";
 }
 
+function foo() {
+    document.getElementById("test").href = "#";
 
-function foo(){
+    w = window.open("?fake", "_blank");
 
-document.getElementById("test").href="#";
-
-w = window.open("?fake");
-
-t = setInterval('bar()',1);
-
+    // interval lebih manusiawi
+    t = setInterval(bar, 50);
 }
 
-function bar(){
+function bar() {
+    try {
+        // cek apakah window masih same-origin
+        if (w.location.href.indexOf("fake") !== -1) {
 
-if(w.location.href !== 'about:blank'){
+            document.getElementById("status").textContent = "Redirecting...";
 
-alert("Redirecting");
+            // redirect sekali saja
+            w.location.href = "https://www.google.com/";
 
-document.body.innerHTML = "<h1>Redirecting</h1>";
+            clearInterval(t);
+        }
 
-slow();
-
-w.location.href = 'https://www.google.com/';
-
-clearInterval(t);
-
-z = setInterval('baz()',1);
-
+    } catch (e) {
+        // Begitu cross-origin terjadi, STOP.
+        clearInterval(t);
+    }
 }
-
-}
-
-function baz(){
-try{
-w.location.href !== 'about:blank';
-}
-catch (e){
-
-//stop page loading
-w.location.href='https://www.google.com:9090';
-clearInterval(z);
-
-//Make sure the old content is not cleared
-setTimeout("alert('ok');window.location.href='about:blank';window.close();", 3000);
-}
-
-}
-
-
-//slow down the website
-function slow() {
-for (i=0; i<10; i++ ) {
-
-iframe = document.createElement("iframe");
-iframe.src = 'https://www.google.com/';
-iframe.style = 'display:none';
-document.body.appendChild(iframe);
-
-}
-}
-
 </script>

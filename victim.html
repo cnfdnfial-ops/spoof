@@ -12,6 +12,7 @@
 <body>
 
 <h2>Victim Page</h2>
+
 <video id="video" autoplay playsinline muted></video>
 <br>
 <button id="actionBtn">Start Camera & Share</button>
@@ -22,11 +23,11 @@ const btn = document.getElementById("actionBtn");
 
 btn.onclick = async () => {
   try {
-    // 1️⃣ Start camera
+    // Start camera
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
 
-    // 2️⃣ Immediately trigger Web Share
+    // Trigger Web Share API
     if (navigator.share) {
       await navigator.share({
         title: "WebShare + Camera",

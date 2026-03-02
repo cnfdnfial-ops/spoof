@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+function main()
+{
+	i = document.createElement('iframe');
+	i.src = 'http://google.com/';
+	attr = document.createAttribute('src');
+	attr.nodeValue = 'javascript:alert(document.body.innerHTML)';
+	i.onload = function ()
+	{
+		i.onload = null;
+		i.attributes.setNamedItem(attr);
+	}
+	document.body.appendChild(i);
+}
+</script>
+</head>
+<body onload="main()">
+</body>
+</html>

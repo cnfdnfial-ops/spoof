@@ -1,45 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Single Button Test</title>
-</head>
-
-<body>
-<button id="run">Run Share + Fullscreen</button>
+<button id="btn">Enter Fullscreen</button>
 
 <script>
-const btn = document.getElementById("run");
-
-btn.addEventListener("click", async () => {
+btn.onclick = async () => {
   try {
-
-    // Cek support
-    if (!navigator.share) {
-      alert("Web Share API not supported");
-      return;
-    }
-
-    // Jalankan keduanya dalam 1 user gesture
-    const sharePromise = navigator.share({
-      title: "Test",
-      text: "Testing Web Share + Fullscreen",
-      url: location.href
-    });
-
-    const fullscreenPromise = document.documentElement.requestFullscreen();
-
-    await Promise.allSettled([sharePromise, fullscreenPromise])
-      .then(results => {
-        console.log("Share:", results[0].status);
-        console.log("Fullscreen:", results[1].status);
-      });
-
-  } catch (err) {
-    console.error(err);
+    await document.documentElement.requestFullscreen();
+  } catch(e) {
+    console.log(e);
   }
+};
+
+document.addEventListener("fullscreenchange", () => {
+  console.log("Fullscreen state:", document.fullscreenElement);
 });
 </script>
-
-</body>
-</html>

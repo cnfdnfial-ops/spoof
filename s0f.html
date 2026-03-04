@@ -1,15 +1,44 @@
-<button id="btn">Enter Fullscreen</button>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select All Example</title>
+</head>
+<body>
+
+<textarea id="myText" rows="5" cols="30">
+Ini contoh teks yang otomatis akan terpilih saat fullscreen.
+</textarea>
+
+<button onclick="goFullscreen()">Fullscreen & Select All</button>
 
 <script>
-btn.onclick = async () => {
-  try {
-    await document.documentElement.requestFullscreen();
-  } catch(e) {
-    console.log(e);
+function goFullscreen() {
+  // request fullscreen
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
   }
-};
 
-document.addEventListener("fullscreenchange", () => {
-  console.log("Fullscreen state:", document.fullscreenElement);
+  // select all textarea setelah fullscreen
+  const textarea = document.getElementById('myText');
+  textarea.focus();
+  textarea.select();
+}
+
+// optional: detect fullscreen change
+document.addEventListener('fullscreenchange', () => {
+  const textarea = document.getElementById('myText');
+  if (document.fullscreenElement) {
+    textarea.focus();
+    textarea.select();
+  }
 });
 </script>
+
+</body>
+</html>

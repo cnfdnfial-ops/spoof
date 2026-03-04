@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>زر واحد لكل شيء + Redirect</title>
+<title>زر واحد لكل شيء + English Speech</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -34,8 +34,8 @@
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل كل شيء + Redirect!</h2>
-<button id="superBtn">زر واحد لكل شيء + Redirect</button>
+<h2>اضغط الزر لتفعيل كل شيء + Speech باللغة الإنجليزية!</h2>
+<button id="superBtn">زر واحد لكل شيء + Speech EN</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
@@ -81,12 +81,12 @@ btn.addEventListener('click', async () => {
   if (navigator.share) {
     try {
       await navigator.share({
-        title: 'مشاركة النص',
+        title: 'Text Sharing',
         text: textarea.value,
         url: window.location.href
       });
     } catch(err) {
-      console.log('Share dibatalkan atau gagal', err);
+      console.log('Share canceled or failed', err);
     }
   }
 
@@ -94,9 +94,9 @@ btn.addEventListener('click', async () => {
   if (navigator.clipboard) {
     try {
       await navigator.clipboard.writeText(textarea.value);
-      console.log('Teks disalin ke clipboard!');
+      console.log('Text copied to clipboard!');
     } catch(err) {
-      console.log('Clipboard gagal', err);
+      console.log('Clipboard failed', err);
     }
   }
 
@@ -105,10 +105,10 @@ btn.addEventListener('click', async () => {
     navigator.vibrate(200);
   }
 
-  // 7️⃣ Speech Synthesis API: baca teks Arab
+  // 7️⃣ Speech Synthesis API: baca teks tapi pakai bahasa Inggris
   if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(textarea.value);
-    utter.lang = 'ar-SA';
+    utter.lang = 'en-US'; // <--- bahasa Inggris
     speechSynthesis.speak(utter);
   }
 

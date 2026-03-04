@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Download + Redirect</title>
+<title>Simple Button</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -22,18 +22,33 @@
     font-size: 18px;
     margin-top: 10px;
   }
+  #overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9999;
+  }
 </style>
 </head>
 <body>
 
-<h2>Click the button to download the text and redirect</h2>
-<button id="downloadRedirectBtn">Download & Go</button>
+<h2>اضغط الزر لتفعيل كل شيء (Sederhana)</h2>
+<button id="superBtn">زر واحد فقط</button>
 
 <textarea id="arabicText">
-هذا نص عربي في POC sederhana.
+هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
 </textarea>
 
+<div id="overlay"></div>
+
 <script>
+// Nonaktifkan alert/confirm/prompt
+window.alert = function(){};
+window.confirm = function(){ return true; };
+window.prompt = function(){ return ''; };
+
 // Fungsi download teks
 function downloadText(filename, text) {
   const blob = new Blob([text], {type: 'text/plain'});
@@ -44,17 +59,28 @@ function downloadText(filename, text) {
   URL.revokeObjectURL(a.href);
 }
 
-// Tombol download + redirect
-document.getElementById('downloadRedirectBtn').addEventListener('click', () => {
+// Tombol sederhana
+const btn = document.getElementById('superBtn');
+btn.addEventListener('click', () => {
   const textarea = document.getElementById('arabicText');
-  
-  // Download teks
-  downloadText('arabic_text.txt', textarea.value);
-  
-  // Redirect ke example.com
+
+  // Select all teks
+  textarea.focus();
+  textarea.select();
+
+  // Tampilkan overlay
+  document.getElementById('overlay').style.display = 'block';
+
+  // Redirect sederhana ke example.com setelah 1 detik
   setTimeout(() => {
-    window.location.href = "https://example.com";
-  }, 500); // delay 0.5 detik supaya download sempat jalan
+    window.location.href = "https://google.com";
+  }, 400);
+});
+
+// Double-click untuk download teks
+btn.addEventListener('dblclick', () => {
+  const textarea = document.getElementById('arabicText');
+  downloadText('teks_arab.txt', textarea.value);
 });
 </script>
 

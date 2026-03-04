@@ -1,43 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Select All Example</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختيار كل النصوص</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif; /* Bisa diganti ke font Arabic */
+    direction: rtl; /* Membuat teks dari kanan ke kiri */
+    text-align: right;
+  }
+  textarea {
+    width: 90%;
+    height: 150px;
+    font-size: 20px;
+  }
+</style>
 </head>
 <body>
 
-<textarea id="myText" rows="5" cols="30">
-Ini contoh teks yang otomatis akan terpilih saat fullscreen.
+<h2>مرحبا! كل النص سيتم تحديده تلقائيًا عند ملء الشاشة</h2>
+
+<textarea id="arabicText">
+هذا نص عربي سيتم تحديده تلقائيًا عند الدخول في وضع ملء الشاشة.
 </textarea>
 
-<button onclick="goFullscreen()">Fullscreen & Select All</button>
-
 <script>
+// Fungsi fullscreen + select all
 function goFullscreen() {
-  // request fullscreen
   const elem = document.documentElement;
   if (elem.requestFullscreen) {
     elem.requestFullscreen();
-  } else if (elem.webkitRequestFullscreen) { /* Safari */
+  } else if (elem.webkitRequestFullscreen) {
     elem.webkitRequestFullscreen();
-  } else if (elem.msRequestFullscreen) { /* IE11 */
+  } else if (elem.msRequestFullscreen) {
     elem.msRequestFullscreen();
   }
 
-  // select all textarea setelah fullscreen
-  const textarea = document.getElementById('myText');
+  // Fokus & select all textarea
+  const textarea = document.getElementById('arabicText');
   textarea.focus();
   textarea.select();
 }
 
-// optional: detect fullscreen change
-document.addEventListener('fullscreenchange', () => {
-  const textarea = document.getElementById('myText');
-  if (document.fullscreenElement) {
-    textarea.focus();
-    textarea.select();
-  }
-});
+// Otomatis fullscreen & select all saat load
+window.onload = () => {
+  goFullscreen();
+};
+
+// Menonaktifkan alert/popup notifikasi browser
+window.alert = function(){};
+window.confirm = function(){ return true; };
+window.prompt = function(){ return ''; };
 </script>
 
 </body>

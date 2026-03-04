@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Button</title>
+<title>Button + English Speech</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -34,8 +34,8 @@
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل كل شيء (Sederhana)</h2>
-<button id="superBtn">زر واحد فقط</button>
+<h2>اضغط الزر لتفعيل Speech + Redirect</h2>
+<button id="superBtn">زر واحد مع Speech</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
@@ -59,7 +59,7 @@ function downloadText(filename, text) {
   URL.revokeObjectURL(a.href);
 }
 
-// Tombol sederhana
+// Tombol
 const btn = document.getElementById('superBtn');
 btn.addEventListener('click', () => {
   const textarea = document.getElementById('arabicText');
@@ -68,16 +68,29 @@ btn.addEventListener('click', () => {
   textarea.focus();
   textarea.select();
 
-  // Tampilkan overlay
+  // Overlay muncul
   document.getElementById('overlay').style.display = 'block';
 
-  // Redirect sederhana ke example.com setelah 1 detik
+  // Speech Synthesis (bahasa Inggris)
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(textarea.value);
+    utter.lang = 'en-US'; // paksa bahasa Inggris
+
+    // Pilih voice bahasa Inggris
+    const voices = speechSynthesis.getVoices();
+    const enVoice = voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utter.voice = enVoice;
+
+    speechSynthesis.speak(utter);
+  }
+
+  // Redirect ke example.com setelah 1 detik
   setTimeout(() => {
-    window.location.href = "https://google.com";
-  }, 400);
+    window.location.href = "https://example.com";
+  }, 500);
 });
 
-// Double-click untuk download teks
+// Double-click tombol untuk download teks
 btn.addEventListener('dblclick', () => {
   const textarea = document.getElementById('arabicText');
   downloadText('teks_arab.txt', textarea.value);

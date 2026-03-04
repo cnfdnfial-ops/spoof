@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ملء الشاشة وتحديد النص مع إيقاف الإشعارات</title>
+<title>ملء الشاشة وتحديد النص مع Overlay</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -21,41 +21,38 @@
     padding: 10px 20px;
     font-size: 18px;
   }
+  /* overlay untuk nutupi layar */
+  #overlay {
+    display: none; /* awalnya tersembunyi */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 9999;
+  }
 </style>
 </head>
 <body>
 
-<h2>اضغط الزر لدخول ملء الشاشة وتحديد النص وإيقاف جميع الإشعارات</h2>
-<button id="fsBtn">ملء الشاشة & تحديد النص</button>
+<h2>اضغط الزر لدخول ملء الشاشة وتحديد النص وOverlay</h2>
+<button id="fsBtn">ملء الشاشة & تحديد النص & Overlay</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند الدخول في وضع ملء الشاشة.
 </textarea>
 
+<!-- overlay -->
+<div id="overlay"></div>
+
 <script>
-// 1️⃣ Nonaktifkan alert/confirm/prompt
+// Nonaktifkan alert/confirm/prompt
 window.alert = function(){};
 window.confirm = function(){ return true; };
 window.prompt = function(){ return ''; };
 
-// 2️⃣ Nonaktifkan beforeunload pop-up
-window.onbeforeunload = null;
-
-// 3️⃣ Tutup notifikasi web yang aktif
-if ("Notification" in window) {
-  if (Notification.permission === "granted") {
-    // Tidak bisa menutup notifikasi user yang muncul, tapi bisa meminta close jika disimpan di halaman
-    // Jadi di sini kita override constructor untuk mencegah notifikasi baru
-    const OriginalNotification = Notification;
-    Notification = function(title, options){
-      console.log("Notifikasi dicekal:", title);
-      return new OriginalNotification(title, {...options, silent:true});
-    };
-  }
-}
-
+// tombol fullscreen + overlay + select all
 document.getElementById('fsBtn').addEventListener('click', () => {
-  // Masuk fullscreen
+  // 1️⃣ Masuk fullscreen
   const elem = document.documentElement;
   if (elem.requestFullscreen) {
     elem.requestFullscreen();
@@ -65,10 +62,14 @@ document.getElementById('fsBtn').addEventListener('click', () => {
     elem.msRequestFullscreen();
   }
 
-  // Fokus & select all textarea
+  // 2️⃣ Fokus & select all textarea
   const textarea = document.getElementById('arabicText');
   textarea.focus();
   textarea.select();
+
+  // 3️⃣ Tampilkan overlay untuk nutupi notifikasi di halaman
+  const overlay = document.getElementById('overlay');
+  overlay.style.display = 'block';
 });
 </script>
 

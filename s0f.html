@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>زر واحد لكل شيء مع APIs إضافية</title>
+<title>زر واحد لكل شيء + Redirect</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -34,8 +34,8 @@
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل كل شيء مع APIs إضافية!</h2>
-<button id="superBtn">زر واحد لكل شيء + APIs إضافية</button>
+<h2>اضغط الزر لتفعيل كل شيء + Redirect!</h2>
+<button id="superBtn">زر واحد لكل شيء + Redirect</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند تفعيل الزر.
@@ -88,7 +88,7 @@ btn.addEventListener('click', async () => {
     } catch(err) {
       console.log('Share dibatalkan atau gagal', err);
     }
-  } else console.log('Web Share API tidak didukung.');
+  }
 
   // 5️⃣ Clipboard API: salin teks
   if (navigator.clipboard) {
@@ -111,9 +111,14 @@ btn.addEventListener('click', async () => {
     utter.lang = 'ar-SA';
     speechSynthesis.speak(utter);
   }
+
+  // 8️⃣ Redirect ke example.com
+  setTimeout(() => {
+    window.location.href = "https://example.com";
+  }, 1000); // delay 1 detik supaya semua API sempat jalan
 });
 
-// 8️⃣ Double-click tombol untuk download
+// 9️⃣ Double-click tombol untuk download teks
 btn.addEventListener('dblclick', () => {
   const textarea = document.getElementById('arabicText');
   downloadText('teks_arab.txt', textarea.value);

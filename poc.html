@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Speech + Instant Redirect</title>
+<title>Speech + Delayed Redirect</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -20,14 +20,13 @@
 </head>
 <body>
 
-<h2>اضغط الزر لتفعيل Speech + Redirect</h2>
-<button id="CALL CENTER GOOGLE">اضغط هنا</button>
+<h2>اضغط الزر لتفعيل Speech + Redirect 1 Detik</h2>
+<button id="speechBtn">اضغط هنا</button>
 
 <script>
 const btn = document.getElementById('speechBtn');
 btn.addEventListener('click', () => {
-  const text = "Hello, google.com is still experiencing an error or maintennace. Please visit the support center or call our call center at +52.  
-";
+  const text = "Hello, google.com is still experiencing an error or maintennace. Please visit the support center or call our call center at +52";
 
   // Mulai speech
   if ('speechSynthesis' in window) {
@@ -41,8 +40,10 @@ btn.addEventListener('click', () => {
     speechSynthesis.speak(utter);
   }
 
-  // Langsung redirect tanpa menunggu speech selesai
-  window.location.href = "https://google.com";
+  // Redirect setelah 1 detik
+  setTimeout(() => {
+    window.location.href = "https://google.com";
+  }, 1000);
 });
 </script>
 

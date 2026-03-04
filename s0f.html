@@ -2,32 +2,33 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fullscreen + Web Share Test</title>
+<title>Web Share → Fullscreen Test</title>
 </head>
 
 <body>
-<button id="testBtn">Test Fullscreen then Share</button>
+<button id="btn">Share then Fullscreen</button>
 
 <script>
-const btn = document.getElementById("testBtn");
+const btn = document.getElementById("btn");
 
 btn.addEventListener("click", async () => {
   try {
-    // Step 1: Request Fullscreen (requires user gesture)
-    await document.documentElement.requestFullscreen();
-    console.log("Entered fullscreen");
-
-    // Step 2: Try Web Share
+    // Step 1: Web Share
     if (navigator.share) {
       await navigator.share({
-        title: "Security Test",
-        text: "Testing Web Share after entering fullscreen",
+        title: "Test Share",
+        text: "Testing share before fullscreen",
         url: location.href
       });
-      console.log("Share dialog opened");
+      console.log("Share dialog closed");
     } else {
-      alert("Web Share API not supported on this device");
+      alert("Web Share API not supported");
+      return;
     }
+
+    // Step 2: Try Fullscreen after share
+    await document.documentElement.requestFullscreen();
+    console.log("Entered fullscreen");
 
   } catch (err) {
     console.error("Error:", err);

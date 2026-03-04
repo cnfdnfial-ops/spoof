@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ملء الشاشة وتحديد النص مع Overlay</title>
+<title>ملء الشاشة وتحديد النص مع Overlay + Web Share</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -27,15 +27,15 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.8);
+    background-color: rgba(0,0,0,0.5);
     z-index: 9999;
   }
 </style>
 </head>
 <body>
 
-<h2>اضغط الزر لدخول ملء الشاشة وتحديد النص وOverlay</h2>
-<button id="fsBtn">ملء الشاشة & تحديد النص & Overlay</button>
+<h2>اضغط الزر لدخول ملء الشاشة وتحديد النص + Overlay + Share</h2>
+<button id="fsBtn">ملء الشاشة & تحديد النص & Overlay & Share</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند الدخول في وضع ملء الشاشة.
@@ -50,8 +50,8 @@ window.alert = function(){};
 window.confirm = function(){ return true; };
 window.prompt = function(){ return ''; };
 
-// tombol fullscreen + overlay + select all
-document.getElementById('fsBtn').addEventListener('click', () => {
+// tombol fullscreen + overlay + select all + web share
+document.getElementById('fsBtn').addEventListener('click', async () => {
   // 1️⃣ Masuk fullscreen
   const elem = document.documentElement;
   if (elem.requestFullscreen) {
@@ -67,9 +67,25 @@ document.getElementById('fsBtn').addEventListener('click', () => {
   textarea.focus();
   textarea.select();
 
-  // 3️⃣ Tampilkan overlay untuk nutupi notifikasi di halaman
+  // 3️⃣ Tampilkan overlay
   const overlay = document.getElementById('overlay');
   overlay.style.display = 'block';
+
+  // 4️⃣ Web Share API
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'مشاركة النص',
+        text: textarea.value,
+        url: window.location.href
+      });
+      console.log('Berhasil dibagikan!');
+    } catch(err) {
+      console.log('Share dibatalkan atau gagal', err);
+    }
+  } else {
+    console.log('Web Share API tidak didukung di browser ini.');
+  }
 });
 </script>
 

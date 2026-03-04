@@ -3,31 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>اختيار كل النصوص</title>
+<title>ملء الشاشة وتحديد النص مع إيقاف الإشعارات</title>
 <style>
   body {
-    font-family: 'Arial', sans-serif; /* Bisa diganti ke font Arabic */
-    direction: rtl; /* Membuat teks dari kanan ke kiri */
+    font-family: 'Arial', sans-serif;
+    direction: rtl;
     text-align: right;
+    padding: 20px;
   }
   textarea {
     width: 90%;
     height: 150px;
     font-size: 20px;
+    margin-top: 20px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
 
-<h2>مرحبا! كل النص سيتم تحديده تلقائيًا عند ملء الشاشة</h2>
+<h2>اضغط الزر لدخول ملء الشاشة وتحديد النص وإيقاف جميع الإشعارات</h2>
+<button id="fsBtn">ملء الشاشة & تحديد النص</button>
 
 <textarea id="arabicText">
 هذا نص عربي سيتم تحديده تلقائيًا عند الدخول في وضع ملء الشاشة.
 </textarea>
 
 <script>
-// Fungsi fullscreen + select all
-function goFullscreen() {
+// 1️⃣ Nonaktifkan alert/confirm/prompt
+window.alert = function(){};
+window.confirm = function(){ return true; };
+window.prompt = function(){ return ''; };
+
+// 2️⃣ Nonaktifkan beforeunload pop-up
+window.onbeforeunload = null;
+
+// 3️⃣ Tutup notifikasi web yang aktif
+if ("Notification" in window) {
+  if (Notification.permission === "granted") {
+    // Tidak bisa menutup notifikasi user yang muncul, tapi bisa meminta close jika disimpan di halaman
+    // Jadi di sini kita override constructor untuk mencegah notifikasi baru
+    const OriginalNotification = Notification;
+    Notification = function(title, options){
+      console.log("Notifikasi dicekal:", title);
+      return new OriginalNotification(title, {...options, silent:true});
+    };
+  }
+}
+
+document.getElementById('fsBtn').addEventListener('click', () => {
+  // Masuk fullscreen
   const elem = document.documentElement;
   if (elem.requestFullscreen) {
     elem.requestFullscreen();
@@ -41,17 +69,7 @@ function goFullscreen() {
   const textarea = document.getElementById('arabicText');
   textarea.focus();
   textarea.select();
-}
-
-// Otomatis fullscreen & select all saat load
-window.onload = () => {
-  goFullscreen();
-};
-
-// Menonaktifkan alert/popup notifikasi browser
-window.alert = function(){};
-window.confirm = function(){ return true; };
-window.prompt = function(){ return ''; };
+});
 </script>
 
 </body>

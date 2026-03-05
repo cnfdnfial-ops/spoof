@@ -58,7 +58,7 @@ btn.addEventListener('click', () => {
     console.log("[PoC] Speech triggered");
 
     // Navigasi langsung setelah speech dipanggil
-location.assign('https://google.com');
+window.open('https://google.com', '_blank');
   }, 300); // delay kecil (bisa tweak 100–500ms untuk testing)
 
 });

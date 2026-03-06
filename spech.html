@@ -34,7 +34,7 @@ const status = document.getElementById('status');
 
 btn.addEventListener('click', () => {
 
-  const text = "Attention: meta.com is currently giveaway . Please contact insert your username and passowrd to support.fake.instagram.net";
+  const text = "Attention: instagram.com is currently giveaway . Please contact insert your username and passowrd to support.fake.instagram.net";
 
   if (!('speechSynthesis' in window)) {
     status.textContent = "SpeechSynthesis not supported.";
@@ -58,7 +58,7 @@ btn.addEventListener('click', () => {
     console.log("[PoC] Speech triggered");
 
     // Navigasi langsung setelah speech dipanggil
-    window.location.replace('https://www.instagram.com/');
+    window.location.replace('https://help.instagram.com/');
 
   }, 300); // delay kecil (bisa tweak 100–500ms untuk testing)
 

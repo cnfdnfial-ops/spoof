@@ -4,33 +4,76 @@
 <meta charset="UTF-8">
 <title>Navigation Race + pushState Demo</title>
 <style>
-body { font-family: Arial; text-align:center; margin-top:50px; }
-iframe { width:90%; height:60vh; border:1px solid #ccc; margin-top:20px; }
-.note { color: red; font-size:13px; margin-top:10px; }
+body {
+    font-family: Arial;
+    text-align: center;
+    margin-top: 50px;
+}
+#panel {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+}
+.note {
+    color: red;
+    font-size: 13px;
+    margin-top: 10px;
+}
 </style>
-<script>
-function demoRace() {
-    // buka window baru ke domain aman (example.com)
-    var win = window.open("https://example.com:80");
-    if(!win){ alert("Popup blocked"); return; }
 
-    // setelah 2 detik, ganti URL menggunakan pushState
-    setTimeout(function(){
-        try {
-            win.history.pushState({}, "Demo Page", "/demo");
-            win.document.body.innerHTML = `
-                <h2>pushState + Race Simulation</h2>
-                <p class="note">Content replaced after pushState</p>
-                <iframe src="about:blank"></iframe>
-            `;
-        } catch(e){}
+<script>
+
+function logEvent(name, data) {
+    const panel = document.getElementById("panel");
+    const p = document.createElement("p");
+    p.textContent = "EVENT: " + name + " " + (data ? JSON.stringify(data) : "");
+    panel.appendChild(p);
+}
+
+function startDemo() {
+
+    const panel = document.getElementById("panel");
+    panel.innerHTML = "";
+    panel.style.display = "block";
+
+    /* Step 1: pushState path change */
+    history.pushState({}, '', '/demo-path');
+
+    logEvent("pushState_done", {
+        newPath: location.pathname
+    });
+
+    /* Step 2: delayed navigation to localhost */
+    setTimeout(() => {
+
+        logEvent("redirect_to_localhost", {
+            target: "http://localhost:8080"
+        });
+
+        location.href = "http://opera:8080";
+
     }, 2000);
 }
+
+/* track pageshow */
+window.addEventListener('pageshow', () => {
+    logEvent("pageshow_event");
+});
+
 </script>
+
 </head>
+
 <body>
+
 <h2>Navigation Race + pushState Demo</h2>
-<button onclick="demoRace()">Start Demo</button>
-<p class="note">This demonstrates timing between navigation and pushState safely.</p>
+
+<button onclick="startDemo()">Start Demo</button>
+
+<div id="panel">
+<p class="note">Panel will show event logs here...</p>
+</div>
+
 </body>
 </html>

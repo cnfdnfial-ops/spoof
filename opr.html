@@ -11,7 +11,7 @@ iframe { width:90%; height:60vh; border:1px solid #ccc; margin-top:20px; }
 <script>
 function demoRace() {
     // buka window baru ke domain aman (example.com)
-    var win = window.open("https://example.com");
+    var win = window.open("https://example.com:80");
     if(!win){ alert("Popup blocked"); return; }
 
     // setelah 2 detik, ganti URL menggunakan pushState

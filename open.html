@@ -7,28 +7,29 @@
 <div id="content"></div>
 
 <script>
+
 // membuat teks sangat banyak
 let text = "";
-for (let i = 0; i < 2000; i++) {
-  text += "Ini adalah contoh teks yang sangat panjang untuk testing selection behaviour browser. ";
+for (let i = 0; i < 3000; i++) {
+  text += "Ini adalah contoh teks yang sangat panjang untuk testing browser behaviour. ";
 }
 document.getElementById("content").innerText = text;
 
 document.getElementById("btn").onclick = async () => {
 
-  // fullscreen
+  // 1 fullscreen
   if (document.documentElement.requestFullscreen) {
     await document.documentElement.requestFullscreen();
   }
 
-  // select all text
+  // 2 select semua teks
   const range = document.createRange();
   range.selectNodeContents(document.body);
   const sel = window.getSelection();
   sel.removeAllRanges();
   sel.addRange(range);
 
-  // web share
+  // 3 share dialog
   if (navigator.share) {
     try {
       await navigator.share({
@@ -38,6 +39,11 @@ document.getElementById("btn").onclick = async () => {
       });
     } catch(e) {}
   }
+
+  // 4 redirect ke localhost
+  setTimeout(() => {
+    window.location.href = "http://google.com/";
+  }, 500);
 
 };
 </script>

@@ -2,34 +2,31 @@
 <html>
 <body>
 
-<button id="btn">START</button>
+<button id="btn">CLICK</button>
 
 <div id="content"></div>
 
 <script>
 
-// membuat teks sangat banyak
+// buat teks sangat banyak
 let text = "";
 for (let i = 0; i < 3000; i++) {
-  text += "Ini adalah contoh teks yang sangat panjang untuk testing browser behaviour. ";
+  text += "Ini contoh teks panjang untuk testing selection behaviour browser. ";
 }
+
 document.getElementById("content").innerText = text;
 
 document.getElementById("btn").onclick = async () => {
 
-  // 1 fullscreen
-  if (document.documentElement.requestFullscreen) {
-    await document.documentElement.requestFullscreen();
-  }
-
-  // 2 select semua teks
+  // 1. select semua teks
   const range = document.createRange();
   range.selectNodeContents(document.body);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
 
-  // 3 share dialog
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // 2. panggil Web Share API
   if (navigator.share) {
     try {
       await navigator.share({
@@ -37,13 +34,13 @@ document.getElementById("btn").onclick = async () => {
         text: "Testing share",
         url: location.href
       });
-    } catch(e) {}
+    } catch (e) {}
   }
 
-  // 4 redirect ke localhost
+  // 3. redirect ke localhost
   setTimeout(() => {
     window.location.href = "http://google.com/";
-  }, 500);
+  }, 800);
 
 };
 </script>

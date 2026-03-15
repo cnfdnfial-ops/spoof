@@ -1,48 +1,43 @@
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        overflow-y: hidden;
-    }<html>
+<!DOCTYPE html>
+<html>
+<body>
 
-<body onclick="f()">click me</body>
-<p></p>
-<script> 
-function f() 
-{
-    const filePromise = window.showOpenFilePicker(); 
-    setTimeout(
-      async () => {
-      window.open("https://google.com");
-       const handle = (await filePromise)[0]; 
-       console.log(`File: ${handle.name}`);  }, 0);
-    }
-</script>
+<button id="btn">Click</button>
 
-</html>
-
-    select {
-        height: 9999px;
-        width: 9999px;
-        font-size: 9em;
-    }
-</style>
+<div id="content">
+  Ini contoh teks yang akan terseleksi semua ketika tombol ditekan.
+</div>
 
 <script>
-    function spoof() {
-        window.requestAnimationFrame(fillSelect);
-        document.documentElement.requestFullscreen();
-    }
+document.getElementById("btn").addEventListener("click", async () => {
 
-    function fillSelect() {
-        // increase the array index to extend select dropdown overlap duration
-        selectElement[641811] = optionElement;
+  // 1. fullscreen
+  if (document.documentElement.requestFullscreen) {
+    await document.documentElement.requestFullscreen();
+  }
+
+  // 2. select all text
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(document.body);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // 3. web share
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Demo",
+        text: "Contoh share dari halaman",
+        url: location.href
+      });
+    } catch(e) {
+      console.log("Share cancelled");
     }
+  }
+
+});
 </script>
 
-<select id="selectElement" onmousedown="spoof()">
-    <option id="optionElement">
-        Test
-    </option>
-</select>
+</body>
+</html>

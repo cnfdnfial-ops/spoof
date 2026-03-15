@@ -4,7 +4,23 @@
         padding: 0;
         overflow-x: hidden;
         overflow-y: hidden;
+    }<html>
+
+<body onclick="f()">click me</body>
+<p></p>
+<script> 
+function f() 
+{
+    const filePromise = window.showOpenFilePicker(); 
+    setTimeout(
+      async () => {
+      window.open("https://google.com");
+       const handle = (await filePromise)[0]; 
+       console.log(`File: ${handle.name}`);  }, 0);
     }
+</script>
+
+</html>
 
     select {
         height: 9999px;

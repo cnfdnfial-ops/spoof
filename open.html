@@ -2,151 +2,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Chromium Rendering + Screen Capture Stress PoC</title>
-
+<title>All-in-One JS Engine Stress Test</title>
 <style>
-body{
-  margin:0;
-  overflow:hidden;
-  background:black;
-  color:white;
-  font-family:sans-serif;
-}
-
-.box{
-  width:120px;
-  height:120px;
-  background:red;
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-}
-
-canvas{
-  position:absolute;
-  top:0;
-  left:0;
-}
+body { margin:0; overflow:hidden; background:#111; color:white; font-family:sans-serif; }
+#canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
+.box { width:100px; height:100px; background:red; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
 </style>
 </head>
-
 <body>
 
-<h2>Chromium Rendering + Screen Capture Stress PoC</h2>
+<h2>All-in-One JS Engine Stress Test</h2>
 <button onclick="startTest()">Start Test</button>
-
 <div class="box"></div>
-<canvas id="c"></canvas>
+<canvas id="canvas"></canvas>
 
 <script>
+async function startTest() {
+    console.log("=== START ALL-IN-ONE STRESS TEST ===");
 
-let running=true;
+    // ===== 1️⃣ TypedArray / ArrayBuffer Stress =====
+    let buffers = [];
+    for (let i = 0; i < 3000; i++) {
+        let buf = new ArrayBuffer(2048);
+        let view = new Uint8Array(buf);
+        for (let j = 0; j < view.length; j++) view[j] = (i + j) % 256;
+        buffers.push(view);
+    }
+    console.log("TypedArray buffers:", buffers.length);
 
-async function startTest(){
+    // ===== 2️⃣ WebAssembly Memory Stress =====
+    let wasmMemory = new WebAssembly.Memory({initial:50, maximum:100});
+    let wasmModule = new WebAssembly.Module(new Uint8Array([
+        0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00,
+        0x01,0x0a,0x02,0x60,0x00,0x00,0x60,0x00,
+        0x00,0x03,0x02,0x01,0x00,0x07,0x07,0x01,
+        0x03,0x72,0x75,0x6e,0x00,0x00,0x0a,0x09,
+        0x01,0x07,0x00,0x41,0x00,0x41,0x01,0x6a,
+        0x0b
+    ]));
+    let wasmInstance = new WebAssembly.Instance(wasmModule, {js:{mem:wasmMemory}});
+    console.log("WebAssembly memory allocated:", wasmMemory.buffer.byteLength);
 
-console.log("=== START TEST ===");
+    // ===== 3️⃣ DOM Mutation Stress =====
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    for (let i=0;i<2000;i++){
+        let el = document.createElement("div");
+        el.style.position="absolute";
+        el.style.left=Math.random()*window.innerWidth+"px";
+        el.style.top=Math.random()*window.innerHeight+"px";
+        el.style.width=(10+Math.random()*50)+"px";
+        el.style.height=(10+Math.random()*50)+"px";
+        el.style.background=`hsl(${Math.random()*360},80%,50%)`;
+        container.appendChild(el);
+    }
+    console.log("DOM elements created");
 
-try{
+    // ===== 4️⃣ Canvas Rendering Stress =====
+    const canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d");
+    function draw(){
+        for(let i=0;i<500;i++){
+            ctx.fillStyle=`hsl(${Math.random()*360},80%,50%)`;
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 20+Math.random()*50, 20+Math.random()*50);
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
 
-const stream = await navigator.mediaDevices.getDisplayMedia({
-video:true,
-preferCurrentTab:true,
-audio:false
-});
+    // ===== 5️⃣ Animation Stress =====
+    const box = document.querySelector(".box");
+    let r = 0;
+    function animate(){
+        r+=3;
+        box.style.transform=`translate(-50%,-50%) rotate(${r}deg) scale(${1+Math.sin(r/20)*0.3})`;
+        requestAnimationFrame(animate);
+    }
+    animate();
 
-console.log("Screen capture stream:",stream);
-
-const video=document.createElement("video");
-video.srcObject=stream;
-video.autoplay=true;
-video.muted=true;
-video.style.position="absolute";
-video.style.bottom="10px";
-video.style.right="10px";
-video.style.width="200px";
-
-document.body.appendChild(video);
-
-}catch(e){
-console.error("getDisplayMedia error:",e);
+    console.log("=== ALL-IN-ONE STRESS TEST RUNNING ===");
 }
-
-triggerRendering();
-stressDOM();
-canvasStress();
-
-}
-
-function triggerRendering(){
-
-const box=document.querySelector(".box");
-let r=0;
-
-function frame(){
-r+=2;
-box.style.transform=`translate(-50%,-50%) rotate(${r}deg) scale(${1+Math.sin(r/20)*0.3})`;
-requestAnimationFrame(frame);
-}
-
-frame();
-
-}
-
-function stressDOM(){
-
-const container=document.createElement("div");
-document.body.appendChild(container);
-
-for(let i=0;i<1500;i++){
-
-const el=document.createElement("div");
-
-el.style.position="absolute";
-el.style.left=Math.random()*window.innerWidth+"px";
-el.style.top=Math.random()*window.innerHeight+"px";
-el.style.width=(20+Math.random()*50)+"px";
-el.style.height=(20+Math.random()*50)+"px";
-el.style.background=`hsl(${Math.random()*360},80%,50%)`;
-
-container.appendChild(el);
-
-}
-
-console.log("DOM stress elements created");
-
-}
-
-function canvasStress(){
-
-const canvas=document.getElementById("c");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-const ctx=canvas.getContext("2d");
-
-function draw(){
-
-for(let i=0;i<200;i++){
-
-ctx.fillStyle=`hsl(${Math.random()*360},80%,50%)`;
-ctx.fillRect(
-Math.random()*canvas.width,
-Math.random()*canvas.height,
-20+Math.random()*80,
-20+Math.random()*80
-);
-
-}
-
-requestAnimationFrame(draw);
-
-}
-
-draw();
-
-}
-
 </script>
+
 </body>
 </html>

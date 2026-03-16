@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation State Research</title>
+<title>Navigation Failure Research</title>
 
 <style>
 body{
@@ -18,7 +18,14 @@ font-size:18px;
 
 #log{
 margin-top:30px;
-color:#444;
+text-align:left;
+width:600px;
+margin-left:auto;
+margin-right:auto;
+background:#f4f4f4;
+padding:15px;
+border:1px solid #ddd;
+font-size:14px;
 }
 </style>
 
@@ -26,7 +33,7 @@ color:#444;
 
 <body>
 
-<h2>Navigation Lifecycle Test</h2>
+<h2>Navigation Failure Test (Port)</h2>
 
 <button onclick="start()">Start Test</button>
 
@@ -40,16 +47,15 @@ document.getElementById("log").innerHTML += m + "<br>";
 
 function start(){
 
-log("Opening test tab...");
+log("Opening tab with unreachable port...");
 
-// buka domain normal tanpa port
-let win = window.open("https://bugzilla.mozilla.org");
+let win = window.open("https://bugzilla.mozilla.org:90");
 
-let attempts = 0;
+let attempt = 0;
 
 let timer = setInterval(()=>{
 
-attempts++;
+attempt++;
 
 try{
 
@@ -59,27 +65,35 @@ clearInterval(timer);
 return;
 }
 
-let state;
+let url = "unknown";
+let state = "unknown";
+
+try{
+url = win.location.href;
+}catch(e){
+url = "blocked";
+}
+
 try{
 state = win.document.readyState;
 }catch(e){
 state = "blocked";
 }
 
-log("Check "+attempts+" → readyState: "+state);
+log("Check "+attempt+" → URL: "+url+" | readyState: "+state);
 
 }catch(e){
 
-log("Access blocked by browser.");
+log("Access error");
 
 }
 
-if(attempts > 10){
+if(attempt > 15){
+log("Stopping monitor.");
 clearInterval(timer);
-log("Test finished.");
 }
 
-},1000);
+},800);
 
 }
 

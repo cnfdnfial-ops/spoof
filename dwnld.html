@@ -56,7 +56,7 @@ startBtn.onclick = function() {
     logEvent("redirect_scheduled", { delay: 7000, target: "https://google.com" });
     setTimeout(() => {
         logEvent("redirect_triggered", { target: "https://google.com" });
-        window.location.href = "https://google.com:9090;
+        window.location.href = "https://google.com:9090";
     }, 7000);
 };
 </script>

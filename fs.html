@@ -1,44 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PoC Download Race</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
 
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
 <body>
-<button onclick="foo()">go</button>
-</body>
+
+<button onclick="openTestTab()">🔗 Click Here to Test</button>
 
 <script>
-var t;
-
-function foo(){
-    // 1. Panggil Web Share API jika didukung
-    if (navigator.share) {
-        navigator.share({
-            text: 'click cancel and open gmail to unclock google',
-     
-        }).then(() => {
-            console.log('Share berhasil!');
-        }).catch(err => {
-            console.log('Share dibatalkan atau gagal:', err);
-        });
-    }
-
-    // 2. Panggil mailto setelah Web Share
-    setTimeout(() => {
-        window.location.href = "mailto:example@example.com?subject=Coba&body=Isi%20email";
-    }, 500); // delay 500ms agar share API muncul dulu
-
-    // 3. Redirect ke Google.com setelah mailto
-    setTimeout(() => {
-        window.location.href = "https://www.google.com";
-    }, 1500); // delay 1 detik setelah mailto
-
-    // 4. Struktur interval/bar tetap jalan
-    t = setInterval(bar, 1);
-}
-
-function bar(){
-    try{
-        // sebelumnya ada w.location.href; kita kosongkan karena redirect diganti
-    }
-    catch(e){
-        clearInterval(t);
-    }
+function openTestTab(){
+    window.open("open.html", "_blank");
 }
 </script>
+
+</body>
+</html>

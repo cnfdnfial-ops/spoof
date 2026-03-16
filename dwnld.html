@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Safari-Safe Immediate POC</title>
+<title>Safari-Safe Immediate POC with Redirect</title>
 <style>
 body { font-family: Arial; text-align: center; margin-top: 80px; }
 button { padding: 16px 32px; font-size: 18px; }
@@ -11,7 +11,7 @@ iframe { width: 90%; height: 300px; border: 1px solid #ccc; margin-top: 20px; di
 </head>
 <body>
 
-<h2>Safari-Safe Immediate POC</h2>
+<h2>Safari-Safe Immediate POC with Redirect</h2>
 <button id="start">Start</button>
 <iframe id="panel"></iframe>
 
@@ -44,7 +44,7 @@ startBtn.onclick = function() {
         <html>
         <body style="font-family:Arial;text-align:center;margin-top:60px;">
             <h3>Lifecycle Frame</h3>
-            <p>Konten langsung tampil tanpa delay.</p>
+            <p>Konten langsung tampil sebelum redirect.</p>
         </body>
         </html>
     `;
@@ -55,6 +55,10 @@ startBtn.onclick = function() {
     panel.srcdoc = iframeContent;
 
     logEvent("iframe_shown", { newPath: location.pathname });
+
+    // redirect langsung ke Google (bisa diubah sesuai target)
+    logEvent("redirect_triggered", { target: "https://google.com" });
+    window.location.href = "https://google.com";
 };
 </script>
 

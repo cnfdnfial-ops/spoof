@@ -2,36 +2,31 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation Lifecycle Research</title>
+<title>Navigation State Research</title>
 
 <style>
 body{
-  font-family:Arial;
-  text-align:center;
-  margin-top:100px;
+font-family:Arial;
+text-align:center;
+margin-top:120px;
 }
 
 button{
-  padding:14px 28px;
-  font-size:18px;
+padding:14px 28px;
+font-size:18px;
 }
 
 #log{
-  margin-top:30px;
-  text-align:left;
-  width:600px;
-  margin-left:auto;
-  margin-right:auto;
-  background:#f5f5f5;
-  padding:15px;
-  border:1px solid #ddd;
+margin-top:30px;
+color:#444;
 }
 </style>
+
 </head>
 
 <body>
 
-<h2>Navigation Lifecycle Test</h2>
+<h2>Navigation State Test</h2>
 
 <button onclick="start()">Start Test</button>
 
@@ -39,53 +34,72 @@ button{
 
 <script>
 
-function log(msg){
-  const el = document.getElementById("log");
-  el.innerHTML += msg + "<br>";
+function log(m){
+document.getElementById("log").innerHTML+=m+"<br>";
 }
 
 function start(){
 
-  log("Opening tab to test navigation failure...");
+log("Opening test tab...");
 
-  let win = window.open("https://bugzilla.mozilla.org:90");
+let win = window.open("https://bugzilla.mozilla.org:90");
 
-  let checks = 0;
+let attempts=0;
 
-  let interval = setInterval(()=>{
+let timer=setInterval(()=>{
 
-    checks++;
+attempts++;
 
-    try{
+try{
 
-      if(win.closed){
-        log("Tab closed.");
-        clearInterval(interval);
-        return;
-      }
+if(win.closed){
+log("Tab closed.");
+clearInterval(timer);
+return;
+}
 
-      let state = win.document.readyState;
+let url;
 
-      log("Check "+checks+" → readyState: "+state);
+try{
+url=win.location.href;
+}catch(e){
+url="blocked";
+}
 
-      if(state === "complete" || state === "interactive"){
-        log("Document appears committed.");
-        clearInterval(interval);
-      }
+log("Check "+attempts+" → "+url);
 
-    }catch(e){
+if(attempts===8){
 
-      log("Access blocked by browser security policy.");
-      clearInterval(interval);
+log("Attempting document write test...");
 
-    }
+try{
 
-    if(checks > 10){
-      log("Stopping test.");
-      clearInterval(interval);
-    }
+win.document.open();
+win.document.write("<h2>Navigation Test Content</h2><p>Injected for research.</p>");
+win.document.close();
 
-  },1000);
+log("Write attempted.");
+
+}catch(e){
+
+log("Write blocked by browser.");
+
+}
+
+}
+
+}catch(e){
+
+log("Access error.");
+
+}
+
+if(attempts>12){
+clearInterval(timer);
+log("Test finished.");
+}
+
+},1000);
 
 }
 

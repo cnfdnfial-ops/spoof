@@ -2,64 +2,91 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation Lifecycle Research</title>
-
+<title>Navigation Condition Test</title>
 <style>
 body{
-  font-family:Arial;
-  text-align:center;
-  margin-top:120px;
+font-family:Arial;
+text-align:center;
+margin-top:120px;
 }
 
 button{
-  padding:14px 28px;
-  font-size:18px;
-}
-
-#log{
-  margin-top:30px;
-  text-align:left;
-  width:600px;
-  margin:auto;
-  background:#f5f5f5;
-  padding:15px;
-  border:1px solid #ddd;
+padding:16px 30px;
+font-size:18px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Navigation Lifecycle Test</h2>
-
-<button onclick="start()">Start Test</button>
-
-<div id="log"></div>
+<h2>Navigation Condition Test</h2>
+<button onclick="start()">Start</button>
 
 <script>
 
-function log(m){
-  document.getElementById("log").innerHTML += m + "<br>";
-}
-
 function start(){
 
-  log("Preparing navigation...");
+let step = 0;
 
-  setTimeout(()=>{
+setInterval(function(){
 
-    log("Navigating to target URL");
+step++;
 
-    // navigasi langsung (halaman akan pindah)
-    location.href="https://bugzilla.mozilla.org:80";
+if(step==1){ location.href="https://example.com"; }
+else if(step==2){ location.href="https://example.org"; }
+else if(step==3){ location.href="https://example.net"; }
+else if(step==4){ location.href="https://iana.org"; }
+else if(step==5){ location.href="https://wikipedia.org"; }
+else if(step==6){ location.href="https://developer.mozilla.org"; }
+else if(step==7){ location.href="https://www.apple.com"; }
+else if(step==8){ location.href="https://www.microsoft.com"; }
+else if(step==9){ location.href="https://www.cloudflare.com"; }
+else if(step==10){ location.href="https://www.github.com"; }
+else if(step==11){ location.href="https://www.stackoverflow.com"; }
+else if(step==12){ location.href="https://www.gnu.org"; }
+else if(step==13){ location.href="https://www.w3.org"; }
+else if(step==14){ location.href="https://www.kernel.org"; }
+else if(step==15){ location.href="https://www.python.org"; }
+else if(step==16){ location.href="https://nodejs.org"; }
+else if(step==17){ location.href="https://golang.org"; }
+else if(step==18){ location.href="https://rust-lang.org"; }
+else if(step==19){ location.href="https://deno.land"; }
+else if(step==20){ location.href="https://sqlite.org"; }
+else if(step==21){ location.href="https://nginx.org"; }
+else if(step==22){ location.href="https://httpd.apache.org"; }
+else if(step==23){ location.href="https://openbsd.org"; }
+else if(step==24){ location.href="https://freebsd.org"; }
+else if(step==25){ location.href="https://netbsd.org"; }
+else if(step==26){ location.href="https://archlinux.org"; }
+else if(step==27){ location.href="https://ubuntu.com"; }
+else if(step==28){ location.href="https://debian.org"; }
+else if(step==29){ location.href="https://fedora.org"; }
+else if(step==30){ location.href="https://alpinelinux.org"; }
 
-  },2000);
+else if(step==31){ location.href="https://example.com#1"; }
+else if(step==32){ location.href="https://example.com#2"; }
+else if(step==33){ location.href="https://example.com#3"; }
+else if(step==34){ location.href="https://example.com#4"; }
+else if(step==35){ location.href="https://example.com#5"; }
+else if(step==36){ location.href="https://example.com#6"; }
+else if(step==37){ location.href="https://example.com#7"; }
+else if(step==38){ location.href="https://example.com#8"; }
+else if(step==39){ location.href="https://example.com#9"; }
+else if(step==40){ location.href="https://example.com#10"; }
 
+else if(step==41){ location.href="https://example.org#a"; }
+else if(step==42){ location.href="https://example.org#b"; }
+else if(step==43){ location.href="https://example.org#c"; }
+else if(step==44){ location.href="https://example.org#d"; }
+else if(step==45){ location.href="https://example.org#e"; }
+
+else if(step==50){
+clearInterval();
 }
 
-window.addEventListener("pageshow",function(e){
-  console.log("Page restored from cache:",e.persisted);
-});
+},200);
+
+}
 
 </script>
 

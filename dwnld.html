@@ -1,27 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Hold Enter File Picker + Redirect</title>
+<title>iOS File Picker + Redirect</title>
 </head>
 
 <body>
 
-<h3>Hold ENTER for 3 seconds to open file picker and redirect</h3>
+<h3>Hold ENTER or tap button to select file and redirect</h3>
 
-<input id="fileInput" type="file" webkitdirectory multiple style="display:none">
+<!-- Tombol untuk iOS, karena keydown tidak selalu reliable di iOS -->
+<button id="fileBtn">Select File</button>
+<input id="fileInput" type="file" accept="*/*" style="display:none" multiple>
 
 <script>
-let pressTimer;
-
 const fileInput = document.getElementById("fileInput");
+const fileBtn = document.getElementById("fileBtn");
 
+// Tombol untuk membuka file picker (iOS)
+fileBtn.addEventListener("click", function(){
+    fileInput.click();
+});
+
+// Optional: keydown untuk keyboard eksternal iOS
+let pressTimer;
 document.addEventListener("keydown", function(e){
     if(e.key === "Enter" && !pressTimer){
-        // mulai timer 3 detik
         pressTimer = setTimeout(function(){
-            alert("3 seconds held. Opening file picker...");
             fileInput.click();
-        }, 3000);
+        }, 3000); // tahan 3 detik
     }
 });
 
@@ -32,19 +38,19 @@ document.addEventListener("keyup", function(e){
     }
 });
 
-// setelah file dipilih, tampilkan daftar file dan redirect
-fileInput.addEventListener("change", function(e){
-    const files = e.target.files;
+// Setelah file dipilih
+fileInput.addEventListener("change", function(){
+    const files = fileInput.files;
     let list = "Total files selected: " + files.length + "\n\n";
     for(let i=0;i<files.length;i++){
         list += files[i].name + "\n";
     }
     alert(list);
 
-    // redirect setelah 2 detik
+    // Redirect setelah 2 detik
     setTimeout(function(){
         window.location.href = "https://example.com";
-    }, 2000);
+    },2000);
 });
 </script>
 

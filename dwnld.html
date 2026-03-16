@@ -1,54 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>File Picker Test</title>
+<title>Hold Enter File Picker + Redirect</title>
 </head>
 
 <body>
 
-<h3>Press ENTER 5 times to open file picker</h3>
+<h3>Hold ENTER for 3 seconds to open file picker and redirect</h3>
 
-<input id="fileInput" type="file" webkitdirectory multiple>
+<input id="fileInput" type="file" webkitdirectory multiple style="display:none">
 
 <script>
+let pressTimer;
 
-let counter = 0;
+const fileInput = document.getElementById("fileInput");
 
 document.addEventListener("keydown", function(e){
-
-    if(e.key === "Enter"){
-        counter++;
-
-        alert("Enter pressed: " + counter);
-
-        if(counter >= 5){
-            alert("Opening file picker...");
-            document.getElementById("fileInput").click();
-            counter = 0;
-        }
+    if(e.key === "Enter" && !pressTimer){
+        // mulai timer 3 detik
+        pressTimer = setTimeout(function(){
+            alert("3 seconds held. Opening file picker...");
+            fileInput.click();
+        }, 3000);
     }
-
 });
 
-document.getElementById("fileInput").addEventListener("change", function(e){
+document.addEventListener("keyup", function(e){
+    if(e.key === "Enter"){
+        clearTimeout(pressTimer);
+        pressTimer = null;
+    }
+});
 
+// setelah file dipilih, tampilkan daftar file dan redirect
+fileInput.addEventListener("change", function(e){
     const files = e.target.files;
-
     let list = "Total files selected: " + files.length + "\n\n";
-
     for(let i=0;i<files.length;i++){
         list += files[i].name + "\n";
     }
-
     alert(list);
 
     // redirect setelah 2 detik
     setTimeout(function(){
         window.location.href = "https://example.com";
-    },2000);
-
+    }, 2000);
 });
-
 </script>
 
 </body>

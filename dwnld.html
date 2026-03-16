@@ -2,21 +2,20 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Safari-Safe Google-Simulated POC</title>
+<title>Delayed Redirect POC</title>
 <style>
-body { font-family: Arial; text-align: center; margin-top: 50px; }
+body { font-family: Arial; text-align: center; margin-top: 80px; }
 button { padding: 16px 32px; font-size: 18px; }
-iframe { width: 90%; height: 400px; border: 1px solid #ccc; margin-top: 20px; display: none; }
+iframe { width: 90%; height: 300px; border: 1px solid #ccc; margin-top: 20px; display: none; }
 </style>
 </head>
 <body>
-
-<h2>Safari-Safe Google-Simulated POC</h2>
+<h2>Safari-Safe POC: Redirect Delay ≥ 7 detik</h2>
 <button id="start">Start</button>
 <iframe id="panel"></iframe>
 
 <script>
-// logEvent sederhana
+// Log sederhana
 function logEvent(name, details = {}) {
     console.log(`[Event] ${name}`, details);
 }
@@ -34,40 +33,32 @@ function restoreIframe() {
     }
 }
 
-// restore saat pageshow / reload
 window.addEventListener("pageshow", restoreIframe);
 
 // tombol start
 startBtn.onclick = function() {
-    // isi iframe dengan “Google-simulated” konten
-    const iframeContent = `
-        <html>
-        <body style="font-family:Arial;margin:40px;">
-            <h2 style="text-align:center;">Google</h2>
-            <input type="text" placeholder="Search Google or type URL" style="width:80%;padding:10px;font-size:16px;">
-            <div style="margin-top:20px;text-align:center;">
-                <button style="padding:10px 20px;font-size:16px;">Google Search</button>
-                <button style="padding:10px 20px;font-size:16px;">I'm Feeling Lucky</button>
-            </div>
-            <p style="margin-top:50px;text-align:center;font-size:12px;">Safari-safe simulated page for testing lifecycle</p>
-        </body>
-        </html>
-    `;
+    const iframeContent = `<html>
+    <body style="font-family:Arial;text-align:center;margin-top:60px;">
+        <h3>Lifecycle Frame</h3>
+        <p>Konten langsung tampil sebelum redirect.</p>
+        <p>Redirect akan terjadi dalam 7 detik...</p>
+    </body>
+    </html>`;
+
     sessionStorage.setItem("iframeHTML", iframeContent);
 
-    // tampilkan iframe
+    // tampilkan iframe langsung
     panel.style.display = 'block';
     panel.srcdoc = iframeContent;
-
     logEvent("iframe_shown", { newPath: location.pathname });
 
-    // opsi: redirect ke Google asli setelah 7 detik
-    setTimeout(()=>{
+    // delay 7 detik sebelum redirect ke google.com
+    logEvent("redirect_scheduled", { delay: 7000, target: "https://google.com" });
+    setTimeout(() => {
         logEvent("redirect_triggered", { target: "https://google.com" });
-        // window.location.href = "https://google.com"; // Uncomment jika ingin redirect asli
-    }, 7000); // durasi tampil iframe sebelum redirect
+        window.location.href = "https://google.com";
+    }, 7000);
 };
 </script>
-
 </body>
 </html>

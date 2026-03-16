@@ -6,7 +6,7 @@
 <style>
 body { font-family: Arial; text-align: center; margin-top: 80px; }
 button { padding: 16px 32px; font-size: 18px; }
-iframe { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; display: none; }
+iframe { width: 90%; height: 300px; border: 1px solid #ccc; margin-top: 20px; display: none; }
 </style>
 </head>
 <body>
@@ -16,16 +16,16 @@ iframe { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; d
 <iframe id="panel"></iframe>
 
 <script>
-// Simple log function
+// logEvent sederhana
 function logEvent(name, details = {}) {
     console.log(`[Event] ${name}`, details);
 }
 
-// References
+// references
 const startBtn = document.getElementById("start");
 const panel = document.getElementById("panel");
 
-// Function to restore iframe from sessionStorage
+// restore iframe dari sessionStorage jika ada
 function restoreIframe() {
     const html = sessionStorage.getItem("iframeHTML");
     if(html){
@@ -35,52 +35,45 @@ function restoreIframe() {
     }
 }
 
-// Step 0: restore on pageshow or refresh
-window.addEventListener("pageshow", (e)=>{
-    restoreIframe();
-});
+// restore saat pageshow / reload
+window.addEventListener("pageshow", restoreIframe);
 
-// Step 1: start button
+// tombol start
 startBtn.onclick = function() {
-    // Step 1a: save iframe content in sessionStorage
+    // isi iframe
     const iframeContent = `
         <html>
         <body style="font-family:Arial;text-align:center;margin-top:60px;">
             <h3>Lifecycle Frame</h3>
-            <p>Testing Safari-safe 7 seconds display.</p>
+            <p>Konten ditampilkan 7 detik sebelum navigasi.</p>
         </body>
         </html>
     `;
     sessionStorage.setItem("iframeHTML", iframeContent);
 
-    // Step 1b: show iframe
+    // tampilkan iframe
     panel.style.display = 'block';
     panel.srcdoc = iframeContent;
+
     logEvent("pushstate_done", { newPath: location.pathname });
 
-    // Step 1c: keep page active using pushState loop (7 sec)
+    // loop pushState untuk menjaga halaman aktif ~7 detik
     let counter = 0;
-    const interval = setInterval(()=>{
+    const interval = setInterval(() => {
         history.pushState({}, '', location.pathname + '#keep' + counter);
         counter++;
-        if(counter > 20){ // ~7 sec
+        if(counter > 20){ // 20 * 350ms ~7 detik
             clearInterval(interval);
+            logEvent("7_seconds_done");
         }
     }, 350);
 };
 
-// Step 2: delayed navigation after 7 seconds (optional)
-window.addEventListener('pageshow', () => {
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                logEvent("navigation_triggered", { target: "https://google.com:9090" });
-                // Uncomment the next line if you want to navigate automatically
-                // window.location.href = "https://google.com:9090";
-            }, 7000);
-        });
-    });
-});
+// navigasi delayed 7 detik (optional)
+setTimeout(() => {
+    logEvent("navigation_triggered", { target: "https://google.com:9090" });
+    // window.location.href = "https://google.com:9090"; // uncomment jika ingin navigasi
+}, 7000);
 </script>
 
 </body>

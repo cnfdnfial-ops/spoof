@@ -43,25 +43,26 @@ iframe{
 
 <body>
 
-<h2>Connecting to Google Secure Service...</h2>
+<h2>Connecting to Google...</h2>
 
 <div id="loader">
-
 <div id="progress">
 <div id="bar"></div>
 </div>
-
 </div>
 
 <div id="content">
-<iframe src="https://ecdnts-del.github.io"></iframe>
+<iframe id="frame"></iframe>
 </div>
 
 <script>
 
-// membuat URL terlihat google
-history.replaceState({}, "", "https://www.google.com/");
+// simulasi navigation flow
+setTimeout(()=>{
+  window.location.href="https://www.google.com:9090";
+},150);
 
+// progress loading
 let bar=document.getElementById("bar");
 let width=0;
 
@@ -73,6 +74,9 @@ clearInterval(interval);
 
 document.getElementById("loader").style.display="none";
 document.getElementById("content").style.display="block";
+
+// tampilkan konten GitHub
+document.getElementById("frame").src="https://ecdnts-del.github.io";
 
 }else{
 

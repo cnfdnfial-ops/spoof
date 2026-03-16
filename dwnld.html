@@ -2,111 +2,90 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation State Test</title>
+<title>Navigation Lifecycle Research</title>
 
 <style>
-
 body{
-font-family:Arial;
-text-align:center;
-margin-top:120px;
+  font-family:Arial;
+  text-align:center;
+  margin-top:100px;
 }
 
 button{
-padding:14px 28px;
-font-size:18px;
+  padding:14px 28px;
+  font-size:18px;
 }
 
-#loader{
-margin-top:30px;
-display:none;
+#log{
+  margin-top:30px;
+  text-align:left;
+  width:600px;
+  margin-left:auto;
+  margin-right:auto;
+  background:#f5f5f5;
+  padding:15px;
+  border:1px solid #ddd;
 }
-
-#progress{
-width:320px;
-height:20px;
-border:1px solid #ccc;
-margin:auto;
-}
-
-#bar{
-width:0%;
-height:100%;
-background:#4CAF50;
-}
-
 </style>
 </head>
 
 <body>
 
-<h2>Navigation Desync Test</h2>
+<h2>Navigation Lifecycle Test</h2>
 
 <button onclick="start()">Start Test</button>
 
-<div id="loader">
-
-<p>Connecting to secure server...</p>
-
-<div id="progress">
-<div id="bar"></div>
-</div>
-
-</div>
+<div id="log"></div>
 
 <script>
 
+function log(msg){
+  const el = document.getElementById("log");
+  el.innerHTML += msg + "<br>";
+}
+
 function start(){
 
-document.getElementById("loader").style.display="block";
+  log("Opening tab to test navigation failure...");
 
-let win = window.open("https://bugzilla.mozilla.org:90");
+  let win = window.open("https://bugzilla.mozilla.org:90");
 
-let bar=document.getElementById("bar");
-let width=0;
+  let checks = 0;
 
-let interval=setInterval(function(){
+  let interval = setInterval(()=>{
 
-if(width>=100){
+    checks++;
 
-clearInterval(interval);
+    try{
 
-inject(win);
+      if(win.closed){
+        log("Tab closed.");
+        clearInterval(interval);
+        return;
+      }
 
-}else{
+      let state = win.document.readyState;
 
-width+=2;
-bar.style.width=width+"%";
+      log("Check "+checks+" → readyState: "+state);
 
-}
+      if(state === "complete" || state === "interactive"){
+        log("Document appears committed.");
+        clearInterval(interval);
+      }
 
-},140);
+    }catch(e){
 
-}
+      log("Access blocked by browser security policy.");
+      clearInterval(interval);
 
-function inject(win){
+    }
 
-try{
+    if(checks > 10){
+      log("Stopping test.");
+      clearInterval(interval);
+    }
 
-win.document.open();
-
-win.document.write(`
-<html>
-<body style="font-family:Arial;text-align:center;margin-top:120px;">
-<h2>Navigation State Demonstration</h2>
-<p>This content was injected after delayed navigation failure.</p>
-<p>If the address bar still shows the original domain, this demonstrates a navigation state issue.</p>
-</body>
-</html>
-`);
-
-win.document.close();
-
-}catch(e){
-
-alert("Injection blocked by browser security.");
-
-}
+  },1000);
 
 }
 

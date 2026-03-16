@@ -26,7 +26,7 @@ color:#444;
 
 <body>
 
-<h2>Navigation State Test</h2>
+<h2>Navigation Lifecycle Test</h2>
 
 <button onclick="start()">Start Test</button>
 
@@ -35,18 +35,19 @@ color:#444;
 <script>
 
 function log(m){
-document.getElementById("log").innerHTML+=m+"<br>";
+document.getElementById("log").innerHTML += m + "<br>";
 }
 
 function start(){
 
 log("Opening test tab...");
 
-let win = window.open("https://bugzilla.mozilla.org:90");
+// buka domain normal tanpa port
+let win = window.open("https://bugzilla.mozilla.org");
 
-let attempts=0;
+let attempts = 0;
 
-let timer=setInterval(()=>{
+let timer = setInterval(()=>{
 
 attempts++;
 
@@ -58,43 +59,22 @@ clearInterval(timer);
 return;
 }
 
-let url;
-
+let state;
 try{
-url=win.location.href;
+state = win.document.readyState;
 }catch(e){
-url="blocked";
+state = "blocked";
 }
 
-log("Check "+attempts+" → "+url);
-
-if(attempts===8){
-
-log("Attempting document write test...");
-
-try{
-
-win.document.open();
-win.document.write("<h2>Navigation Test Content</h2><p>Injected for research.</p>");
-win.document.close();
-
-log("Write attempted.");
+log("Check "+attempts+" → readyState: "+state);
 
 }catch(e){
 
-log("Write blocked by browser.");
+log("Access blocked by browser.");
 
 }
 
-}
-
-}catch(e){
-
-log("Access error.");
-
-}
-
-if(attempts>12){
+if(attempts > 10){
 clearInterval(timer);
 log("Test finished.");
 }

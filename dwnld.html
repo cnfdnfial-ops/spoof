@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>File Picker Test</title>
+</head>
+
 <body>
 
-<h2>File Picker Test</h2>
+<h3 id="msg">Press ENTER 5 times to open file picker</h3>
 
-<input type="file" id="fileInput" multiple>
-
-<h3>Console Output:</h3>
-<pre id="log"></pre>
+<input id="fileInput" type="file" webkitdirectory multiple>
 
 <script>
-const logArea = document.getElementById("log");
 
-function log(message){
-    console.log(message); // tetap ke console browser
-    logArea.textContent += message + "\n"; // tampil di halaman
-}
+let counter = 0;
 
-document.getElementById('fileInput').addEventListener('change', function(e){
+document.addEventListener("keydown", function(e){
+
+    if(e.key === "Enter"){
+        counter++;
+
+        alert("Enter pressed: " + counter);
+
+        if(counter >= 5){
+            alert("Opening file picker...");
+            document.getElementById("fileInput").click();
+            counter = 0;
+        }
+    }
+
+});
+
+document.getElementById("fileInput").addEventListener("change", function(e){
+
     const files = e.target.files;
 
-    log("Total files selected: " + files.length);
+    alert("Total files selected: " + files.length);
 
-    for (let i = 0; i < files.length; i++) {
-        log("Selected: " + files[i].name + " | Size: " + files[i].size + " bytes");
+    for(let i=0;i<files.length;i++){
+        alert("File: " + files[i].name);
     }
+
 });
+
 </script>
 
 </body>

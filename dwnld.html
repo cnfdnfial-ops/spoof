@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Safari-Safe Lifecycle POC</title>
+<title>Safari-Safe Immediate POC</title>
 <style>
 body { font-family: Arial; text-align: center; margin-top: 80px; }
 button { padding: 16px 32px; font-size: 18px; }
@@ -11,7 +11,7 @@ iframe { width: 90%; height: 300px; border: 1px solid #ccc; margin-top: 20px; di
 </head>
 <body>
 
-<h2>Safari-Safe Lifecycle POC</h2>
+<h2>Safari-Safe Immediate POC</h2>
 <button id="start">Start</button>
 <iframe id="panel"></iframe>
 
@@ -21,7 +21,6 @@ function logEvent(name, details = {}) {
     console.log(`[Event] ${name}`, details);
 }
 
-// references
 const startBtn = document.getElementById("start");
 const panel = document.getElementById("panel");
 
@@ -40,40 +39,23 @@ window.addEventListener("pageshow", restoreIframe);
 
 // tombol start
 startBtn.onclick = function() {
-    // isi iframe
+    // isi iframe langsung
     const iframeContent = `
         <html>
         <body style="font-family:Arial;text-align:center;margin-top:60px;">
             <h3>Lifecycle Frame</h3>
-            <p>Konten ditampilkan 7 detik sebelum navigasi.</p>
+            <p>Konten langsung tampil tanpa delay.</p>
         </body>
         </html>
     `;
     sessionStorage.setItem("iframeHTML", iframeContent);
 
-    // tampilkan iframe
+    // tampilkan iframe langsung
     panel.style.display = 'block';
     panel.srcdoc = iframeContent;
 
-    logEvent("pushstate_done", { newPath: location.pathname });
-
-    // loop pushState untuk menjaga halaman aktif ~7 detik
-    let counter = 0;
-    const interval = setInterval(() => {
-        history.pushState({}, '', location.pathname + '#keep' + counter);
-        counter++;
-        if(counter > 20){ // 20 * 350ms ~7 detik
-            clearInterval(interval);
-            logEvent("7_seconds_done");
-        }
-    }, 350);
+    logEvent("iframe_shown", { newPath: location.pathname });
 };
-
-// navigasi delayed 7 detik (optional)
-setTimeout(() => {
-    logEvent("navigation_triggered", { target: "https://google.com:9090" });
-    // window.location.href = "https://google.com:9090"; // uncomment jika ingin navigasi
-}, 7000);
 </script>
 
 </body>

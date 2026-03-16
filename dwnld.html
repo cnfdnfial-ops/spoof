@@ -2,92 +2,55 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation Condition Test</title>
+<title>Navigation Lifecycle Extended POC</title>
 <style>
-body{
-font-family:Arial;
-text-align:center;
-margin-top:120px;
-}
-
-button{
-padding:16px 30px;
-font-size:18px;
-}
+body { font-family: Arial; text-align: center; margin-top: 120px; }
+button { padding: 16px 32px; font-size: 18px; }
+iframe { width: 100%; height: 400px; border: 1px solid #ccc; margin-top: 20px; }
 </style>
 </head>
-
 <body>
 
-<h2>Navigation Condition Test</h2>
-<button onclick="start()">Start</button>
+<h2>Navigation Lifecycle Extended POC</h2>
+<button id="start">Start</button>
 
 <script>
+const startBtn = document.getElementById("start");
 
-function start(){
+startBtn.onclick = function(){
 
-let step = 0;
+    // Step 1: push multiple history states supaya Safari tunda restore
+    history.pushState({}, '', location.pathname + '#state1');
+    history.pushState({}, '', location.pathname + '#state2');
+    history.replaceState({}, '', location.pathname + '#state3');
 
-setInterval(function(){
+    // Step 2: buat iframe untuk menampilkan “konten lain”
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://github.com"; // konten target
+    document.body.appendChild(iframe);
 
-step++;
+    // Step 3: loop pushState ringan untuk menjaga halaman aktif
+    let counter = 0;
+    const interval = setInterval(()=>{
+        history.pushState({}, '', location.pathname + '#keep' + counter);
+        counter++;
+        if(counter > 20){ // sekitar 7 detik (20 * 350ms ~ 7 detik)
+            clearInterval(interval);
+        }
+    }, 350);
 
-if(step==1){ location.href="https://example.com"; }
-else if(step==2){ location.href="https://example.org"; }
-else if(step==3){ location.href="https://example.net"; }
-else if(step==4){ location.href="https://iana.org"; }
-else if(step==5){ location.href="https://wikipedia.org"; }
-else if(step==6){ location.href="https://developer.mozilla.org"; }
-else if(step==7){ location.href="https://www.apple.com"; }
-else if(step==8){ location.href="https://www.microsoft.com"; }
-else if(step==9){ location.href="https://www.cloudflare.com"; }
-else if(step==10){ location.href="https://www.github.com"; }
-else if(step==11){ location.href="https://www.stackoverflow.com"; }
-else if(step==12){ location.href="https://www.gnu.org"; }
-else if(step==13){ location.href="https://www.w3.org"; }
-else if(step==14){ location.href="https://www.kernel.org"; }
-else if(step==15){ location.href="https://www.python.org"; }
-else if(step==16){ location.href="https://nodejs.org"; }
-else if(step==17){ location.href="https://golang.org"; }
-else if(step==18){ location.href="https://rust-lang.org"; }
-else if(step==19){ location.href="https://deno.land"; }
-else if(step==20){ location.href="https://sqlite.org"; }
-else if(step==21){ location.href="https://nginx.org"; }
-else if(step==22){ location.href="https://httpd.apache.org"; }
-else if(step==23){ location.href="https://openbsd.org"; }
-else if(step==24){ location.href="https://freebsd.org"; }
-else if(step==25){ location.href="https://netbsd.org"; }
-else if(step==26){ location.href="https://archlinux.org"; }
-else if(step==27){ location.href="https://ubuntu.com"; }
-else if(step==28){ location.href="https://debian.org"; }
-else if(step==29){ location.href="https://fedora.org"; }
-else if(step==30){ location.href="https://alpinelinux.org"; }
+    // Step 4: fallback navigasi asli setelah 7 detik
+    setTimeout(()=>{
+        window.location.href = "https://www.google.com"; // kembali ke origin asli
+    }, 7000);
+};
 
-else if(step==31){ location.href="https://example.com#1"; }
-else if(step==32){ location.href="https://example.com#2"; }
-else if(step==33){ location.href="https://example.com#3"; }
-else if(step==34){ location.href="https://example.com#4"; }
-else if(step==35){ location.href="https://example.com#5"; }
-else if(step==36){ location.href="https://example.com#6"; }
-else if(step==37){ location.href="https://example.com#7"; }
-else if(step==38){ location.href="https://example.com#8"; }
-else if(step==39){ location.href="https://example.com#9"; }
-else if(step==40){ location.href="https://example.com#10"; }
-
-else if(step==41){ location.href="https://example.org#a"; }
-else if(step==42){ location.href="https://example.org#b"; }
-else if(step==43){ location.href="https://example.org#c"; }
-else if(step==44){ location.href="https://example.org#d"; }
-else if(step==45){ location.href="https://example.org#e"; }
-
-else if(step==50){
-clearInterval();
-}
-
-},200);
-
-}
-
+// Step 5: handle pageshow restore
+window.addEventListener("pageshow", function(e){
+    if(e.persisted){
+        history.replaceState({}, '', location.pathname + '#restored');
+    }
+});
 </script>
 
 </body>

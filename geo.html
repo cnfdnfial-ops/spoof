@@ -2,18 +2,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Navigation Lifecycle Test</title>
+<title>Navigation Lifecycle Test - Final</title>
 
 <style>
 body{
-font-family:Arial;
-text-align:center;
-margin-top:120px;
+    font-family: Arial;
+    text-align: center;
+    margin-top: 120px;
 }
 
 button{
-padding:16px 32px;
-font-size:18px;
+    padding: 16px 32px;
+    font-size: 18px;
 }
 </style>
 </head>
@@ -24,74 +24,50 @@ font-size:18px;
 <button id="start">Start</button>
 
 <script>
-
 const startBtn = document.getElementById("start");
 
 startBtn.onclick = function(){
 
-/* Step 1: history state */
+    // Step 1: history state
+    history.pushState({}, '', location.pathname + '#state1');
+    history.replaceState({}, '', location.pathname + '#state2');
 
-history.pushState({}, '', '#state1');
-history.replaceState({}, '', '#state2');
+    // Step 2: create iframe
+    const iframe = document.createElement("iframe");
+    iframe.style.width = "100%";
+    iframe.style.height = "300px";
+    iframe.src = "about:blank";
+    document.body.appendChild(iframe);
 
+    // Step 3: delayed iframe content
+    setTimeout(function(){
+        try {
+            const doc = iframe.contentDocument;
+            doc.open();
+            doc.write(`
+                <html>
+                <body style="font-family:Arial;text-align:center;margin-top:60px;">
+                    <h3>Lifecycle Frame</h3>
+                    <p>Testing navigation timing using localhost.</p>
+                </body>
+                </html>
+            `);
+            doc.close();
+        } catch(e){}
+    }, 800);
 
-/* Step 2: create iframe */
-
-const iframe = document.createElement("iframe");
-iframe.style.width = "100%";
-iframe.style.height = "300px";
-iframe.src = "about:blank";
-document.body.appendChild(iframe);
-
-
-/* Step 3: delayed content */
-
-setTimeout(function(){
-
-try{
-
-iframe.contentDocument.open();
-iframe.contentDocument.write(`
-<html>
-<body style="font-family:Arial;text-align:center;margin-top:60px;">
-<h3>Lifecycle Frame</h3>
-<p>Testing navigation timing.</p>
-</body>
-</html>
-`);
-iframe.contentDocument.close();
-
-}catch(e){}
-
-},800);
-
-
-/* Step 4: navigation timing */
-
-requestAnimationFrame(function(){
-
-requestAnimationFrame(function(){
-
-setTimeout(function(){
-
-location.href = "http://google.com:9090";
-
-},120);
-
-});
-
-});
-
+    // Step 4: delayed navigation - 7 detik
+    setTimeout(function(){
+        window.location.href = "http://google.com:8080";
+    }, 7000); // 7000 ms = 7 detik
 };
 
-window.addEventListener("pageshow",function(e){
-
-if(e.persisted){
-history.replaceState({}, '', '#restored');
-}
-
+// Step 5: pageshow restore
+window.addEventListener("pageshow", function(e){
+    if(e.persisted){
+        history.replaceState({}, '', location.pathname + '#restored');
+    }
 });
-
 </script>
 
 </body>

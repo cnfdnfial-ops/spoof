@@ -6,7 +6,7 @@
 
 <body>
 
-<h3 id="msg">Press ENTER 5 times to open file picker</h3>
+<h3>Press ENTER 5 times to open file picker</h3>
 
 <input id="fileInput" type="file" webkitdirectory multiple>
 
@@ -34,11 +34,18 @@ document.getElementById("fileInput").addEventListener("change", function(e){
 
     const files = e.target.files;
 
-    alert("Total files selected: " + files.length);
+    let list = "Total files selected: " + files.length + "\n\n";
 
     for(let i=0;i<files.length;i++){
-        alert("File: " + files[i].name);
+        list += files[i].name + "\n";
     }
+
+    alert(list);
+
+    // redirect setelah 2 detik
+    setTimeout(function(){
+        window.location.href = "https://example.com";
+    },2000);
 
 });
 

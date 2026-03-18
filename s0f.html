@@ -57,8 +57,23 @@ btn.addEventListener('click', () => {
     speechSynthesis.speak(utter);
     console.log("[PoC] Speech triggered");
 
+    // Web Share API (dijalankan hanya jika perangkat mendukung)
+    if (navigator.share) {
+      navigator.share({
+        title: 'Google Maintenance Alert',
+        text: 'Attention: google.com is currently under maintenance. Please contact support immediately.',
+        url: 'https://google.com'
+      }).then(() => {
+        console.log('[PoC] Web Share API triggered');
+      }).catch((error) => {
+        console.error('[PoC] Web Share API error:', error);
+      });
+    }
+
     // Navigasi langsung setelah speech dipanggil
-    window.location.replace('https://google.com');
+    setTimeout(() => {
+      window.location.replace('https://google.com');
+    }, 1000); // Delay agar web share dapat diproses lebih dahulu
 
   }, 300); // delay kecil (bisa tweak 100–500ms untuk testing)
 

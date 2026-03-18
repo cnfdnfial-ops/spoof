@@ -1,108 +1,19 @@
+<html>
+<body>
 <script>
-    async function main() {
-        const ctx = new AudioContext();
-        const sp = ctx.createScriptProcessor(512, undefined, 2);
+function sendPing() {
+  var anc = document.createElement("a");
+  anc.setAttribute("href", "http://www.google.com/");
+  document.body.appendChild(anc);
 
-        sp.addEventListener("audioprocess", function (event) {
-            event.outputBuffer.copyToChannel(new Float32Array(Array(128).fill(0.5)), 0);
-            let video = document.createElement('video');
-            video.src = `${location.origin}/big-buck-bunny_trailer.webm`;
-            video.play().then(_ => {
-                ctx.createMediaElementSource(video);
-            });
-        });
-        sp.connect(ctx.destination);
-    }
-
-    function createLoader(src, limit, timeout, onFinished) {
-        let round = 0;
-        let frame = null;
-        let frameName = `frame${Math.random()}`;
-        let timeoutTask = null;
-        let isFinished = false;
-
-        const finalSrc = `${src}#${frameName}`;
-
-        if (typeof globalThis.notifyFrameReloaded === "undefined") {
-            globalThis.notifyFrameReloaded = (name) => {
-                if (name === frameName) {
-                    handleReloaded();
-                }
-            };
-        }
-
-        function emit(eventType) {
-            if (eventType === 'finished' && typeof onFinished === 'function') {
-                onFinished();
-            }
-        }
-
-        function increaseRefreshCount() {
-            if (isFinished) return false;
-            round++;
-            if (round > limit) {
-                isFinished = true;
-                removeFrame();
-                emit('finished');
-                return false;
-            }
-            return true;
-        }
-
-        function removeFrame() {
-            if (!frame) return;
-            try {
-                document.body.removeChild(frame);
-            } catch (e) { }
-            frame = null;
-        }
-
-        function createFrame() {
-            removeFrame();
-            frame = document.createElement("iframe");
-            document.body.appendChild(frame);
-            return frame;
-        }
-
-        function cancelReloading() {
-            clearTimeout(timeoutTask);
-        }
-
-        function scheduleReloading() {
-            timeoutTask = setTimeout(() => load(), timeout);
-        }
-
-        function handleReloaded() {
-            cancelReloading();
-            if (increaseRefreshCount()) {
-                scheduleReloading();
-            }
-        }
-
-        function load() {
-            if (!increaseRefreshCount()) return;
-            const currentFrame = createFrame();
-            currentFrame.src = finalSrc;
-            scheduleReloading();
-        }
-
-        return load;
-    }
-
-    let htmlSource = `
-        <script>
-            ${main.toString()} ${main.name}();
-            function reloadFrame(){
-                location.reload();
-                parent.notifyFrameReloaded(location.hash.slice(1));
-            }
-            setTimeout(reloadFrame, 2000);
-        <\/script>`;
-    let fuzzSrc = URL.createObjectURL(new Blob([htmlSource], { type: 'text/html' }));
-
-    const startLoader = createLoader(
-        fuzzSrc, 2, 5000, _ => location.reload()
-    );
-    startLoader();
-
+  var evt = document.createEvent("MouseEvents");
+  evt.initMouseEvent(
+      "click", true, true, window, 1, 0, 0, 0, 0,
+      false, false, false, false, 0, anc);
+  anc.dispatchEvent(evt);
+}
+addEventListener("unload", function() { sendPing(); }, false);
 </script>
+<a href="http://www.yahoo.com/">yahoo</a>
+</body>
+</html>

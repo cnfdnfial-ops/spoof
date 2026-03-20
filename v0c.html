@@ -1,31 +1,33 @@
 <script>
   function next() {
-    // Pastikan halaman yang dimaksud hanya dipanggil sekali setelah verifikasi
-    if (w.location.href !== 'https://x.com') {
-      w.location.replace('https://www.google.com:1234');
-    }
+    // Mengarahkan ulang ke alamat yang diinginkan
+    w.location.replace('https://www.google.com:1234');
   }
 
   function f() {
-    w = window.open("");  
+    // Membuka jendela baru
+    w = window.open("");
     w.document.write('<h2>This is not x.com!</h2>');
-    
-    // Verifikasi domain sebelum mengubah lokasi
+
+    // Mengatur lokasi ke x.com setelah sedikit delay
     setTimeout(function() {
       w.location = "https://x.com";
-    }, 500); // Memberi delay untuk menghindari looping cepat
-    
-    // Atur kondisi berhenti jika manipulasi tidak diperlukan
-    setTimeout(function() {
+    }, 500); // Delay agar perubahan lokasi lebih stabil dan tidak tereksekusi terlalu cepat
+
+    // Menggunakan setInterval untuk mengecek apakah alamat sudah berubah
+    i = setInterval(function() {
       try {
+        // Mengecek URL halaman yang terbuka
         let url = w.location.href;
-        if (url !== "https://x.com") {
+        if (url !== 'https://x.com') {
+          // Jika URL bukan yang diinginkan, lakukan redirect
           next();
         }
-      } catch(e) {
+      } catch (e) {
+        // Jika ada kesalahan (misalnya window sudah tidak ada), hentikan interval
         clearInterval(i);
       }
-    }, 500);
+    }, 50);  // Interval yang lebih moderat (50ms)
   }
 </script>
 

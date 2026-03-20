@@ -7,10 +7,10 @@
   function f() {
     // Membuka jendela baru
     w = window.open("");  
+   w.location = "https://x.com";
     w.document.write('<h2>This is not x.com!</h2>');  // Tampilkan konten sementara
 
     // Mengubah alamat URL ke x.com, address bar berubah
-    w.location = "https://x.com";
 
     // Menambahkan efek loading bolak-balik di dalam konten
     let counter = 0;

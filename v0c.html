@@ -3,26 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <title>Download Test</title>
-
 <script>
 function start() {
-
-    const file = "https://drive.usercontent.google.com/../../download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
+    const file = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
     const a = document.createElement("a");
     a.href = file;
     a.download = "";
     document.body.appendChild(a);
-    a.click();
 
-    setTimeout(()=>{
-        window.location.href="http://google.com/";
-    },2000);
+    a.click(); // trigger download
+    document.body.removeChild(a); // bersihkan DOM
 
+    // redirect setelah download
+    setTimeout(() => {
+        window.open("http://google.com/", "_self", "noopener,noreferrer");
+    }, 2000);
 }
 </script>
 </head>
-
 <body onload="start()">
 Downloading...
 </body>

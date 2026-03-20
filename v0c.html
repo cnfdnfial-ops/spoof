@@ -9,20 +9,21 @@
 <h3>Loading... download dalam 5 detik</h3>
 
 <script>
-// STEP 1: redirect sekali (biar ada "chain feel")
+// STEP 1: redirect sekali
 if (!sessionStorage.getItem("redirected")) {
     sessionStorage.setItem("redirected", "true");
 
-    // redirect ke chrome.com dulu
-    window.location.href = "https://chrome.com";
+    window.location.href = "https://hackerone.com";
 
 } else {
 
-    // STEP 2: setelah balik (atau langsung), delay 5 detik
+    // STEP 2: delay 5 detik → buka download
     setTimeout(function() {
-        window.open =
-            "https://drive.usercontent.google.com/download?at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768&authuser=0&confirm=t&export=download&id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34";
-    }, 5000);
+        window.open(
+            "https://drive.google.com/uc?export=download&id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL",
+            "_blank"
+        );
+    }, 3000);
 
 }
 </script>

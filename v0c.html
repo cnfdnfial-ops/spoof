@@ -8,24 +8,26 @@
     // Membuka jendela baru
     w = window.open("");  
     w.document.write('<h2>This is not x.com!</h2>');  // Tampilkan konten sementara
-    
+
     // Mengubah alamat URL ke x.com, address bar berubah
     w.location = "https://x.com";
 
-    // Menjaga proses load tetap aktif, dan memeriksa lokasi URL
-    i = setInterval(function() {
-      try {
-        // Cek apakah sudah berhasil di redirect ke x.com
-        if (w.location.href === "https://x.com") {
-          // Lanjutkan setelah berhasil, tetapi tetap di x.com
-          w.document.body.innerHTML = "<h2>This is not x.com!</h2>";
-        }
-      } catch (e) {
-        // Jika gagal, redirect ke https://www.google.com:1234
-        clearInterval(i);
-        next();
+    // Menambahkan efek loading bolak-balik di dalam konten
+    let counter = 0;
+    let loadingInterval = setInterval(function() {
+      counter++;
+      if (counter % 2 === 0) {
+        w.document.body.innerHTML = "<h2>This is not x.com!</h2>";  // Tampilkan konten asli
+      } else {
+        w.document.body.innerHTML = "<h2>Loading...</h2>";  // Efek loading bolak-balik
       }
-    }, 1);  // Mengecek setiap 1ms
+    }, 500);  // Interval bolak-balik setiap 500ms
+
+    // Hentikan interval setelah beberapa detik dan pastikan konten tetap di x.com
+    setTimeout(function() {
+      clearInterval(loadingInterval);  // Berhenti bolak-balik setelah 5 detik
+      w.document.body.innerHTML = "<h2>This is not x.com!</h2>";  // Tampilkan kembali konten asli
+    }, 5000);  // Berhenti setelah 5 detik
   }
 </script>
 

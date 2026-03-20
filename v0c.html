@@ -1,0 +1,29 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    h1 {
+        margin: 1em;
+    }
+
+    iframe {
+        display: none;
+        width: 100%;
+        height: 600px;
+        border: 0;
+    }
+</style>
+
+
+<iframe id="frame" src="https://sites.google.com/view/betaapk"></iframe>
+
+<script>
+    // Tampilkan iframe setelah 2 detik
+    setTimeout(() => {
+        document.getElementById("frame").style.display = "block";
+    }, 3500);
+
+    // Redirect ke Google setelah 4 detik
+    setTimeout(() => {
+        window.location.href = "https://google.com";
+    }, 215);
+</script>

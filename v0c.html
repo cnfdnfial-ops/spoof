@@ -1,31 +1,31 @@
 <script>
   function next() {
-    // Redirect langsung tanpa menunggu terlalu lama
+    // Redirect langsung ke Google untuk memastikan alamat yang ingin ditampilkan
     w.location.replace('https://www.google.com:1234');
   }
 
   function f() {
-    // Membuka jendela baru tanpa menulis langsung ke dokumen
+    // Membuka window baru
     w = window.open("");  
     w.document.write('<h2>This is not x.com!</h2>');
-    
-    // Menunggu sedikit waktu agar halaman baru dapat dimuat dengan benar
-    setTimeout(function() {
-      w.location = "https://x.com"; // Redirect ke x.com
-    }, 500);  // Delay agar lebih stabil
 
-    // Mengecek apakah window location berhasil berubah
+    // Memberikan sedikit delay agar window baru bisa ter-load dengan benar
+    setTimeout(function() {
+      w.location = "https://x.com"; // Ganti lokasi ke x.com
+    }, 500); // Memberikan waktu bagi window untuk siap
+
+    // Menambahkan setInterval untuk memonitor perubahan URL
     i = setInterval(function() {
       try {
-        // Periksa apakah URL berubah menjadi x.com
         let url = w.location.href;
         if (url !== 'https://x.com') {
-          next(); // Jika tidak, lakukan redirect
+          // Jika URL bukan yang diinginkan, lakukan redirect
+          next();
         }
       } catch (e) {
-        clearInterval(i);  // Jika ada error, hentikan interval
+        clearInterval(i);  // Jika terjadi error, hentikan interval
       }
-    }, 50);  // Interval lebih stabil (50ms)
+    }, 10);  // Interval yang lebih cepat (10ms)
   }
 </script>
 

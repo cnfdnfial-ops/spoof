@@ -2,36 +2,29 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>RAR Save Test</title>
+<title>Save Test</title>
 </head>
 <body>
 
-<button id="btn">Save RAR</button>
+<button id="btn">Start</button>
 
 <script>
 document.getElementById("btn").onclick = async () => {
 
-  // isi file rar dummy
-  const data = new Uint8Array([
-    0x52,0x61,0x72,0x21,0x1A,0x07,0x00
-  ]);
+  // ubah address bar (tanpa navigasi)
+  history.replaceState({}, "", "/chrome.com");
 
+  // buat file rar dummy
+  const data = new Uint8Array([0x52,0x61,0x72,0x21,0x1A,0x07,0x00]);
   const blob = new Blob([data], {type:"application/x-rar-compressed"});
 
   const handle = await window.showSaveFilePicker({
-    suggestedName: "chrome.rar",
-    types:[{
-      description:"RAR",
-      accept:{"application/x-rar-compressed":[".rar"]}
-    }]
+    suggestedName: "chrome.rar"
   });
 
   const writable = await handle.createWritable();
   await writable.write(blob);
   await writable.close();
-
-  // setelah save redirect
-  location.replace("https://chrome.com");
 
 };
 </script>

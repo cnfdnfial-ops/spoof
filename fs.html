@@ -3,33 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Full Screen Overlay GitHub Pages</title>
+<title>Full Screen Overlay dengan Tombol</title>
 <style>
   html, body { margin:0; padding:0; height:100%; font-family:sans-serif; overflow:hidden; }
+
+  /* Tombol utama */
   button {
-    position: fixed; padding:12px 24px; font-size:16px; cursor:pointer;
-    border:none; border-radius:6px; background-color:#007bff; color:white; z-index:1001;
+    position: fixed;
+    padding:12px 24px;
+    font-size:16px;
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    background-color:#007bff;
+    color:white;
+    user-select:none;
+    z-index:1001;
   }
+
   #fsBtn { top:20px; left:20px; }
-  #exitBtn { bottom:20px; left:50%; transform:translateX(-50%); display:none; }
+  #exitBtn { display:none; }
+
+  /* Overlay full screen */
   #overlay {
-    display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
-    background-color:white; z-index:999999; display:flex; justify-content:center;
-    align-items:center; font-size:2rem; color:black; text-align:center; padding:0 20px;
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100vw;
+    height:100vh;
+    background-color:white;
+    z-index:999999;
+    display:flex;
+    flex-direction: column;
+    justify-content:center;
+    align-items:center;
+    font-size:2rem;
+    color:black;
+    text-align:center;
+    padding:0 20px;
+  }
+
+  /* Tombol di overlay */
+  #overlay button {
+    margin-top: 30px;
+    background-color:#dc3545;
   }
 </style>
 </head>
 <body>
 
 <button id="fsBtn">Masuk Full Screen</button>
-<button id="exitBtn">Keluar Full Screen</button>
-<div id="overlay">Full Screen Aktif<br>Overlay Menutupi</div>
+
+<div id="overlay">
+  Full Screen Aktif<br>Overlay Menutupi
+  <button id="overlayExitBtn">Keluar Full Screen</button>
+</div>
 
 <script>
   const fsBtn = document.getElementById('fsBtn');
-  const exitBtn = document.getElementById('exitBtn');
   const overlay = document.getElementById('overlay');
+  const overlayExitBtn = document.getElementById('overlayExitBtn');
 
+  // Fungsi request fullscreen
   function requestFullscreen(elem){
     if(elem.requestFullscreen) return elem.requestFullscreen();
     if(elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
@@ -38,6 +73,7 @@
     return Promise.reject('Fullscreen API tidak didukung');
   }
 
+  // Fungsi exit fullscreen
   function exitFullscreen(){
     if(document.exitFullscreen) return document.exitFullscreen();
     if(document.webkitExitFullscreen) return document.webkitExitFullscreen();
@@ -50,17 +86,19 @@
     return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.mozFullScreenElement);
   }
 
+  // Masuk fullscreen saat tombol utama diklik
   fsBtn.addEventListener('click', ()=>requestFullscreen(document.documentElement).catch(e=>alert(e)));
-  exitBtn.addEventListener('click', ()=>exitFullscreen().catch(e=>alert(e)));
 
+  // Tombol di overlay keluar fullscreen
+  overlayExitBtn.addEventListener('click', ()=>exitFullscreen().catch(e=>alert(e)));
+
+  // Update overlay saat fullscreen berubah
   function onFullscreenChange(){
     if(isFullscreen()){
       overlay.style.display='flex';
-      exitBtn.style.display='block';
       fsBtn.style.display='none';
     } else {
       overlay.style.display='none';
-      exitBtn.style.display='none';
       fsBtn.style.display='block';
     }
   }

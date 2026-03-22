@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fullscreen Lock Semi</title>
+<title>Fullscreen Lock</title>
 <style>
   html, body {
-    margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif;
+    margin:0; padding:0; height:100%; font-family:sans-serif; overflow:hidden;
   }
 
   #fsBtn {
-    position: fixed; top:20px; left:20px;
+    position: fixed;
+    top:20px; left:20px;
     padding:12px 24px; font-size:16px;
     cursor:pointer; border:none; border-radius:6px; background:#007bff; color:white;
     z-index:1001;
@@ -21,15 +22,8 @@
     position:fixed; top:0; left:0;
     width:100vw; height:100vh;
     background:white; z-index:999999;
-    display:flex; flex-direction:column;
-    justify-content:center; align-items:center;
+    display:flex; justify-content:center; align-items:center;
     font-size:2rem; color:black; text-align:center; padding:0 20px;
-  }
-
-  #overlay button {
-    margin-top:30px; padding:12px 24px;
-    font-size:16px; border:none; border-radius:6px; background:#dc3545; color:white;
-    cursor:pointer;
   }
 </style>
 </head>
@@ -38,16 +32,14 @@
 <button id="fsBtn">Masuk Full Screen Lock</button>
 
 <div id="overlay">
-  Full Screen Aktif<br>Overlay Menutupi<br>
-  <button id="exitBtn">Keluar Full Screen</button>
+  Full Screen Aktif — Layar Terkunci
 </div>
 
 <script>
 const fsBtn = document.getElementById('fsBtn');
 const overlay = document.getElementById('overlay');
-const exitBtn = document.getElementById('exitBtn');
 
-// Fullscreen request
+// Request fullscreen dengan fallback
 function requestFullscreen(elem){
   if(elem.requestFullscreen) return elem.requestFullscreen();
   if(elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
@@ -56,15 +48,7 @@ function requestFullscreen(elem){
   return Promise.reject('Fullscreen API tidak didukung');
 }
 
-// Exit fullscreen
-function exitFullscreen(){
-  if(document.exitFullscreen) return document.exitFullscreen();
-  if(document.webkitExitFullscreen) return document.webkitExitFullscreen();
-  if(document.msExitFullscreen) return document.msExitFullscreen();
-  if(document.mozCancelFullScreen) return document.mozCancelFullScreen();
-  return Promise.reject('Fullscreen API tidak didukung');
-}
-
+// Cek fullscreen aktif
 function isFullscreen(){
   return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.mozFullScreenElement);
 }
@@ -74,20 +58,17 @@ fsBtn.addEventListener('click', ()=>{
   requestFullscreen(document.documentElement).catch(e=>alert(e));
 });
 
-// Tombol keluar
-exitBtn.addEventListener('click', ()=>{
-  exitFullscreen().catch(e=>alert(e));
-});
-
-// Overlay muncul saat fullscreen aktif
+// Update overlay setiap fullscreen berubah
 function updateOverlay(){
   if(isFullscreen()){
     overlay.style.display='flex';
     fsBtn.style.display='none';
   } else {
-    // Jika pengguna tekan Esc, overlay tetap muncul lagi → “lock semi”
+    // Jika fullscreen hilang (misal Esc), tampilkan overlay + paksa fullscreen lagi
     overlay.style.display='flex';
     fsBtn.style.display='none';
+    // Paksa fullscreen otomatis lagi setelah 200ms
+    setTimeout(()=>requestFullscreen(document.documentElement).catch(()=>{}), 200);
   }
 }
 

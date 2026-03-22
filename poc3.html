@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Popup Download Gesture Test</title>
+<title>Download File Picker Test</title>
 <style>
 body { font-family:sans-serif;padding:20px }
 button { padding:12px 18px;font-size:16px }
@@ -11,46 +11,30 @@ pre { background:#111;color:#0f0;padding:10px }
 </head>
 <body>
 
-<h3>Popup Download Gesture Enforcement Test</h3>
-<button id="btn">Open Popup</button>
+<h3>Download File Picker Test</h3>
+<button id="btn">Download File</button>
 <pre id="log"></pre>
 
 <script>
 const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
-document.getElementById("btn").onclick = async () => {
+document.getElementById("btn").onclick = () => {
 
   log("[1] User click received");
 
-  const fileUrl = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
+  const url = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
-  try {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "chrome.rar";   // nama file yang akan muncul di file picker
 
-    log("[2] Fetching file...");
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
+  log("[2] Download request triggered");
 
-    log("[3] File received");
-
-    const a = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    a.href = url;
-    a.download = "chrome.exe";   // nama file yang disimpan
-    document.body.appendChild(a);
-    a.click();
-
-    URL.revokeObjectURL(url);
-
-    log("[4] Download triggered");
-
-  } catch(e) {
-    log("[ERROR] " + e);
-  }
-
-  // popup test
   const w = window.open(
     "https://chrome.com",
     "_blank",
@@ -65,7 +49,7 @@ document.getElementById("btn").onclick = async () => {
   if(!w){
     log("[ERROR] Popup blocked");
   } else {
-    log("[5] Popup opened");
+    log("[3] Popup opened");
   }
 
 };

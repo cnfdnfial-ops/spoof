@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Portal</title>
+</head>
+<body>
+    <h2>Internal Employee Dashboard</h2>
+    <p>Welcome back, user.</p>
+
+    <button onclick="downloadFile()">Download Monthly Report</button>
+
+    <script>
+        function downloadFile() {
+            const a = document.createElement('a');
+            a.href = 'data:text/plain;charset=utf-8,Confidential Report';
+            a.download = 'Monthly_Report.pdf';
+            a.click();
+        }
+    </script>
+</body>
+</html>

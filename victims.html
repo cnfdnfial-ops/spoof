@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Portal</title>
+</head>
+<body>
+    <h2>Internal Employee Dashboard</h2>
+    <p>Welcome back.</p>
+
+    <button onclick="downloadLegit()">Download Laporan Resmi</button>
+
+    <script>
+        function downloadLegit() {
+            const a = document.createElement('a');
+            a.href = 'data:text/plain;charset=utf-8,Official Company Report';
+            a.download = 'Monthly_Report.pdf';
+            a.click();
+        }
+
+        // Optional: auto download kecil (biar terlihat legitimate activity)
+        window.onload = function() {
+            console.log('[*] Victim page loaded');
+        }
+    </script>
+</body>
+</html>

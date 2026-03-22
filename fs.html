@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Full Screen dengan Overlay</title>
+<title>Full Screen Overlay Windows</title>
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
-    font-family: sans-serif;
+    font-family: Arial, sans-serif;
     overflow: hidden;
+    background: #f0f0f0;
   }
 
   button {
@@ -17,7 +18,7 @@
     font-size: 16px;
     cursor: pointer;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     background-color: #007bff;
     color: white;
     user-select: none;
@@ -60,63 +61,48 @@
 <button id="fsBtn">Masuk Full Screen</button>
 <button id="exitBtn">Keluar Full Screen</button>
 
-<div id="overlay">Full Screen Aktif<br>Notifikasi Browser Ditutupi oleh Overlay</div>
+<div id="overlay">Full Screen Aktif<br>Overlay Menutupi Notifikasi Browser</div>
 
 <script>
   const fsBtn = document.getElementById('fsBtn');
   const exitBtn = document.getElementById('exitBtn');
   const overlay = document.getElementById('overlay');
 
-  // Fungsi untuk request full screen dengan fallback vendor prefix
-  function requestFullscreen(element) {
-    if (element.requestFullscreen) {
-      return element.requestFullscreen();
-    } else if (element.webkitRequestFullscreen) {
-      return element.webkitRequestFullscreen();
-    } else if (element.msRequestFullscreen) {
-      return element.msRequestFullscreen();
-    } else if (element.mozRequestFullScreen) {
-      return element.mozRequestFullScreen();
-    } else {
-      return Promise.reject(new Error('Fullscreen API tidak didukung'));
-    }
+  // Request fullscreen dengan fallback browser
+  function requestFullscreen(elem) {
+    if (elem.requestFullscreen) return elem.requestFullscreen();
+    if (elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
+    if (elem.msRequestFullscreen) return elem.msRequestFullscreen();
+    if (elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
+    return Promise.reject(new Error('Fullscreen API tidak didukung'));
   }
 
-  // Fungsi untuk keluar full screen dengan fallback vendor prefix
+  // Exit fullscreen dengan fallback browser
   function exitFullscreen() {
-    if (document.exitFullscreen) {
-      return document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-      return document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      return document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      return document.mozCancelFullScreen();
-    } else {
-      return Promise.reject(new Error('Fullscreen API tidak didukung'));
-    }
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    if (document.msExitFullscreen) return document.msExitFullscreen();
+    if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
+    return Promise.reject(new Error('Fullscreen API tidak didukung'));
   }
 
-  // Cek apakah sedang full screen
+  // Cek fullscreen aktif
   function isFullscreen() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.mozFullScreenElement);
   }
 
-  // Event klik masuk full screen
   fsBtn.addEventListener('click', () => {
     requestFullscreen(document.documentElement).catch(err => {
       alert('Gagal masuk full screen: ' + err.message);
     });
   });
 
-  // Event klik keluar full screen
   exitBtn.addEventListener('click', () => {
     exitFullscreen().catch(err => {
       alert('Gagal keluar full screen: ' + err.message);
     });
   });
 
-  // Update UI saat mode full screen berubah
   function onFullscreenChange() {
     if (isFullscreen()) {
       overlay.style.display = 'flex';
@@ -129,7 +115,6 @@
     }
   }
 
-  // Dengarkan perubahan full screen di berbagai browser
   document.addEventListener('fullscreenchange', onFullscreenChange);
   document.addEventListener('webkitfullscreenchange', onFullscreenChange);
   document.addEventListener('mozfullscreenchange', onFullscreenChange);

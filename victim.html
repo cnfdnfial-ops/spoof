@@ -1,148 +1,174 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 OOB Path Hunter</title>
+<title>V8 Advanced Bug Hunter</title>
 
-<h2>OOB / Type Confusion Hunter</h2>
+<h2>V8 Bug Hunting Harness</h2>
 <pre id="log"></pre>
 
 <script>
-const logEl = document.getElementById('log')
-const log = m => {
-  logEl.textContent += m + "\n"
-  console.log(m)
+
+const logEl = document.getElementById("log")
+function log(x){
+  logEl.textContent += x + "\n"
+  console.log(x)
 }
 
-// ==========================
-// CONFIG
-// ==========================
-const N = 10000
+const ITER = 20000
 
-// ==========================
-// GC PRESSURE
-// ==========================
-function gc() {
-  let tmp = []
-  for (let i = 0; i < 30; i++) {
-    tmp.push(new ArrayBuffer(1024 * 1024))
+// =========================
+// GC pressure
+// =========================
+function stressGC(){
+  let tmp=[]
+  for(let i=0;i<20;i++){
+    tmp.push(new ArrayBuffer(1024*1024))
   }
 }
 
-// ==========================
-// TARGET FUNCTION (JIT)
-// ==========================
-function vuln(arr, idx, val, toggle) {
-  if (toggle) {
-    arr[idx] = val
-  } else {
-    arr[idx] = val + 0.1
+// =========================
+// array generators
+// =========================
+function doubleArray(){
+  let a=[]
+  for(let i=0;i<64;i++) a.push(i+0.5)
+  return a
+}
+
+function objectArray(){
+  let a=[]
+  for(let i=0;i<64;i++) a.push({x:i})
+  return a
+}
+
+// =========================
+// JIT target
+// =========================
+function target(arr,idx,val,flag){
+
+  if(flag){
+    arr[idx]=val
+  }else{
+    arr[idx]=val+0.1
   }
+
   return arr[idx]
 }
 
-// ==========================
-// SETUP ARRAYS
-// ==========================
-function makeDoubleArr() {
-  let a = []
-  for (let i = 0; i < 100; i++) a.push(i + 0.5)
-  return a
-}
+// =========================
+// typed arrays
+// =========================
+let buf=new ArrayBuffer(0x200)
+let f64=new Float64Array(buf)
+let u32=new Uint32Array(buf)
 
-function makeObjectArr() {
-  let a = []
-  for (let i = 0; i < 100; i++) a.push({x: i})
-  return a
-}
+// =========================
+// anomaly detectors
+// =========================
 
-// ==========================
-// TYPED ARRAY TARGET
-// ==========================
-let buf = new ArrayBuffer(0x100)
-let f64 = new Float64Array(buf)
-let u32 = new Uint32Array(buf)
+function checkNumbers(arr){
 
-// ==========================
-// CHECKERS
-// ==========================
-function checkOOB(arr) {
-  for (let i = 0; i < arr.length; i++) {
-    let v = arr[i]
+  if(typeof arr[0]!="number") return false
 
-    if (typeof v !== "number") {
-      log("❗ TYPE CONFUSION @ " + i + ": " + JSON.stringify(v))
+  for(let i=0;i<arr.length;i++){
+
+    let v=arr[i]
+
+    if(typeof v!="number"){
+      log("TYPE CONFUSION @ "+i)
       return true
     }
 
-    if (Math.abs(v) > 1e12) {
-      log("❗ POSSIBLE POINTER LEAK @ " + i + ": " + v)
+    if(!Number.isFinite(v)){
+      log("WEIRD NUMBER "+v)
       return true
     }
+
+    if(Math.abs(v)>1e12){
+      log("POSSIBLE POINTER "+v)
+      return true
+    }
+
   }
+
   return false
 }
 
-function checkTypedArray() {
-  for (let i = 0; i < f64.length; i++) {
-    let a = f64[i]
-    let b = (u32[i*2] | (u32[i*2+1] << 32))
+function checkTypedArray(){
 
-    if (!Number.isFinite(a) && a !== NaN) {
-      log("❗ WEIRD FLOAT64 @ " + i + ": " + a)
+  for(let i=0;i<f64.length;i++){
+
+    let v=f64[i]
+
+    if(!Number.isFinite(v)){
+      log("FLOAT CORRUPTION "+v)
       return true
     }
+
   }
+
   return false
 }
 
-// ==========================
-// MAIN
-// ==========================
-function run() {
-  log("[*] warmup...")
+// =========================
+// main
+// =========================
+function run(){
 
-  let arr = makeDoubleArr()
+  log("[*] warmup")
 
-  // warmup JIT
-  for (let i = 0; i < 10000; i++) {
-    vuln(arr, 0, 1.1, true)
+  let arr=doubleArray()
+
+  for(let i=0;i<10000;i++){
+    target(arr,0,1.1,true)
   }
 
-  log("[*] fuzzing...")
+  log("[*] fuzzing")
 
-  for (let i = 0; i < N; i++) {
+  for(let i=0;i<ITER;i++){
 
-    // 🔥 shape flip (classic trigger)
-    if (i % 7 === 0) arr = makeObjectArr()
-    if (i % 9 === 0) arr = makeDoubleArr()
+    // elements kind flip
+    if(i%13==0) arr=objectArray()
+    if(i%17==0) arr=doubleArray()
 
-    let idx = (i % 120) // occasionally out-of-bounds-ish
-    let val = i + 0.1337
+    // holey transition
+    if(i%19==0){
+      arr[1000]=1
+    }
 
-    vuln(arr, idx, val, i % 2)
+    // length mutation
+    if(i%23==0){
+      arr.length=32
+    }
 
-    // 🔥 spray typed array
-    f64[i % f64.length] = i + 0.5
+    let idx=i%120
+    let val=i+0.1337
 
-    if (i % 20 === 0) gc()
+    target(arr,idx,val,i%2)
 
-    // checks
-    if (checkOOB(arr)) {
-      log("🔥 POSSIBLE OOB PATH DETECTED")
+    // typed array spray
+    f64[i%f64.length]=i+0.5
+
+    if(i%50==0) stressGC()
+
+    if(checkNumbers(arr)){
+      log("⚠ potential corruption")
       break
     }
 
-    if (checkTypedArray()) {
-      log("🔥 TYPED ARRAY CORRUPTION?")
+    if(checkTypedArray()){
+      log("⚠ typed array anomaly")
       break
     }
 
-    if (i % 500 === 0) {
-      log("[*] iter = " + i)
+    if(i%1000==0){
+      log("iter "+i)
     }
+
   }
 
   log("[*] done")
 }
 
 run()
+
 </script>

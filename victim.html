@@ -1,8 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Combined JIT / Array Edge Case + Snap Report</title>
+<title>V8 Super JIT / Array Edge Fuzz + Snapshots</title>
 
-<h2>V8 Engine Behaviour Fuzz + Snapshots</h2>
+<h2>V8 Engine Super Stress Fuzz + Snapshots</h2>
 <pre id="log"></pre>
 
 <script>
@@ -22,8 +22,9 @@ let report = {
 }
 
 function snapshot(arr, iter){
-  let shape = arr.slice(0,10).map(x=>typeof x).join(",")
+  let shape = arr.slice(0,20).map(x=>typeof x).join(",")
   report.iter = iter
+  report.spikes++
   log(`📊 SNAPSHOT @ iter ${iter} | shape:${shape} | length:${arr.length}`)
 }
 
@@ -39,7 +40,7 @@ function target(a,i){ return a[i]+1.1 }
 function warmup(){
   let arr=[]
   for(let i=0;i<100;i++) arr.push(i+0.5)
-  for(let i=0;i<30000;i++){
+  for(let i=0;i<50000;i++){
     vuln(arr,i%50)
     target(arr,i%50)
   }
@@ -54,6 +55,9 @@ function mutate(arr){
   arr.length=20
   arr[60]=13.37
   arr[4]={x:1}
+  arr[2]=null
+  arr[7]="foo"
+  arr[9]=true
   Object.defineProperty(arr,3,{
     get(){ return 1.1 }
   })
@@ -71,6 +75,14 @@ function breakAssumption(a){
   Object.defineProperty(a,3,{
     get(){
       a.push(99.9)
+      a[1]={x:"oops"}
+      return 1.1
+    }
+  })
+  Object.defineProperty(a,6,{
+    get(){
+      a.push(Math.random()*1000)
+      a[11]="bar"
       return 1.1
     }
   })
@@ -142,16 +154,21 @@ function checkTyped(){
 function run(){
   log("[*] warmup / JIT")
   let base = warmup()
-  log("[*] fuzzing + snapshots")
+  log("[*] super fuzzing + snapshots")
 
-  for(let i=0;i<10000;i++){
+  for(let i=0;i<50000;i++){
     let arr=[...base]
-    arr = mutate(arr)
-    arr = breakAssumption(arr)
+    let ops = [mutate, breakAssumption]
+    ops.sort(()=>Math.random()-0.5).forEach(f=>arr=f(arr))
 
     vuln(arr,5)
     target(arr,4)
-    f64[i%f64.length]=i+0.5
+
+    // Typed array extreme values
+    f64[i%f64.length] = i+0.5
+    if(i % 100 === 0) f64[i%f64.length] = NaN
+    if(i % 150 === 0) f64[i%f64.length] = Infinity
+    if(i % 200 === 0) u32[i%u32.length] = 0xffffffff
 
     if(i%20===0) gc()
 
@@ -159,19 +176,16 @@ function run(){
       log("⚠ ARRAY INVARIANT BREAK")
       report.anomalies.push({iter:i,state:"array"})
       snapshot(arr,i)
-      return
+      break
     }
     if(checkTyped()){
       log("⚠ TYPED ARRAY CORRUPTION")
       report.anomalies.push({iter:i,state:"typed"})
       snapshot(arr,i)
-      return
+      break
     }
 
-    if(i%500===0){
-      log("iter "+i)
-      snapshot(arr,i)
-    }
+    if(i%500===0) snapshot(arr,i)
   }
 
   log("[*] finished fuzzing")

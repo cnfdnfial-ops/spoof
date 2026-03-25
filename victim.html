@@ -1,173 +1,295 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Research-Grade Safe Minimizer</title>
+<title>V8 Combined JIT / Array Edge Case Research</title>
 
+<h2>V8 Engine Behaviour Fuzz</h2>
 <pre id="log"></pre>
 
 <script>
 
-const logBox = document.getElementById("log");
-const log = (m) => {
-  console.log(m);
-  logBox.textContent += m + "\n";
-};
-
-// =========================
-// HOT FUNCTION (IC target)
-// =========================
-
-function hot(a, i) {
-  return a[i] + 1.1;
+const log = m=>{
+ document.getElementById("log").textContent += m+"\n"
+ console.log(m)
 }
 
-// =========================
-// DETECTION SIGNALS
-// =========================
+// =======================
+// REPORT BUFFER (NEW)
+// =======================
 
-let lastTime = performance.now();
-let spikeCount = 0;
-let typeChaos = 0;
+let report = {
+  iter: 0,
+  states: { PACKED:0, HOLEY:0, MIXED:0 },
+  spikes: 0,
+  anomalies: [],
+  start: performance.now()
+}
 
-// =========================
-// SAFE FAILURE MODEL
-// =========================
+// =======================
+// TARGET FUNCTIONS
+// =======================
 
-function evaluate(arr) {
+function vuln(a,i){
+ return a[i] + 1.1
+}
 
-  let sum = 0;
-  let hasObject = false;
-  let hasHole = false;
+function target(a,i){
+ return a[i] + 1.1
+}
 
-  const t0 = performance.now();
+// =======================
+// WARMUP / JIT TRAINING
+// =======================
 
-  for (let i = 0; i < arr.length; i++) {
+function warmup(){
 
-    const v = hot(arr, i % arr.length);
+ let arr=[]
 
-    if (typeof v === "object") hasObject = true;
-    if (v === undefined) hasHole = true;
-    if (typeof v === "number") sum += v;
-    if (!Number.isFinite(v)) typeChaos++;
+ for(let i=0;i<100;i++)
+  arr.push(i+0.5)
+
+ for(let i=0;i<30000;i++){
+  vuln(arr,i%50)
+  target(arr,i%50)
+ }
+
+ return arr
+}
+
+// =======================
+// ARRAY MUTATIONS
+// =======================
+
+function mutate(arr){
+
+ delete arr[5]
+
+ arr.length = 20
+
+ arr[60] = 13.37
+
+ arr[4] = {x:1}
+
+ Object.defineProperty(arr,3,{
+  get(){
+   return 1.1
+  }
+ })
+
+ return arr
+}
+
+// =======================
+// ASSUMPTION BREAK
+// =======================
+
+function breakAssumption(a){
+
+ delete a[10]
+
+ a.length = 20
+
+ a[80] = 13.37
+
+ a[5] = {x:1}
+
+ Object.defineProperty(a,3,{
+  get(){
+   a.push(99.9)
+   return 1.1
+  }
+ })
+
+ a = new Proxy(a,{
+  get(target,prop){
+
+   if(prop==="length")
+    target.push(13.37)
+
+   return Reflect.get(target,prop)
+  }
+ })
+
+ return a
+}
+
+// =======================
+// TYPED ARRAY MEMORY
+// =======================
+
+let buf = new ArrayBuffer(0x400)
+let f64 = new Float64Array(buf)
+let u32 = new Uint32Array(buf)
+
+// =======================
+// GC PRESSURE
+// =======================
+
+function gc(){
+
+ let t=[]
+
+ for(let i=0;i<40;i++)
+  t.push(new ArrayBuffer(1024*1024))
+}
+
+// =======================
+// STATE CLASSIFIER (NEW)
+// =======================
+
+function classify(a){
+
+ let n=0,o=0,u=0
+
+ for(let i=0;i<a.length;i++){
+  let v=a[i]
+  if(v===undefined) u++
+  else if(typeof v==="object") o++
+  else n++
+ }
+
+ if(o>0) return "MIXED"
+ if(u>0) return "HOLEY"
+ return "PACKED"
+}
+
+// =======================
+// ANOMALY CHECKER (NEW SAFE VERSION)
+// =======================
+
+function checkArray(a){
+
+ let anomaly = false
+
+ for(let i=0;i<a.length+20;i++){
+
+  let v = a[i]
+
+  if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
+   log("TYPE BREAK "+i+" "+v)
+   anomaly = true
   }
 
-  const dt = performance.now() - t0;
-
-  if (dt > 2.0) spikeCount++;
-
-  return {
-    sum,
-    unstable: hasObject || hasHole,
-    spike: dt > 2.0,
-    time: dt
-  };
-}
-
-// =========================
-// APPLY MUTATIONS
-// =========================
-
-function apply(arr, steps) {
-
-  for (const s of steps) {
-
-    if (s.op === "push") arr.push(s.v);
-
-    if (s.op === "del") delete arr[s.i];
-
-    if (s.op === "len") arr.length = s.v;
-
-    if (s.op === "set") arr[s.i] = s.v;
-
-    if (s.op === "define") {
-      Object.defineProperty(arr, s.i, {
-        get() { return 1.1; }
-      });
-    }
+  if(typeof v==="number" && !Number.isFinite(v)){
+   log("NON FINITE "+v)
+   anomaly = true
   }
 
-  return arr;
+ }
+
+ return anomaly
 }
 
-// =========================
-// SEVERITY SCORE (SAFE)
-// =========================
+// =======================
+// TYPED ARRAY CHECK
+// =======================
 
-function severityScore(r) {
+function checkTyped(){
 
-  let score = 0;
+ for(let i=0;i<f64.length;i++){
 
-  if (r.unstable) score += 1;
-  if (r.spike) score += 2;
-  if (typeChaos > 0) score += 2;
+  let v=f64[i]
 
-  return score;
-}
-
-// =========================
-// MINIMIZER (GREEDY + VERIFY)
-// =========================
-
-function minimize(steps) {
-
-  log("🧪 minimizer start");
-
-  let best = steps.slice();
-
-  for (let i = 0; i < steps.length; i++) {
-
-    const test = best.slice();
-    test.splice(i, 1);
-
-    const arr = apply([1,2,3,4,5,6,7,8], test);
-    const r = evaluate(arr);
-
-    const score = severityScore(r);
-
-    if (score >= 1) {
-      best = test;
-      log("✔ reduced → " + best.length + " | score=" + score);
-    }
+  if(!Number.isFinite(v)){
+   log("FLOAT ISSUE "+v)
+   return true
   }
 
-  return best;
+ }
+
+ return false
 }
 
-// =========================
-// RUN
-// =========================
+// =======================
+// AUTO REPORT ENGINE (NEW)
+// =======================
 
-function run() {
+function snapshot(state){
 
-  const base = apply([1,2,3,4,5,6,7,8], [
-    {op:"push", v:0.5},
-    {op:"push", v:1.5},
-    {op:"push", v:2.5},
-    {op:"del", i:5},
-    {op:"len", v:20},
-    {op:"set", i:4, v:{x:1}},
-    {op:"define", i:3}
-  ]);
-
-  const r = evaluate(base);
-
-  log("[*] baseline score = " + severityScore(r));
-
-  log("[*] minimizing...");
-
-  const reduced = minimize([
-    {op:"push", v:0.5},
-    {op:"push", v:1.5},
-    {op:"push", v:2.5},
-    {op:"del", i:5},
-    {op:"len", v:20},
-    {op:"set", i:4, v:{x:1}},
-    {op:"define", i:3}
-  ]);
-
-  log("==== RESULT ====");
-  log(JSON.stringify(reduced, null, 2));
+ return {
+  iter: report.iter,
+  state,
+  time: performance.now() - report.start
+ }
 }
 
-run();
+function reportState(state){
+
+ report.states[state]++
+
+ if(report.iter % 200 === 0){
+  log("📊 REPORT SNAPSHOT: "+JSON.stringify(snapshot(state)))
+ }
+}
+
+// =======================
+// PERF SPIKE DETECTOR (NEW)
+// =======================
+
+let last = performance.now()
+
+function detectSpike(i){
+
+ let now = performance.now()
+ let delta = now - last
+ last = now
+
+ if(delta > 2.0){
+  report.spikes++
+  log("⚡ SPIKE @"+i+" "+delta.toFixed(2)+"ms")
+ }
+}
+
+// =======================
+// MAIN FUZZ LOOP
+// =======================
+
+function run(){
+
+ log("[*] warmup / JIT")
+
+ let base = warmup()
+
+ log("[*] fuzzing")
+
+ for(let i=0;i<10000;i++){
+
+  report.iter = i
+
+  let arr = [...base]
+
+  arr = mutate(arr)
+
+  arr = breakAssumption(arr)
+
+  vuln(arr,5)
+  target(arr,4)
+
+  f64[i%f64.length] = i + 0.5
+
+  detectSpike(i)
+
+  let state = classify(arr)
+  reportState(state)
+
+  if(checkArray(arr)){
+   log("⚠ ANOMALY DETECTED (ARRAY)")
+   report.anomalies.push({i,state:"array"})
+  }
+
+  if(checkTyped()){
+   log("⚠ ANOMALY DETECTED (TYPED)")
+   report.anomalies.push({i,state:"typed"})
+  }
+
+  if(i%500===0)
+   log("iter "+i)
+
+ }
+
+ log("[*] FINAL REPORT")
+ log(JSON.stringify(report,null,2))
+}
+
+run()
 
 </script>

@@ -1,295 +1,203 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>V8 Combined JIT / Array Edge Case Research</title>
-
-<h2>V8 Engine Behaviour Fuzz</h2>
-<pre id="log"></pre>
-
 <script>
-
-const log = m=>{
- document.getElementById("log").textContent += m+"\n"
- console.log(m)
-}
+function log(x){ console.log(x) }
 
 // =======================
-// REPORT BUFFER (NEW)
+// GLOBAL CONFIG
 // =======================
 
-let report = {
-  iter: 0,
-  states: { PACKED:0, HOLEY:0, MIXED:0 },
-  spikes: 0,
-  anomalies: [],
-  start: performance.now()
+const CFG = {
+  WARMUP: 120000,
+  TRIGGER_ROUNDS: 50,
+  CHECK_ROUNDS: 2000
 }
 
 // =======================
 // TARGET FUNCTIONS
 // =======================
 
-function vuln(a,i){
- return a[i] + 1.1
+function vuln(a){
+  return a[0] + 1.1;
 }
 
-function target(a,i){
- return a[i] + 1.1
-}
-
-// =======================
-// WARMUP / JIT TRAINING
-// =======================
-
-function warmup(){
-
- let arr=[]
-
- for(let i=0;i<100;i++)
-  arr.push(i+0.5)
-
- for(let i=0;i<30000;i++){
-  vuln(arr,i%50)
-  target(arr,i%50)
- }
-
- return arr
+// variasi akses (biar optimizer punya beberapa path)
+function vuln_alt(a,i){
+  return a[i] + 1.1;
 }
 
 // =======================
-// ARRAY MUTATIONS
+// STATE TRACKER
 // =======================
 
-function mutate(arr){
+let stats = {
+  calls: 0,
+  anomalies: 0,
+  typeFlip: 0,
+  nanSeen: 0,
+  nonNumber: 0
+}
 
- delete arr[5]
+// =======================
+// HELPERS
+// =======================
 
- arr.length = 20
+function isNumber(x){
+  return typeof x === "number"
+}
 
- arr[60] = 13.37
-
- arr[4] = {x:1}
-
- Object.defineProperty(arr,3,{
-  get(){
-   return 1.1
+function checkResult(res, tag){
+  if(!isNumber(res)){
+    stats.nonNumber++
+    log("⚠ NON-NUMBER ["+tag+"] => " + res)
+    return true
   }
- })
 
- return arr
+  if(!Number.isFinite(res)){
+    stats.nanSeen++
+    log("⚠ NON-FINITE ["+tag+"] => " + res)
+    return true
+  }
+
+  return false
 }
 
 // =======================
-// ASSUMPTION BREAK
+// CONTROLLED ARRAY BUILDER
+// =======================
+
+function buildStableArray(){
+  let a = new Array(16)
+
+  for(let i=0;i<a.length;i++){
+    a[i] = i + 0.5
+  }
+
+  return a
+}
+
+// =======================
+// PHASE 1: WARMUP
+// =======================
+
+function warmup(a){
+
+  for(let i=0;i<CFG.WARMUP;i++){
+    vuln(a)
+    vuln_alt(a, i & 3)
+  }
+
+}
+
+// =======================
+// PHASE 2: SHAPE LOCK
+// =======================
+
+function stabilizeShape(a){
+
+  // akses konsisten untuk bantu optimizer
+  for(let i=0;i<20000;i++){
+    vuln(a)
+  }
+
+}
+
+// =======================
+// PHASE 3: ASSUMPTION BREAK
 // =======================
 
 function breakAssumption(a){
 
- delete a[10]
+  // ubah elemen utama
+  a[0] = {x:1}
 
- a.length = 20
+  // buat hole
+  delete a[1]
 
- a[80] = 13.37
+  // ubah length
+  a.length = 8
 
- a[5] = {x:1}
+  // extend sparse
+  a[20] = 13.37
 
- Object.defineProperty(a,3,{
-  get(){
-   a.push(99.9)
-   return 1.1
-  }
- })
-
- a = new Proxy(a,{
-  get(target,prop){
-
-   if(prop==="length")
-    target.push(13.37)
-
-   return Reflect.get(target,prop)
-  }
- })
-
- return a
+  return a
 }
 
 // =======================
-// TYPED ARRAY MEMORY
+// PHASE 4: TRIGGER
 // =======================
 
-let buf = new ArrayBuffer(0x400)
-let f64 = new Float64Array(buf)
-let u32 = new Uint32Array(buf)
+function trigger(a){
 
-// =======================
-// GC PRESSURE
-// =======================
+  let anomaly = false
 
-function gc(){
+  for(let i=0;i<CFG.TRIGGER_ROUNDS;i++){
 
- let t=[]
+    let r1 = vuln(a)
+    let r2 = vuln_alt(a,0)
 
- for(let i=0;i<40;i++)
-  t.push(new ArrayBuffer(1024*1024))
-}
+    if(checkResult(r1,"vuln")) anomaly = true
+    if(checkResult(r2,"alt")) anomaly = true
 
-// =======================
-// STATE CLASSIFIER (NEW)
-// =======================
-
-function classify(a){
-
- let n=0,o=0,u=0
-
- for(let i=0;i<a.length;i++){
-  let v=a[i]
-  if(v===undefined) u++
-  else if(typeof v==="object") o++
-  else n++
- }
-
- if(o>0) return "MIXED"
- if(u>0) return "HOLEY"
- return "PACKED"
-}
-
-// =======================
-// ANOMALY CHECKER (NEW SAFE VERSION)
-// =======================
-
-function checkArray(a){
-
- let anomaly = false
-
- for(let i=0;i<a.length+20;i++){
-
-  let v = a[i]
-
-  if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
-   log("TYPE BREAK "+i+" "+v)
-   anomaly = true
+    stats.calls += 2
   }
 
-  if(typeof v==="number" && !Number.isFinite(v)){
-   log("NON FINITE "+v)
-   anomaly = true
+  return anomaly
+}
+
+// =======================
+// PHASE 5: STRESS CHECK
+// =======================
+
+function stress(a){
+
+  let anomaly = false
+
+  for(let i=0;i<CFG.CHECK_ROUNDS;i++){
+
+    let idx = i & 7
+    let r = vuln_alt(a, idx)
+
+    if(checkResult(r,"stress")) anomaly = true
   }
 
- }
-
- return anomaly
+  return anomaly
 }
 
 // =======================
-// TYPED ARRAY CHECK
-// =======================
-
-function checkTyped(){
-
- for(let i=0;i<f64.length;i++){
-
-  let v=f64[i]
-
-  if(!Number.isFinite(v)){
-   log("FLOAT ISSUE "+v)
-   return true
-  }
-
- }
-
- return false
-}
-
-// =======================
-// AUTO REPORT ENGINE (NEW)
-// =======================
-
-function snapshot(state){
-
- return {
-  iter: report.iter,
-  state,
-  time: performance.now() - report.start
- }
-}
-
-function reportState(state){
-
- report.states[state]++
-
- if(report.iter % 200 === 0){
-  log("📊 REPORT SNAPSHOT: "+JSON.stringify(snapshot(state)))
- }
-}
-
-// =======================
-// PERF SPIKE DETECTOR (NEW)
-// =======================
-
-let last = performance.now()
-
-function detectSpike(i){
-
- let now = performance.now()
- let delta = now - last
- last = now
-
- if(delta > 2.0){
-  report.spikes++
-  log("⚡ SPIKE @"+i+" "+delta.toFixed(2)+"ms")
- }
-}
-
-// =======================
-// MAIN FUZZ LOOP
+// RUNNER
 // =======================
 
 function run(){
 
- log("[*] warmup / JIT")
+  log("[*] build array")
+  let arr = buildStableArray()
 
- let base = warmup()
+  log("[*] warmup")
+  warmup(arr)
 
- log("[*] fuzzing")
+  log("[*] stabilize")
+  stabilizeShape(arr)
 
- for(let i=0;i<10000;i++){
-
-  report.iter = i
-
-  let arr = [...base]
-
-  arr = mutate(arr)
-
+  log("[*] break assumption")
   arr = breakAssumption(arr)
 
-  vuln(arr,5)
-  target(arr,4)
+  log("[*] trigger")
+  let a1 = trigger(arr)
 
-  f64[i%f64.length] = i + 0.5
+  log("[*] stress")
+  let a2 = stress(arr)
 
-  detectSpike(i)
+  log("[*] done")
 
-  let state = classify(arr)
-  reportState(state)
+  log("calls: " + stats.calls)
+  log("nonNumber: " + stats.nonNumber)
+  log("nanSeen: " + stats.nanSeen)
 
-  if(checkArray(arr)){
-   log("⚠ ANOMALY DETECTED (ARRAY)")
-   report.anomalies.push({i,state:"array"})
+  if(a1 || a2){
+    log("⚠ ANOMALY DETECTED")
+  }else{
+    log("✓ no visible anomaly")
   }
-
-  if(checkTyped()){
-   log("⚠ ANOMALY DETECTED (TYPED)")
-   report.anomalies.push({i,state:"typed"})
-  }
-
-  if(i%500===0)
-   log("iter "+i)
-
- }
-
- log("[*] FINAL REPORT")
- log(JSON.stringify(report,null,2))
 }
 
 run()
-
 </script>

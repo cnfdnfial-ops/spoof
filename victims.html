@@ -1,5 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
+<title>V8 Array Edge Case Research</title>
+
+<h2>V8 Engine Behaviour Test</h2>
 <pre id="log"></pre>
 
 <script>
@@ -9,107 +12,95 @@ const log = m => {
   console.log(m)
 }
 
-// =======================
-// TARGET
-// =======================
-
-function vuln(a){
-  return a[0] + 1.1   // expect double
+// target function
+function target(a,i){
+  return a[i] + 1.1
 }
 
-function trigger(a){
-  return vuln(a)
+// warmup to encourage JIT optimization
+function warmup(){
+
+  let arr=[]
+
+  for(let i=0;i<100;i++)
+    arr.push(i+0.5)
+
+  for(let i=0;i<20000;i++)
+    target(arr,i%50)
+
+  return arr
 }
 
-// =======================
-// TRAIN
-// =======================
+// mutation sequence
+function mutate(arr){
 
-function train(){
-  let a = [1.1, 2.2, 3.3, 4.4]
+  delete arr[5]
 
-  for(let i=0;i<100000;i++){
-    trigger(a)
+  arr.length = 20
+
+  arr[60] = 13.37
+
+  arr[4] = {x:1}
+
+  Object.defineProperty(arr,3,{
+    get(){
+      return 1.1
+    }
+  })
+
+  return arr
+}
+
+// GC pressure
+function gc(){
+
+  let t=[]
+  for(let i=0;i<20;i++)
+    t.push(new ArrayBuffer(1024*1024))
+}
+
+// anomaly checker
+function check(arr){
+
+  for(let i=0;i<arr.length;i++){
+
+    let v=arr[i]
+
+    if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
+      log("unexpected type at "+i+" -> "+v)
+    }
+
+    if(typeof v==="number" && Math.abs(v)>1e10){
+      log("large numeric value "+v)
+    }
   }
 
-  return a
 }
-
-// =======================
-// CONFUSION
-// =======================
-
-function corrupt(a){
-
-  // ⚠ subtle: jangan langsung replace index 0
-  // ubah lewat prototype chain
-
-  let fake = { valueOf(){
-    return 13.37
-  }}
-
-  // inject object tapi tetap “numeric-ish”
-  a[0] = fake
-
-  return a
-}
-
-// =======================
-// CHECK
-// =======================
-
-function check(v){
-
-  if(typeof v !== "number"){
-    log("🔥 TYPE CONFUSION: " + v)
-    return true
-  }
-
-  if(!Number.isFinite(v)){
-    log("🔥 NaN/INF: " + v)
-    return true
-  }
-
-  if(Math.abs(v) > 1e12){
-    log("🔥 PTR LEAK?: " + v)
-    return true
-  }
-
-  return false
-}
-
-// =======================
-// MAIN
-// =======================
 
 function run(){
 
-  log("[*] training...")
-  let base = train()
+  log("[*] warmup")
 
-  log("[*] triggering...")
+  let base=warmup()
 
-  for(let i=0;i<20000;i++){
+  log("[*] mutation test")
 
-    let arr = corrupt([...base])
+  for(let i=0;i<2000;i++){
 
-    let r = trigger(arr)
+    let a=mutate([...base])
 
-    if(check(r)){
-      return
-    }
+    target(a,4)
 
-    // GC pressure ringan
-    if(i % 50 === 0){
-      for(let k=0;k<10;k++)
-        new ArrayBuffer(0x10000)
-    }
+    if(i%20===0)
+      gc()
 
-    if(i % 2000 === 0)
-      log("iter " + i)
+    check(a)
+
+    if(i%200===0)
+      log("iteration "+i)
   }
 
-  log("[*] no bug (still safe path)")
+  log("[*] finished")
 }
 
 run()

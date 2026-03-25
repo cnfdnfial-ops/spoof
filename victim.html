@@ -1,8 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Binary Side-Channel STRONG</title>
+<title>V8 Max Stress Bug Hunt</title>
 
-<h2>Binary Side-Channel (Strong + Stable)</h2>
+<h2>V8 Max Stress Bug Hunt</h2>
 <pre id="log"></pre>
 
 <script>
@@ -13,132 +13,121 @@ const log = m => {
 }
 
 // ===============================
-// 🔴 SIGNAL (Victim-like)
+// ⚙️ CONFIG
 // ===============================
-const PREAMBLE = "11110000"
-const DATA = "1011001110"
-const pattern = PREAMBLE + DATA
+const TRAIN = 40000
+const ROUNDS = 800
 
-let idx = 0
-let currentBit = 0
+// ===============================
+// 💥 TARGET (edit freely)
+// ===============================
+function target(a, flip) {
+  let x = a[0]
 
-function burn(ms) {
-  const end = performance.now() + ms
-  while (performance.now() < end) {}
+  if (flip) {
+    // 🔥 brutal mutations
+    a.length = 1
+    a[0] = 1.1
+    a.push(13.37)
+    a.push({})
+    a.unshift(999)
+  }
+
+  // jauh dari bounds
+  return a[20]
 }
 
+// ===============================
+// 🧠 WARMUP (JIT)
+// ===============================
+function warmup() {
+  for (let i = 0; i < TRAIN; i++) {
+    target([1,2,3,4,5,6], false)
+  }
+}
+
+// ===============================
+// 💣 GC PRESSURE
+// ===============================
 function gcStorm() {
-  let tmp = []
-  for (let i = 0; i < 120; i++) {
-    tmp.push(new Uint8Array(1024 * 1024))
+  let junk = []
+  for (let i = 0; i < 60; i++) {
+    junk.push(new Array(20000).fill(i))
   }
 }
 
-function signalLoop() {
-  currentBit = Number(pattern[idx % pattern.length])
-  idx++
-
-  if (currentBit === 1) {
-    // 💣 SUPER HEAVY
-    for (let i = 0; i < 12; i++) burn(25)
-    for (let i = 0; i < 8; i++) gcStorm()
-  } else {
-    // light
-    burn(5)
+// ===============================
+// 🔀 SHAPE CHAOS
+// ===============================
+function makeArray(i) {
+  switch (i % 5) {
+    case 0:
+      return [1,2,3,4]
+    case 1:
+      let a = [1,2,3]
+      a[0] = 1.1
+      return a
+    case 2:
+      let b = new Array(200)
+      b[100] = i
+      return b
+    case 3:
+      return [{x:1}, {y:2}]
+    case 4:
+      let buf = new ArrayBuffer(64)
+      return new Float64Array(buf)
   }
-
-  setTimeout(signalLoop, 1600)
-}
-
-signalLoop()
-
-// ===============================
-// 🔵 PROBE
-// ===============================
-function probe() {
-  const t0 = performance.now()
-
-  let x = 0
-  for (let i = 0; i < 7e6; i++) x += i
-
-  let arr = []
-  for (let i = 0; i < 20000; i++) arr.push([i])
-
-  return performance.now() - t0
 }
 
 // ===============================
-// ⚙️ CALIBRATION
+// 🔍 DETECTOR
 // ===============================
-let baseline = 0
-let threshold = 0
+function isWeird(v) {
+  if (v === undefined) return false
 
-function calibrate() {
-  let samples = []
-  for (let i = 0; i < 12; i++) samples.push(probe())
+  // unexpected type
+  if (typeof v !== "number") return true
 
-  baseline = samples.reduce((a,b)=>a+b,0)/samples.length
+  // NaN / Infinity
+  if (!Number.isFinite(v)) return true
 
-  // adaptive threshold
-  threshold = baseline + 6
+  // suspicious values
+  if (v !== 13.37 && v !== 999) return true
 
-  log("Baseline = " + baseline.toFixed(2))
-  log("Threshold = " + threshold.toFixed(2))
+  return false
 }
 
 // ===============================
-// 📡 DECODER (STRONG)
+// 🧪 RUN
 // ===============================
-let bits = []
-let windowBits = []
+function run() {
+  let anomalies = 0
 
-function sampleBit() {
-  let samples = []
+  for (let i = 0; i < ROUNDS; i++) {
+    let arr = makeArray(i)
 
-  // multi-sample (anti noise)
-  for (let i = 0; i < 5; i++) {
-    samples.push(probe())
-  }
+    if (i % 4 === 0) gcStorm()
 
-  const avg = samples.reduce((a,b)=>a+b,0)/samples.length
-  const bit = avg > threshold ? 1 : 0
+    let res = target(arr, true)
 
-  windowBits.push(bit)
-
-  // majority vote (strong stabilizer)
-  if (windowBits.length === 3) {
-    const sum = windowBits.reduce((a,b)=>a+b,0)
-    const finalBit = sum >= 2 ? 1 : 0
-
-    bits.push(finalBit)
-
-    const color = finalBit ? "🟥" : "🟩"
-
-    log(`${color} avg=${avg.toFixed(2)} => BIT=${finalBit}`)
-
-    windowBits = []
-
-    // detect preamble (sync)
-    const stream = bits.join("")
-    if (stream.endsWith("11110000")) {
-      log("🔵 SYNC LOCKED (preamble detected)")
-      bits = []
-      return
-    }
-
-    // print data
-    if (bits.length === 10) {
-      log("📡 DATA: " + bits.join(""))
-      bits = []
+    if (isWeird(res)) {
+      anomalies++
+      log("⚠️ anomaly: " + String(res))
     }
   }
+
+  log("=== DONE ===")
+  log("anomalies: " + anomalies + " / " + ROUNDS)
 }
 
 // ===============================
 // 🚀 START
 // ===============================
 setTimeout(() => {
-  calibrate()
-  setInterval(sampleBit, 500)
-}, 1200)
+  log("[*] warmup...")
+  warmup()
+
+  log("[*] running...")
+  run()
+}, 500)
 </script>

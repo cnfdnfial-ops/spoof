@@ -1,21 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Employee Portal</title>
-</head>
+<!doctype html>
+<meta charset="utf-8">
+<title>NaN Budget Oracle – Sender</title>
+<script>
+function burn(level) {
+  for (let i = 0; i < level; i++) {
+    for (let j = 0; j < 60; j++);
+  }
+}
+
+function sendSymbol(sym) {
+  switch (sym) {
+    case '00': burn(5); break;
+    case '01': burn(25); break;
+    case '10': burn(60); break;
+    case '11': burn(120); break;
+  }
+}
+
+function encode(str) {
+  return str.split('')
+    .map(c => c.charCodeAt(0).toString(2).padStart(8,'0'))
+    .join('');
+}
+
+// pesan bisa diganti
+const MESSAGE = "HELLO_FROM_GITHUB_PAGES";
+const bits = encode(MESSAGE);
+
+let i = 0;
+
+// preamble (sync)
+const PREAMBLE = "1111111111111111"; // kuat buat sync
+const stream = PREAMBLE + bits;
+
+setInterval(() => {
+  const sym = stream.slice(i, i+2);
+  if (sym.length < 2) return;
+
+  sendSymbol(sym);
+
+  i += 2;
+  if (i >= stream.length) i = 0;
+}, 120);
+</script>
 <body>
-    <h2>Internal Employee Dashboard</h2>
-    <p>Welcome back, user.</p>
-
-    <button onclick="downloadFile()">Download Monthly Report</button>
-
-    <script>
-        function downloadFile() {
-            const a = document.createElement('a');
-            a.href = 'data:text/plain;charset=utf-8,Confidential Report';
-            a.download = 'Monthly_Report.pdf';
-            a.click();
-        }
-    </script>
+<h3>Sender aktif</h3>
 </body>
-</html>

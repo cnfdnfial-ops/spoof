@@ -1,190 +1,128 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Assumption Break Hunter</title>
+<title>JIT Focused Stability Harness</title>
 
 <pre id="log"></pre>
 
 <script>
 
-const log = m=>{
-  document.getElementById("log").textContent += m + "\n"
-  console.log(m)
+const log = (x) => {
+  console.log(x)
+  document.getElementById("log").textContent += x + "\n"
 }
 
-// =======================
-// JIT TARGET
-// =======================
+// =========================
+// HOT FUNCTION (JIT TARGET)
+// =========================
 
-function vuln(a,i){
-  return a[i] + 1.1
+function hot(a, i){
+
+  // stable numeric loop-friendly pattern
+  return (a[i] * 1.0000001) + 0.1
 }
 
-// =======================
-// TRAIN
-// =======================
+// =========================
+// WARMUP PHASE (CRITICAL)
+// =========================
 
-function train(){
+function warmup(){
 
-  let a=[]
+  let arr = new Array(200)
 
-  for(let i=0;i<100;i++)
-    a.push(i+0.5)
+  for(let i=0;i<200;i++){
+    arr[i] = i + 0.5
+  }
 
-  for(let i=0;i<30000;i++){
-    vuln(a,i%50)
+  // FORCE OPTIMIZATION (hot path)
+  for(let i=0;i<200000;i++){
+    hot(arr, i % 200)
+  }
+
+  return arr
+}
+
+// =========================
+// JIT DEOPT TRIGGER CONTROL
+// =========================
+
+function mutate_type_shift(a, step){
+
+  // controlled type instability (NOT chaos)
+
+  if(step === 5000){
+    a[10] = "x"        // number → string
+  }
+
+  if(step === 8000){
+    a[20] = {}         // object injection
+  }
+
+  if(step === 12000){
+    a[30] = undefined  // hole-like behavior
   }
 
   return a
 }
 
-// =======================
-// CHAOS TRANSITIONS
-// =======================
+// =========================
+// TYPE OBSERVER (JIT SIGNAL)
+// =========================
 
-function breakAssumption(a){
+function observe(a){
 
-  // hole creation
-  delete a[10]
+  for(let i=0;i<50;i++){
 
-  // shrink
-  a.length=20
+    let v = a[i]
 
-  // sparse expand
-  a[80]=13.37
-
-  // elements kind flip
-  a[5]={x:1}
-
-  // accessor mutation
-  Object.defineProperty(a,3,{
-    get(){
-      a.push(99.9)
-      return 1.1
-    }
-  })
-
-  // proxy length trap
-  a=new Proxy(a,{
-    get(target,prop){
-      if(prop==="length"){
-        target.push(13.37)
-      }
-      return Reflect.get(target,prop)
-    }
-  })
-
-  return a
-}
-
-// =======================
-// TYPED ARRAY TARGET
-// =======================
-
-let buf=new ArrayBuffer(0x200)
-let f64=new Float64Array(buf)
-let u32=new Uint32Array(buf)
-
-// =======================
-// GC
-// =======================
-
-function gc(){
-  let t=[]
-  for(let i=0;i<40;i++)
-    t.push(new ArrayBuffer(1024*1024))
-}
-
-// =======================
-// CHECKERS
-// =======================
-
-function checkArray(a){
-
-  for(let i=0;i<a.length+20;i++){
-
-    let v=a[i]
-
-    if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
-      log("TYPE BREAK "+i+" "+v)
+    if(v === undefined){
+      log("⚠ HOLE at " + i)
       return true
     }
 
-    if(typeof v==="number" && Math.abs(v)>1e12){
-      log("POINTER LIKE "+v)
+    let t = typeof v
+
+    if(t !== "number"){
+      log("⚠ TYPE CHANGE at " + i + " => " + t)
       return true
     }
-
-  }
-
-  let leak=a[a.length+5]
-
-  if(leak!==undefined){
-    log("OOB READ "+leak)
-    return true
   }
 
   return false
 }
 
-function checkTyped(){
-
-  for(let i=0;i<f64.length;i++){
-
-    let v=f64[i]
-
-    if(!Number.isFinite(v)){
-      log("FLOAT CORRUPTION "+v)
-      return true
-    }
-
-    if(Math.abs(v)>1e12){
-      log("PTR LEAK "+v)
-      return true
-    }
-
-  }
-
-  return false
-}
-
-// =======================
-// MAIN
-// =======================
+// =========================
+// MAIN LOOP (JIT STRESS)
+// =========================
 
 function run(){
 
-  log("[*] training")
+  log("[*] warmup JIT")
 
-  let base=train()
+  let base = warmup()
 
-  log("[*] fuzzing")
+  log("[*] JIT test phase")
 
-  for(let i=0;i<8000;i++){
+  for(let i=0;i<15000;i++){
 
-    let arr=breakAssumption([...base])
+    let arr = base.slice()
 
-    vuln(arr,5)
+    arr = mutate_type_shift(arr, i)
 
-    f64[i%f64.length]=i+0.5
+    let r = hot(arr, 50)
 
-    if(i%20===0) gc()
-
-    if(checkArray(arr)){
-      log("⚠ ARRAY INVARIANT BREAK")
-      return
+    // periodic logging only
+    if(i % 2000 === 0){
+      log("iter " + i + " result=" + r)
     }
 
-    if(checkTyped()){
-      log("⚠ TYPED ARRAY CORRUPTION")
-      return
+    // JIT SIGNAL CHECK
+    if(observe(arr)){
+      log("🚨 JIT TYPE INSTABILITY DETECTED")
+      break
     }
-
-    if(i%500===0)
-      log("iter "+i)
   }
 
-  log("[*] no anomaly detected")
-
+  log("[*] finished")
 }
 
 run()

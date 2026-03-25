@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>V8 Fuzz Harness v2</title>
+<title>V8 Final Research Harness</title>
 
 <style>
 body { font-family: monospace; background:#111; color:#0f0; }
@@ -12,7 +12,7 @@ body { font-family: monospace; background:#111; color:#0f0; }
 
 <body>
 
-<h3>V8 Fuzz Harness v2 (Stabil + State Tracking)</h3>
+<h3>V8 Final Research Harness (IC / JIT / Stability)</h3>
 <pre id="log"></pre>
 
 <script>
@@ -23,66 +23,63 @@ const log = (m) => {
   logBox.textContent += m + "\n";
 };
 
-// =====================
+// =========================
 // deterministic RNG
-// =====================
+// =========================
 
-let seed = 123456789;
+let seed = 987654321;
 function rand() {
   seed = (seed * 1664525 + 1013904223) >>> 0;
   return seed;
 }
 
-// =====================
-// HOT FUNCTION
-// =====================
+// =========================
+// HOT FUNCTION (JIT target)
+// =========================
 
 function hot(a, i) {
   return a[i] + 1.1;
 }
 
-// =====================
-// BASE WARMUP
-// =====================
+// =========================
+// WARMUP PHASE
+// =========================
 
 function warmup() {
-  const arr = new Array(150);
+  const arr = new Array(200);
 
   for (let i = 0; i < arr.length; i++) {
     arr[i] = i + 0.5;
   }
 
-  for (let i = 0; i < 40000; i++) {
-    hot(arr, i % 80);
+  for (let i = 0; i < 50000; i++) {
+    hot(arr, i % 100);
   }
 
   return arr;
 }
 
-// =====================
-// CONTROLLED MUTATION (LESS NOISE, MORE SIGNAL)
-// =====================
+// =========================
+// CONTROLLED MUTATION ENGINE
+// =========================
 
 function mutate(arr, i) {
 
-  const r = rand() % 16;
+  const r = rand() % 20;
 
-  // stable numeric drift
-  arr[1] = (i % 3 === 0) ? 1.5 : 2.5;
+  // stable numeric baseline drift
+  arr[0] = (i % 2 === 0) ? 1.5 : 2.5;
 
-  // hole injection (rare, controlled)
-  if (r === 1) arr[10] = undefined;
+  // introduce HOLEY state occasionally
+  if (r === 3) arr[10] = undefined;
 
-  // shape shrink/grow oscillation (controlled)
-  if (i % 11 === 0) {
-    arr.length = 100;
-  }
+  // controlled growth
+  if (i % 17 === 0) arr.push(99.99);
 
-  if (i % 13 === 0) {
-    arr.push(99.99);
-  }
+  // controlled shrink
+  if (i % 23 === 0 && arr.length > 120) arr.length = 120;
 
-  // polymorphic injection (rare)
+  // rare object injection (IC stress)
   if (r === 7) {
     arr[i % arr.length] = { x: i };
   }
@@ -90,40 +87,57 @@ function mutate(arr, i) {
   return arr;
 }
 
-// =====================
-// STATE TRACKER (NEW)
-// =====================
+// =========================
+// STATE CLASSIFIER (IC / ELEMENT KIND)
+// =========================
 
 function classify(arr) {
-
-  let hasObject = false;
-  let hasHole = false;
-  let numeric = 0;
+  let num = 0;
+  let obj = 0;
+  let hole = 0;
 
   for (let i = 0; i < arr.length; i++) {
     const v = arr[i];
 
-    if (v === undefined) hasHole = true;
-    else if (typeof v === "object") hasObject = true;
-    else if (typeof v === "number") numeric++;
+    if (v === undefined) hole++;
+    else if (typeof v === "number") num++;
+    else obj++;
   }
 
-  if (hasObject) return "MIXED_OBJECT";
-  if (hasHole) return "HOLEY";
-  return "PACKED_NUMERIC";
+  if (obj > 0) return "MIXED";
+  if (hole > 0) return "HOLEY";
+  return "PACKED";
 }
 
-// =====================
-// CRASH HASH (DEDUP IMPROVED)
-// =====================
+// =========================
+// STABILITY SCORER
+// =========================
 
-function hashState(i, arr, state) {
-  return `${i}_${arr.length}_${state}_${arr[1]}`;
+let packedCount = 0;
+let unstableCount = 0;
+
+function score(state) {
+  if (state === "PACKED") packedCount++;
+  else unstableCount++;
+
+  return packedCount / (packedCount + unstableCount);
 }
 
-// =====================
-// MAIN
-// =====================
+// =========================
+// CRASH SAFE WRAPPER
+// =========================
+
+function safeRun(fn) {
+  try {
+    return fn();
+  } catch (e) {
+    log("💥 ERROR: " + (e.message || e));
+  }
+}
+
+// =========================
+// MAIN LOOP
+// =========================
 
 function run() {
 
@@ -132,51 +146,30 @@ function run() {
 
   log("[*] fuzz start");
 
-  const seen = new Map();
-  let lastState = "";
+  let lastState = "INIT";
 
-  for (let i = 0; i < 9000; i++) {
+  for (let i = 0; i < 12000; i++) {
 
-    try {
+    let arr = base.slice();
+    arr = mutate(arr, i);
 
-      let arr = base.slice();
-      arr = mutate(arr, i);
+    safeRun(() => hot(arr, i % arr.length));
+    safeRun(() => hot(arr, (i * 3) % arr.length));
 
-      hot(arr, i % arr.length);
-      hot(arr, (i * 7) % arr.length);
+    const state = classify(arr);
+    const stability = score(state);
 
-      const state = classify(arr);
+    if (state !== lastState) {
+      log(`⚡ STATE CHANGE @${i}: ${lastState} → ${state}`);
+      lastState = state;
+    }
 
-      const h = hashState(i, arr, state);
-
-      // regression detection (important!)
-      if (state !== lastState) {
-        log(`⚡ STATE SHIFT @${i}: ${lastState} → ${state}`);
-        lastState = state;
-      }
-
-      if (!seen.has(h)) {
-        seen.set(h, 1);
-      }
-
-      if (i % 500 === 0) {
-        log(`iter=${i} state=${state} unique=${seen.size}`);
-      }
-
-    } catch (e) {
-
-      const key = e.message + "::" + i;
-
-      if (!seen.has(key)) {
-        seen.set(key, true);
-        log("💥 CRASH:");
-        log(e.stack || e.message);
-      }
-
+    if (i % 500 === 0) {
+      log(`iter=${i} state=${state} stability=${stability.toFixed(3)}`);
     }
   }
 
-  log("[*] finished");
+  log("[*] done");
 }
 
 run();

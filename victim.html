@@ -1,18 +1,7 @@
 <!doctype html>
-<html>
-<head>
 <meta charset="utf-8">
-<title>V8 Research Fuzzer ++</title>
+<title>V8 Research-Grade Safe Minimizer</title>
 
-<style>
-body { font-family: monospace; background:#111; color:#0f0; }
-#log { white-space: pre-wrap; }
-</style>
-</head>
-
-<body>
-
-<h3>V8 Research Fuzzer ++ (IC + Stability + Deopt Signals)</h3>
 <pre id="log"></pre>
 
 <script>
@@ -23,176 +12,162 @@ const log = (m) => {
   logBox.textContent += m + "\n";
 };
 
-// ======================
-// deterministic RNG
-// ======================
-
-let seed = 42;
-function rand() {
-  seed = (seed * 1664525 + 1013904223) >>> 0;
-  return seed;
-}
-
-// ======================
-// HOT FUNCTIONS
-// ======================
+// =========================
+// HOT FUNCTION (IC target)
+// =========================
 
 function hot(a, i) {
   return a[i] + 1.1;
 }
 
-function hot2(a, i) {
-  return (a[i] || 0) + 1.1;
-}
-
-// ======================
-// WARMUP
-// ======================
-
-function warmup() {
-  const arr = new Array(200);
-
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = i + 0.5;
-  }
-
-  for (let i = 0; i < 60000; i++) {
-    hot(arr, i % 80);
-  }
-
-  return arr;
-}
-
-// ======================
-// MUTATION ENGINE (controlled, not chaotic)
-// ======================
-
-function mutate(arr, i) {
-
-  const r = rand() % 25;
-
-  // stable baseline drift
-  arr[0] = (i % 2) ? 1.1 : 2.2;
-
-  // hole injection
-  if (r === 3) arr[10] = undefined;
-
-  // object injection (IC stress)
-  if (r === 7) arr[i % arr.length] = { x: i };
-
-  // controlled growth
-  if (i % 11 === 0) arr.push(99.99);
-
-  // controlled shrink
-  if (i % 17 === 0 && arr.length > 120) arr.length = 120;
-
-  return arr;
-}
-
-// ======================
-// STATE CLASSIFIER
-// ======================
-
-function classify(a) {
-  let n = 0, o = 0, h = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    const v = a[i];
-
-    if (v === undefined) h++;
-    else if (typeof v === "object") o++;
-    else n++;
-  }
-
-  if (o > 0) return "MIXED";
-  if (h > 0) return "HOLEY";
-  return "PACKED";
-}
-
-// ======================
-// IC / STABILITY TRACKER
-// ======================
-
-let packed = 0;
-let unstable = 0;
-
-function stability(state) {
-  if (state === "PACKED") packed++;
-  else unstable++;
-
-  return packed / (packed + unstable);
-}
-
-// ======================
-// "DEOPT SIGNAL" HEURISTIC
-// ======================
+// =========================
+// DETECTION SIGNALS
+// =========================
 
 let lastTime = performance.now();
+let spikeCount = 0;
+let typeChaos = 0;
 
-function detectSlowdown(i) {
-  const now = performance.now();
-  const delta = now - lastTime;
-  lastTime = now;
+// =========================
+// SAFE FAILURE MODEL
+// =========================
 
-  // heuristic: sudden spike = possible deopt / GC / IC reset
-  if (delta > 2.0) {
-    log("⚠ PERF SPIKE @ " + i + " Δ=" + delta.toFixed(2) + "ms");
+function evaluate(arr) {
+
+  let sum = 0;
+  let hasObject = false;
+  let hasHole = false;
+
+  const t0 = performance.now();
+
+  for (let i = 0; i < arr.length; i++) {
+
+    const v = hot(arr, i % arr.length);
+
+    if (typeof v === "object") hasObject = true;
+    if (v === undefined) hasHole = true;
+    if (typeof v === "number") sum += v;
+    if (!Number.isFinite(v)) typeChaos++;
   }
+
+  const dt = performance.now() - t0;
+
+  if (dt > 2.0) spikeCount++;
+
+  return {
+    sum,
+    unstable: hasObject || hasHole,
+    spike: dt > 2.0,
+    time: dt
+  };
 }
 
-// ======================
-// SAFE EXECUTOR
-// ======================
+// =========================
+// APPLY MUTATIONS
+// =========================
 
-function safe(fn) {
-  try { return fn(); }
-  catch (e) {
-    log("💥 ERROR: " + e.message);
+function apply(arr, steps) {
+
+  for (const s of steps) {
+
+    if (s.op === "push") arr.push(s.v);
+
+    if (s.op === "del") delete arr[s.i];
+
+    if (s.op === "len") arr.length = s.v;
+
+    if (s.op === "set") arr[s.i] = s.v;
+
+    if (s.op === "define") {
+      Object.defineProperty(arr, s.i, {
+        get() { return 1.1; }
+      });
+    }
   }
+
+  return arr;
 }
 
-// ======================
-// MAIN LOOP
-// ======================
+// =========================
+// SEVERITY SCORE (SAFE)
+// =========================
+
+function severityScore(r) {
+
+  let score = 0;
+
+  if (r.unstable) score += 1;
+  if (r.spike) score += 2;
+  if (typeChaos > 0) score += 2;
+
+  return score;
+}
+
+// =========================
+// MINIMIZER (GREEDY + VERIFY)
+// =========================
+
+function minimize(steps) {
+
+  log("🧪 minimizer start");
+
+  let best = steps.slice();
+
+  for (let i = 0; i < steps.length; i++) {
+
+    const test = best.slice();
+    test.splice(i, 1);
+
+    const arr = apply([1,2,3,4,5,6,7,8], test);
+    const r = evaluate(arr);
+
+    const score = severityScore(r);
+
+    if (score >= 1) {
+      best = test;
+      log("✔ reduced → " + best.length + " | score=" + score);
+    }
+  }
+
+  return best;
+}
+
+// =========================
+// RUN
+// =========================
 
 function run() {
 
-  log("[*] warmup");
-  let base = warmup();
+  const base = apply([1,2,3,4,5,6,7,8], [
+    {op:"push", v:0.5},
+    {op:"push", v:1.5},
+    {op:"push", v:2.5},
+    {op:"del", i:5},
+    {op:"len", v:20},
+    {op:"set", i:4, v:{x:1}},
+    {op:"define", i:3}
+  ]);
 
-  log("[*] fuzz start");
+  const r = evaluate(base);
 
-  let lastState = "";
+  log("[*] baseline score = " + severityScore(r));
 
-  for (let i = 0; i < 12000; i++) {
+  log("[*] minimizing...");
 
-    let arr = base.slice();
-    arr = mutate(arr, i);
+  const reduced = minimize([
+    {op:"push", v:0.5},
+    {op:"push", v:1.5},
+    {op:"push", v:2.5},
+    {op:"del", i:5},
+    {op:"len", v:20},
+    {op:"set", i:4, v:{x:1}},
+    {op:"define", i:3}
+  ]);
 
-    safe(() => hot(arr, i % arr.length));
-    safe(() => hot2(arr, (i * 3) % arr.length));
-
-    const state = classify(arr);
-    const stab = stability(state);
-
-    detectSlowdown(i);
-
-    if (state !== lastState) {
-      log(`⚡ STATE @${i}: ${lastState} → ${state}`);
-      lastState = state;
-    }
-
-    if (i % 500 === 0) {
-      log(`iter=${i} state=${state} stability=${stab.toFixed(3)}`);
-    }
-  }
-
-  log("[*] done");
+  log("==== RESULT ====");
+  log(JSON.stringify(reduced, null, 2));
 }
 
 run();
 
 </script>
-
-</body>
-</html>

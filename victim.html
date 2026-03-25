@@ -1,196 +1,190 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Super JIT / Array Edge Fuzz + Snapshots</title>
+<title>V8 Combined JIT / Array Edge Case Research</title>
 
-<h2>V8 Engine Super Stress Fuzz + Snapshots</h2>
+<h2>V8 Engine Behaviour Fuzz (Final PoC)</h2>
 <pre id="log"></pre>
 
 <script>
 const log = m=>{
-  document.getElementById("log").textContent += m+"\n"
-  console.log(m)
+ document.getElementById("log").textContent += m+"\n";
+ console.log(m);
 }
 
 // =======================
-// REPORT ENGINE
+// TARGET FUNCTIONS
 // =======================
-let report = {
-  iter:0,
-  spikes:0,
-  anomalies:[],
-  start: performance.now()
-}
-
-function snapshot(arr, iter){
-  let shape = arr.slice(0,20).map(x=>typeof x).join(",")
-  report.iter = iter
-  report.spikes++
-  log(`📊 SNAPSHOT @ iter ${iter} | shape:${shape} | length:${arr.length}`)
-}
+function vuln(a,i){ return a[i] + 1.1 }
+function target(a,i){ return a[i] + 1.1 }
 
 // =======================
-// TARGET
-// =======================
-function vuln(a,i){ return a[i]+1.1 }
-function target(a,i){ return a[i]+1.1 }
-
-// =======================
-// WARMUP
+// WARMUP / JIT TRAINING
 // =======================
 function warmup(){
-  let arr=[]
-  for(let i=0;i<100;i++) arr.push(i+0.5)
-  for(let i=0;i<50000;i++){
-    vuln(arr,i%50)
-    target(arr,i%50)
-  }
-  return arr
+ let arr=[];
+ for(let i=0;i<100;i++) arr.push(i+0.5);
+ for(let i=0;i<30000;i++){
+  vuln(arr,i%50)
+  target(arr,i%50)
+ }
+ return arr;
 }
 
 // =======================
 // ARRAY MUTATIONS
 // =======================
 function mutate(arr){
-  delete arr[5]
-  arr.length=20
-  arr[60]=13.37
-  arr[4]={x:1}
-  arr[2]=null
-  arr[7]="foo"
-  arr[9]=true
-  Object.defineProperty(arr,3,{
-    get(){ return 1.1 }
-  })
-  return arr
+ delete arr[5];
+ arr.length = 20;
+ arr[60] = 13.37;
+ arr[4] = {x:1};
+ Object.defineProperty(arr,3,{get(){ return 1.1 }});
+ return arr;
 }
 
 // =======================
 // ASSUMPTION BREAK
 // =======================
 function breakAssumption(a){
-  delete a[10]
-  a.length=20
-  a[80]=13.37
-  a[5]={x:1}
-  Object.defineProperty(a,3,{
-    get(){
-      a.push(99.9)
-      a[1]={x:"oops"}
-      return 1.1
-    }
-  })
-  Object.defineProperty(a,6,{
-    get(){
-      a.push(Math.random()*1000)
-      a[11]="bar"
-      return 1.1
-    }
-  })
-  a = new Proxy(a,{
-    get(target,prop){
-      if(prop==="length") target.push(13.37)
-      return Reflect.get(target,prop)
-    }
-  })
-  return a
+ delete a[10];
+ a.length = 20;
+ a[80] = 13.37;
+ a[5] = {x:1};
+ Object.defineProperty(a,3,{
+  get(){
+   a.push(99.9);
+   return 1.1;
+  }
+ });
+ a = new Proxy(a,{
+  get(target,prop){
+   if(prop==="length") target.push(13.37);
+   return Reflect.get(target,prop);
+  }
+ });
+ return a;
 }
 
 // =======================
-// TYPED ARRAY
+// NESTED PROXY + GETTER/SETTER
 // =======================
-let buf = new ArrayBuffer(0x400)
-let f64 = new Float64Array(buf)
-let u32 = new Uint32Array(buf)
+function deepProxy(arr){
+ return new Proxy(arr,{
+  get(target,prop){
+   if(prop==="length") target.push({x:Math.random()});
+   if(!isNaN(prop)){
+    let val = Reflect.get(target,prop);
+    if(typeof val==="number") return val + 0.12345;
+    return val;
+   }
+   return Reflect.get(target,prop);
+  },
+  set(target,prop,value){
+   if(!isNaN(prop) && Math.random()<0.3) target[prop] = value*2.0;
+   else target[prop] = value;
+   return true;
+  }
+ });
+}
+
+// =======================
+// RANDOM TYPE SWITCH
+// =======================
+function randomTypeSwitch(arr){
+ for(let i=0;i<10;i++){
+  let idx = Math.floor(Math.random() * arr.length);
+  let r = Math.random();
+  if(r<0.33) arr[idx] = {x:idx};
+  else if(r<0.66) delete arr[idx];
+  else arr[idx] = idx+0.5;
+ }
+ return arr;
+}
+
+// =======================
+// TYPED ARRAY MEMORY
+// =======================
+let buf = new ArrayBuffer(0x400);
+let f64 = new Float64Array(buf);
+let u32 = new Uint32Array(buf);
+
+// =======================
+// ALIAS TYPED ARRAY
+// =======================
+function aliasTyped(arr){
+ for(let i=0;i<Math.min(f64.length, arr.length); i++){
+  let v = arr[i];
+  if(typeof v==="number") u32[i*2] = (new Float64Array([v]))[0];
+ }
+}
 
 // =======================
 // GC PRESSURE
 // =======================
 function gc(){
-  let t=[]
-  for(let i=0;i<40;i++) t.push(new ArrayBuffer(1024*1024))
+ let t=[];
+ for(let i=0;i<40;i++) t.push(new ArrayBuffer(1024*1024));
 }
 
 // =======================
-// ARRAY CHECK / TYPED CHECK
+// ARRAY CHECK
 // =======================
 function checkArray(a){
-  for(let i=0;i<a.length+20;i++){
-    let v=a[i]
-    if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
-      log("TYPE BREAK "+i+" "+v)
-      return true
-    }
-    if(typeof v==="number" && Math.abs(v)>1e12){
-      log("POINTER LIKE "+v)
-      return true
-    }
+ for(let i=0;i<a.length+20;i++){
+  let v = a[i];
+  if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
+   log("TYPE BREAK "+i+" "+v); return true;
   }
-  let leak = a[a.length+5]
-  if(leak!==undefined){
-    log("OOB READ "+leak)
-    return true
+  if(typeof v==="number" && Math.abs(v)>1e12){
+   log("POINTER LIKE "+v); return true;
   }
-  return false
+ }
+ let leak = a[a.length+5];
+ if(leak!==undefined){ log("OOB READ "+leak); return true; }
+ return false;
 }
 
+// =======================
+// TYPED ARRAY CHECK
+// =======================
 function checkTyped(){
-  for(let i=0;i<f64.length;i++){
-    let v=f64[i]
-    if(!Number.isFinite(v)){
-      log("FLOAT CORRUPTION "+v)
-      return true
-    }
-    if(Math.abs(v)>1e12){
-      log("PTR LEAK "+v)
-      return true
-    }
-  }
-  return false
+ for(let i=0;i<f64.length;i++){
+  let v=f64[i];
+  if(!Number.isFinite(v)){ log("FLOAT CORRUPTION "+v); return true; }
+  if(Math.abs(v)>1e12){ log("PTR LEAK "+v); return true; }
+ }
+ return false;
 }
 
 // =======================
 // MAIN FUZZ LOOP
 // =======================
 function run(){
-  log("[*] warmup / JIT")
-  let base = warmup()
-  log("[*] super fuzzing + snapshots")
+ log("[*] warmup / JIT");
+ let base = warmup();
+ log("[*] fuzzing");
 
-  for(let i=0;i<50000;i++){
-    let arr=[...base]
-    let ops = [mutate, breakAssumption]
-    ops.sort(()=>Math.random()-0.5).forEach(f=>arr=f(arr))
+ for(let i=0;i<10000;i++){
+  let arr = [...base];
+  arr = mutate(arr);
+  arr = breakAssumption(arr);
+  arr = randomTypeSwitch(arr);
+  arr = deepProxy(arr);
 
-    vuln(arr,5)
-    target(arr,4)
+  vuln(arr,5);
+  target(arr,4);
+  aliasTyped(arr);
 
-    // Typed array extreme values
-    f64[i%f64.length] = i+0.5
-    if(i % 100 === 0) f64[i%f64.length] = NaN
-    if(i % 150 === 0) f64[i%f64.length] = Infinity
-    if(i % 200 === 0) u32[i%u32.length] = 0xffffffff
+  f64[i%f64.length] = i+0.5;
 
-    if(i%20===0) gc()
+  if(i%20===0) gc();
 
-    if(checkArray(arr)){
-      log("⚠ ARRAY INVARIANT BREAK")
-      report.anomalies.push({iter:i,state:"array"})
-      snapshot(arr,i)
-      break
-    }
-    if(checkTyped()){
-      log("⚠ TYPED ARRAY CORRUPTION")
-      report.anomalies.push({iter:i,state:"typed"})
-      snapshot(arr,i)
-      break
-    }
-
-    if(i%500===0) snapshot(arr,i)
-  }
-
-  log("[*] finished fuzzing")
-  log("📈 FINAL REPORT: "+JSON.stringify(report,null,2))
+  if(checkArray(arr)){ log("⚠ ARRAY INVARIANT BREAK"); return; }
+  if(checkTyped()){ log("⚠ TYPED ARRAY CORRUPTION"); return; }
+  if(i%500===0) log("iter "+i);
+ }
+ log("[*] finished");
 }
 
-run()
+run();
 </script>

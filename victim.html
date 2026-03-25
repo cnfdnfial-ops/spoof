@@ -1,8 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Invariant Break Detector (Final)</title>
+<title>V8 OOB Path Hunter</title>
 
-<h2>V8 Memory Invariant Tester</h2>
+<h2>OOB / Type Confusion Hunter</h2>
 <pre id="log"></pre>
 
 <script>
@@ -15,82 +15,56 @@ const log = m => {
 // ==========================
 // CONFIG
 // ==========================
-const ITER = 2000
-const SIZE = 128
+const N = 10000
 
 // ==========================
-// GC CONTROL
+// GC PRESSURE
 // ==========================
-function controlledGC() {
+function gc() {
   let tmp = []
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 30; i++) {
     tmp.push(new ArrayBuffer(1024 * 1024))
   }
 }
 
 // ==========================
-// JIT TRIGGER FUNCTION
+// TARGET FUNCTION (JIT)
 // ==========================
-function hotFunction(arr, toggle) {
-  let sum = 0
-
-  for (let i = 0; i < arr.length; i++) {
-    if (toggle) {
-      sum += arr[i]
-    } else {
-      sum += arr[i] + 0.1
-    }
+function vuln(arr, idx, val, toggle) {
+  if (toggle) {
+    arr[idx] = val
+  } else {
+    arr[idx] = val + 0.1
   }
-
-  return sum
+  return arr[idx]
 }
 
 // ==========================
-// SETUP
+// SETUP ARRAYS
 // ==========================
-function makeArray(type) {
-  if (type === "double") {
-    let a = []
-    for (let i = 0; i < SIZE; i++) a.push(i + 0.5)
-    return a
-  }
+function makeDoubleArr() {
+  let a = []
+  for (let i = 0; i < 100; i++) a.push(i + 0.5)
+  return a
+}
 
-  if (type === "object") {
-    let a = []
-    for (let i = 0; i < SIZE; i++) a.push({x: i})
-    return a
-  }
+function makeObjectArr() {
+  let a = []
+  for (let i = 0; i < 100; i++) a.push({x: i})
+  return a
 }
 
 // ==========================
-// DATAVIEW CROSS CHECK
+// TYPED ARRAY TARGET
 // ==========================
-function checkBufferConsistency() {
-  let buf = new ArrayBuffer(64)
-  let f64 = new Float64Array(buf)
-  let dv = new DataView(buf)
-
-  for (let i = 0; i < 8; i++) {
-    f64[i] = i + 0.123
-  }
-
-  for (let i = 0; i < 8; i++) {
-    let a = f64[i]
-    let b = dv.getFloat64(i * 8, true)
-
-    if (a !== b) {
-      log("❗ DataView mismatch => " + a + " vs " + b)
-      return true
-    }
-  }
-
-  return false
-}
+let buf = new ArrayBuffer(0x100)
+let f64 = new Float64Array(buf)
+let u32 = new Uint32Array(buf)
 
 // ==========================
-// TYPE CONFUSION CHECK
+// CHECKERS
 // ==========================
-function checkArray(arr) {
+function checkOOB(arr) {
   for (let i = 0; i < arr.length; i++) {
     let v = arr[i]
 
@@ -99,73 +73,70 @@ function checkArray(arr) {
       return true
     }
 
-    if (!Number.isFinite(v) && !Number.isNaN(v)) {
-      log("❗ WEIRD VALUE @ " + i + ": " + v)
+    if (Math.abs(v) > 1e12) {
+      log("❗ POSSIBLE POINTER LEAK @ " + i + ": " + v)
       return true
     }
   }
-
   return false
 }
 
-// ==========================
-// LENGTH CONFUSION CHECK
-// ==========================
-function checkLength(arr) {
-  let count = 0
+function checkTypedArray() {
+  for (let i = 0; i < f64.length; i++) {
+    let a = f64[i]
+    let b = (u32[i*2] | (u32[i*2+1] << 32))
 
-  for (let i in arr) count++
-
-  if (count !== arr.length) {
-    log("❗ LENGTH MISMATCH: " + count + " vs " + arr.length)
-    return true
+    if (!Number.isFinite(a) && a !== NaN) {
+      log("❗ WEIRD FLOAT64 @ " + i + ": " + a)
+      return true
+    }
   }
-
   return false
 }
 
 // ==========================
-// MAIN FUZZ LOOP
+// MAIN
 // ==========================
 function run() {
-  log("[*] warming up...")
+  log("[*] warmup...")
 
-  let arr = makeArray("double")
+  let arr = makeDoubleArr()
 
   // warmup JIT
   for (let i = 0; i < 10000; i++) {
-    hotFunction(arr, true)
+    vuln(arr, 0, 1.1, true)
   }
 
   log("[*] fuzzing...")
 
-  for (let i = 0; i < ITER; i++) {
+  for (let i = 0; i < N; i++) {
 
-    // switch types to stress IC
-    if (i % 10 === 0) arr = makeArray("object")
-    if (i % 11 === 0) arr = makeArray("double")
+    // 🔥 shape flip (classic trigger)
+    if (i % 7 === 0) arr = makeObjectArr()
+    if (i % 9 === 0) arr = makeDoubleArr()
 
-    hotFunction(arr, i % 2)
+    let idx = (i % 120) // occasionally out-of-bounds-ish
+    let val = i + 0.1337
 
-    if (i % 20 === 0) controlledGC()
+    vuln(arr, idx, val, i % 2)
+
+    // 🔥 spray typed array
+    f64[i % f64.length] = i + 0.5
+
+    if (i % 20 === 0) gc()
 
     // checks
-    if (checkArray(arr)) {
-      log("🔥 potential TYPE confusion detected")
+    if (checkOOB(arr)) {
+      log("🔥 POSSIBLE OOB PATH DETECTED")
       break
     }
 
-    if (checkLength(arr)) {
-      log("🔥 potential LENGTH confusion detected")
+    if (checkTypedArray()) {
+      log("🔥 TYPED ARRAY CORRUPTION?")
       break
     }
 
-    if (checkBufferConsistency()) {
-      log("🔥 potential MEMORY inconsistency detected")
-      break
-    }
-
-    if (i % 100 === 0) {
+    if (i % 500 === 0) {
       log("[*] iter = " + i)
     }
   }
@@ -173,6 +144,5 @@ function run() {
   log("[*] done")
 }
 
-// ==========================
 run()
 </script>

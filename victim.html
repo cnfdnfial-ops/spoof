@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>V8 Fuzz Harness (Stable + Dedup + Repro)</title>
+<title>V8 Fuzz Harness v2</title>
 
 <style>
 body { font-family: monospace; background:#111; color:#0f0; }
@@ -12,7 +12,7 @@ body { font-family: monospace; background:#111; color:#0f0; }
 
 <body>
 
-<h3>V8 Fuzz Harness (Level 4 Stable)</h3>
+<h3>V8 Fuzz Harness v2 (Stabil + State Tracking)</h3>
 <pre id="log"></pre>
 
 <script>
@@ -23,173 +23,156 @@ const log = (m) => {
   logBox.textContent += m + "\n";
 };
 
-// =======================
-// SEED (deterministic fuzz)
-// =======================
+// =====================
+// deterministic RNG
+// =====================
 
-let SEED = 1337;
+let seed = 123456789;
 function rand() {
-  SEED = (SEED * 1664525 + 1013904223) >>> 0;
-  return SEED;
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return seed;
 }
 
-// =======================
-// HOT FUNCTIONS
-// =======================
+// =====================
+// HOT FUNCTION
+// =====================
 
-function vuln(a, i) {
+function hot(a, i) {
   return a[i] + 1.1;
 }
 
-function target(a, i) {
-  return a[i] + 1.1;
-}
-
-// =======================
-// WARMUP
-// =======================
+// =====================
+// BASE WARMUP
+// =====================
 
 function warmup() {
-  const arr = new Array(120);
+  const arr = new Array(150);
 
   for (let i = 0; i < arr.length; i++) {
     arr[i] = i + 0.5;
   }
 
-  for (let i = 0; i < 25000; i++) {
-    vuln(arr, i % 50);
-    target(arr, i % 50);
+  for (let i = 0; i < 40000; i++) {
+    hot(arr, i % 80);
   }
 
   return arr;
 }
 
-// =======================
-// SAFE MUTATOR (controlled instability)
-// =======================
+// =====================
+// CONTROLLED MUTATION (LESS NOISE, MORE SIGNAL)
+// =====================
 
 function mutate(arr, i) {
 
-  const r = rand() % 10;
+  const r = rand() % 16;
 
-  // controlled type noise
-  arr[1] = (r % 2) ? 1.5 : 2.5;
+  // stable numeric drift
+  arr[1] = (i % 3 === 0) ? 1.5 : 2.5;
 
-  // introduce undefined holes (safe)
-  if (r === 3) arr[5] = undefined;
+  // hole injection (rare, controlled)
+  if (r === 1) arr[10] = undefined;
 
-  // controlled structural change
-  if (i % 7 === 0 && arr.length > 80) {
-    arr.length = 90;
+  // shape shrink/grow oscillation (controlled)
+  if (i % 11 === 0) {
+    arr.length = 100;
   }
 
-  // controlled growth
-  if (i % 5 === 0) {
-    arr.push(42.42);
+  if (i % 13 === 0) {
+    arr.push(99.99);
   }
 
-  // polymorphism injection (safe type mixing)
-  if (r === 6) {
+  // polymorphic injection (rare)
+  if (r === 7) {
     arr[i % arr.length] = { x: i };
   }
 
   return arr;
 }
 
-// =======================
-// CHECKERS
-// =======================
+// =====================
+// STATE TRACKER (NEW)
+// =====================
 
-function checkArray(a) {
-  let sum = 0;
+function classify(arr) {
 
-  for (let i = 0; i < a.length; i++) {
-    const v = a[i];
-    if (typeof v === "number") sum += v;
+  let hasObject = false;
+  let hasHole = false;
+  let numeric = 0;
+
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
+
+    if (v === undefined) hasHole = true;
+    else if (typeof v === "object") hasObject = true;
+    else if (typeof v === "number") numeric++;
   }
 
-  return sum;
+  if (hasObject) return "MIXED_OBJECT";
+  if (hasHole) return "HOLEY";
+  return "PACKED_NUMERIC";
 }
 
-function checkTyped(f64) {
-  for (let i = 0; i < f64.length; i++) {
-    const v = f64[i];
-    if (!Number.isFinite(v)) return true;
-  }
-  return false;
+// =====================
+// CRASH HASH (DEDUP IMPROVED)
+// =====================
+
+function hashState(i, arr, state) {
+  return `${i}_${arr.length}_${state}_${arr[1]}`;
 }
 
-// =======================
-// CRASH FINGERPRINT
-// =======================
-
-function fingerprint(err, i) {
-  return {
-    msg: err?.message || String(err),
-    iter: i,
-    stack: err?.stack?.split("\n")[0] || "no-stack"
-  };
-}
-
-// =======================
-// DEDUP STORE
-// =======================
-
-const seen = new Map();
-
-// =======================
-// TYPED ARRAY
-// =======================
-
-let buf = new ArrayBuffer(0x400);
-let f64 = new Float64Array(buf);
-
-// =======================
-// MAIN LOOP
-// =======================
+// =====================
+// MAIN
+// =====================
 
 function run() {
 
   log("[*] warmup");
   let base = warmup();
+
   log("[*] fuzz start");
 
-  for (let i = 0; i < 8000; i++) {
+  const seen = new Map();
+  let lastState = "";
+
+  for (let i = 0; i < 9000; i++) {
 
     try {
 
       let arr = base.slice();
-
       arr = mutate(arr, i);
 
-      vuln(arr, i % arr.length);
-      target(arr, (i * 3) % arr.length);
+      hot(arr, i % arr.length);
+      hot(arr, (i * 7) % arr.length);
 
-      f64[i % f64.length] = i + 0.5;
+      const state = classify(arr);
 
-      let s = checkArray(arr);
+      const h = hashState(i, arr, state);
 
-      if (i % 500 === 0) {
-        log(`iter=${i} sum=${s}`);
+      // regression detection (important!)
+      if (state !== lastState) {
+        log(`⚡ STATE SHIFT @${i}: ${lastState} → ${state}`);
+        lastState = state;
       }
 
-      if (checkTyped(f64)) {
-        log("⚠ typed array anomaly detected");
-        return;
+      if (!seen.has(h)) {
+        seen.set(h, 1);
+      }
+
+      if (i % 500 === 0) {
+        log(`iter=${i} state=${state} unique=${seen.size}`);
       }
 
     } catch (e) {
 
-      const fp = fingerprint(e, i);
-      const key = JSON.stringify(fp);
+      const key = e.message + "::" + i;
 
       if (!seen.has(key)) {
         seen.set(key, true);
-        log("💥 CRASH/EXCEPTION DETECTED:");
-        log(JSON.stringify(fp, null, 2));
+        log("💥 CRASH:");
+        log(e.stack || e.message);
       }
 
-      // continue fuzzing instead of dying (important for fuzzers)
     }
   }
 

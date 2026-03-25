@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>V8 Stable JIT Observation Harness</title>
+<title>V8 Fuzz Harness (Stable + Dedup + Repro)</title>
 
 <style>
 body { font-family: monospace; background:#111; color:#0f0; }
@@ -12,7 +12,7 @@ body { font-family: monospace; background:#111; color:#0f0; }
 
 <body>
 
-<h3>V8 JIT / IC / Deopt Observer (Stable)</h3>
+<h3>V8 Fuzz Harness (Level 4 Stable)</h3>
 <pre id="log"></pre>
 
 <script>
@@ -23,132 +23,179 @@ const log = (m) => {
   logBox.textContent += m + "\n";
 };
 
-// -----------------------
-// HOT FUNCTION (monomorphic target)
-// -----------------------
+// =======================
+// SEED (deterministic fuzz)
+// =======================
 
-function hot(a, i) {
+let SEED = 1337;
+function rand() {
+  SEED = (SEED * 1664525 + 1013904223) >>> 0;
+  return SEED;
+}
+
+// =======================
+// HOT FUNCTIONS
+// =======================
+
+function vuln(a, i) {
   return a[i] + 1.1;
 }
 
-// -----------------------
-// SECOND HOT (forces polymorphism)
-// -----------------------
-
-function hot2(a, i) {
-  return (a[i] || 0) + 1.1;
+function target(a, i) {
+  return a[i] + 1.1;
 }
 
-// -----------------------
-// WARMUP (forces JIT compilation)
-// -----------------------
+// =======================
+// WARMUP
+// =======================
 
 function warmup() {
-  const arr = new Array(200);
+  const arr = new Array(120);
 
   for (let i = 0; i < arr.length; i++) {
     arr[i] = i + 0.5;
   }
 
-  for (let i = 0; i < 30000; i++) {
-    hot(arr, i % arr.length);
+  for (let i = 0; i < 25000; i++) {
+    vuln(arr, i % 50);
+    target(arr, i % 50);
   }
 
   return arr;
 }
 
-// -----------------------
-// CONTROLLED MUTATION (safe transitions)
-// -----------------------
+// =======================
+// SAFE MUTATOR (controlled instability)
+// =======================
 
 function mutate(arr, i) {
 
-  // controlled type noise (NO deletes, NO sparse jumps)
-  arr[1] = (i % 2 === 0) ? 1.5 : 2.5;
+  const r = rand() % 10;
 
-  arr[5] = undefined;     // hole-like but safe
-  arr[6] = 99.9;
+  // controlled type noise
+  arr[1] = (r % 2) ? 1.5 : 2.5;
 
-  // small structural change
-  if (arr.length > 150) {
-    arr.length = 120;
+  // introduce undefined holes (safe)
+  if (r === 3) arr[5] = undefined;
+
+  // controlled structural change
+  if (i % 7 === 0 && arr.length > 80) {
+    arr.length = 90;
   }
 
   // controlled growth
-  if (i % 3 === 0) {
+  if (i % 5 === 0) {
     arr.push(42.42);
+  }
+
+  // polymorphism injection (safe type mixing)
+  if (r === 6) {
+    arr[i % arr.length] = { x: i };
   }
 
   return arr;
 }
 
-// -----------------------
-// CHECKER (IC / bounds observation)
-// -----------------------
+// =======================
+// CHECKERS
+// =======================
 
-function check(arr) {
+function checkArray(a) {
   let sum = 0;
 
-  for (let i = 0; i < arr.length; i++) {
-    const v = arr[i];
-
-    if (typeof v === "number") {
-      sum += v;
-    }
+  for (let i = 0; i < a.length; i++) {
+    const v = a[i];
+    if (typeof v === "number") sum += v;
   }
 
   return sum;
 }
 
-// -----------------------
-// PERF HELPERS
-// -----------------------
-
-function now() {
-  return performance.now();
+function checkTyped(f64) {
+  for (let i = 0; i < f64.length; i++) {
+    const v = f64[i];
+    if (!Number.isFinite(v)) return true;
+  }
+  return false;
 }
 
-// -----------------------
+// =======================
+// CRASH FINGERPRINT
+// =======================
+
+function fingerprint(err, i) {
+  return {
+    msg: err?.message || String(err),
+    iter: i,
+    stack: err?.stack?.split("\n")[0] || "no-stack"
+  };
+}
+
+// =======================
+// DEDUP STORE
+// =======================
+
+const seen = new Map();
+
+// =======================
+// TYPED ARRAY
+// =======================
+
+let buf = new ArrayBuffer(0x400);
+let f64 = new Float64Array(buf);
+
+// =======================
 // MAIN LOOP
-// -----------------------
+// =======================
 
 function run() {
 
-  log("[*] warmup start");
+  log("[*] warmup");
   let base = warmup();
-  log("[*] warmup done");
-
-  let t0 = now();
+  log("[*] fuzz start");
 
   for (let i = 0; i < 8000; i++) {
 
-    let arr = base.slice();
+    try {
 
-    arr = mutate(arr, i);
+      let arr = base.slice();
 
-    // IC stress (same + slightly different access patterns)
-    hot(arr, i % arr.length);
-    hot(arr, (i + 1) % arr.length);
+      arr = mutate(arr, i);
 
-    hot2(arr, (i * 3) % arr.length);
-    hot2(arr, (i * 7) % arr.length);
+      vuln(arr, i % arr.length);
+      target(arr, (i * 3) % arr.length);
 
-    let s = check(arr);
+      f64[i % f64.length] = i + 0.5;
 
-    // periodic logging
-    if (i % 500 === 0) {
-      let dt = (now() - t0).toFixed(2);
-      log(`iter=${i} sum=${s.toFixed(2)} time=${dt}ms`);
+      let s = checkArray(arr);
+
+      if (i % 500 === 0) {
+        log(`iter=${i} sum=${s}`);
+      }
+
+      if (checkTyped(f64)) {
+        log("⚠ typed array anomaly detected");
+        return;
+      }
+
+    } catch (e) {
+
+      const fp = fingerprint(e, i);
+      const key = JSON.stringify(fp);
+
+      if (!seen.has(key)) {
+        seen.set(key, true);
+        log("💥 CRASH/EXCEPTION DETECTED:");
+        log(JSON.stringify(fp, null, 2));
+      }
+
+      // continue fuzzing instead of dying (important for fuzzers)
     }
-
   }
 
-  let total = (now() - t0).toFixed(2);
-
-  log("[*] done in " + total + "ms");
+  log("[*] finished");
 }
 
-// run
 run();
 
 </script>

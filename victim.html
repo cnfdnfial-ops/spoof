@@ -1,6 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 TypedArray Stress Harness</title>
+<title>V8 Invariant TypedArray Hunter (Strong)</title>
+
+<h2>Invariant-based Bug Hunter</h2>
 <pre id="log"></pre>
 
 <script>
@@ -9,86 +11,67 @@ const log = m => {
   console.log(m)
 }
 
-function rnd(n=1000){ return Math.floor(Math.random()*n) }
 function chance(p){ return Math.random() < p }
 
 // ===============================
-// 💣 BUFFER FACTORY
+// 🔥 STABLE BUFFER SETUP
 // ===============================
-function makeBuffer() {
-  let size = [8,16,32,64,128][rnd(5)]
-  let buf = new ArrayBuffer(size)
-
-  if (chance(0.3)) {
-    let u8 = new Uint8Array(buf)
-    for (let i = 0; i < u8.length; i++) {
-      u8[i] = rnd(256)
-    }
-  }
-
-  return buf
-}
+const buf = new ArrayBuffer(64)
+const f64 = new Float64Array(buf)
+const u32 = new Uint32Array(buf)
+const u8  = new Uint8Array(buf)
 
 // ===============================
-// 🔥 VIEW CHAOS
+// 🎯 TARGET FUNCTION (JIT BAIT)
 // ===============================
-function makeView(buf) {
-  switch (rnd(6)) {
-    case 0: return new Uint8Array(buf)
-    case 1: return new Float64Array(buf)
-    case 2: return new Uint16Array(buf)
-    case 3: return new Int32Array(buf)
-    case 4: return new DataView(buf)
-    case 5:
-      return new Uint8Array(buf, 0, Math.max(1, buf.byteLength - 1))
-  }
-}
-
-// ===============================
-// ⚠️ TARGET (JIT CONFUSION)
-// ===============================
-function target(view, flip) {
-  let x
-
-  if (view instanceof DataView) {
-    x = view.getUint8(0)
-  } else {
-    x = view[0]
-  }
+function target(arr, flip) {
+  let x = arr[0]
 
   if (flip) {
-    // 💥 mutate underlying assumptions
-    if (chance(0.5) && view.buffer) {
-      let newBuf = makeBuffer()
-      view = makeView(newBuf)
-    }
-
-    if (chance(0.3) && view.length) {
-      view[0] = 13.37
-    }
-
-    if (chance(0.2)) {
-      // force type confusion path
-      view.__proto__ = {}
-    }
+    // controlled mutation
+    arr[0] = 13.37
   }
 
-  if (view instanceof DataView) {
-    return view.getUint8(0)
-  } else {
-    return view[0]
+  return arr[0]
+}
+
+// ===============================
+// 🚀 WARMUP (FORCE OPT)
+// ===============================
+function warmup() {
+  for (let i = 0; i < 30000; i++) {
+    target(f64, false)
   }
 }
 
 // ===============================
-// 🚀 WARMUP
+// 💣 CONFUSION ENGINE
 // ===============================
-function warmup() {
-  let buf = new ArrayBuffer(64)
-  let v = new Uint8Array(buf)
+function confuse() {
+  // overwrite same buffer via different views
+  u32[0] = 0x41414141
 
-  for (let i = 0; i < 20000; i++) {
-    target(v, false)
+  if (chance(0.3)) {
+    u8[0] = 0xff
+  }
+
+  if (chance(0.2)) {
+    f64[0] = Math.random()
+  }
+}
+
+// ===============================
+// 🚨 INVARIANT CHECK
+// ===============================
+function checkInvariant(before, after) {
+  if (after !== 13.37) {
+    log("🚨 INVARIANT BROKEN!")
+    log("before=" + before + " after=" + after)
+
+    // dump raw bytes
+    let bytes = []
+    for (let i = 0; i < 8; i++) bytes.push(u8[i])
+    log("bytes=" + bytes.join(","))
   }
 }
 
@@ -96,34 +79,19 @@ function warmup() {
 // 💥 STRESS LOOP
 // ===============================
 function run() {
-  for (let i = 0; i < 1000; i++) {
-    let buf = makeBuffer()
-    let view = makeView(buf)
+  for (let i = 0; i < 2000; i++) {
 
-    let r1 = target(view, false)
-    let r2 = target(view, true)
+    // baseline
+    let before = target(f64, false)
 
-    // ===========================
-    // 🚨 DETECT ANOMALY
-    // ===========================
-    if (typeof r1 === "number" && typeof r2 === "number") {
+    // chaos
+    if (chance(0.7)) confuse()
 
-      if (!Number.isFinite(r2)) {
-        log("⚠️ NaN/Inf anomaly")
-      }
+    // mutation
+    let after = target(f64, true)
 
-      if (Math.abs(r1 - r2) > 1e6) {
-        log("⚠️ huge diff: " + r1 + " vs " + r2)
-      }
-    }
-
-    if (typeof r2 === "object") {
-      log("⚠️ unexpected object return")
-    }
-
-    if (r2 === undefined && chance(0.1)) {
-      log("⚠️ undefined anomaly")
-    }
+    // invariant: after MUST be 13.37
+    checkInvariant(before, after)
   }
 }
 
@@ -132,25 +100,34 @@ function run() {
 // ===============================
 function gcStorm() {
   let tmp = []
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 80; i++) {
     tmp.push(new Uint8Array(1024*1024))
   }
 }
 
 // ===============================
-// ⚡ DRIVER
+// ⚡ SCHEDULER CHAOS
+// ===============================
+function scheduler() {
+  if (chance(0.3)) setTimeout(run, 0)
+  if (chance(0.3)) Promise.resolve().then(run)
+}
+
+// ===============================
+// 🚀 START
 // ===============================
 log("[*] warmup...")
 warmup()
 warmup()
 
-log("[*] running typed-array stress...")
+log("[*] running invariant hunter...")
 
 setInterval(() => {
   run()
+  scheduler()
 
   if (chance(0.4)) gcStorm()
 
-}, 10)
+}, 20)
 
 </script>

@@ -1,14 +1,14 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 JIT Research Harness (Enhanced)</title>
+<title>V8 JIT Stability / Type Behavior Test</title>
 
 <h2>V8 JIT Behaviour Test</h2>
 <pre id="log"></pre>
 
 <script>
-function log(x){
-  document.getElementById("log").textContent += x + "\n";
-  console.log(x);
+const log = m=>{
+  document.getElementById("log").textContent += m + "\n"
+  console.log(m)
 }
 
 // =======================
@@ -16,11 +16,11 @@ function log(x){
 // =======================
 
 const CFG = {
-  WARMUP: 150000,
-  POLY_WARMUP: 50000,
+  WARMUP: 100000,
+  POLY: 50000,
   TRIGGER: 100,
-  STRESS: 4000
-};
+  STRESS: 2000
+}
 
 // =======================
 // TARGET
@@ -35,147 +35,116 @@ function vuln_alt(a,i){
 }
 
 // =======================
-// STATS
-// =======================
-
-let stats = {
-  calls: 0,
-  nonNumber: 0,
-  nan: 0,
-  weird: 0
-};
-
-// =======================
-// CHECK
+// CHECKER (IMPORTANT)
 // =======================
 
 function check(v, tag){
 
   if(typeof v !== "number"){
-    stats.nonNumber++;
-    log("⚠ NON-NUM ["+tag+"] " + v);
-    return true;
+    log("⚠ NON-NUM ["+tag+"] " + v)
+    return
   }
 
   if(!Number.isFinite(v)){
-    stats.nan++;
-    log("⚠ NAN ["+tag+"] " + v);
-    return true;
+    log("⚠ NAN ["+tag+"] " + v)
+    return
   }
 
-  if(v > 1e10 || v < -1e10){
-    stats.weird++;
-    log("⚠ WEIRD VALUE " + v);
-    return true;
+  // 🔥 anomaly kandidat (kalau ada bug)
+  if(v < 0 || v > 1000){
+    log("⚠ WEIRD NUMBER ["+tag+"] " + v)
+  }
+}
+
+// =======================
+// BUILD ARRAY
+// =======================
+
+function build(){
+  let a = new Array(16)
+
+  for(let i=0;i<a.length;i++){
+    a[i] = i + 0.5
   }
 
-  return false;
+  return a
 }
 
 // =======================
-// ARRAY BUILDERS
+// PHASE 1: MONOMORPHIC
 // =======================
 
-function packed(){
-  return [1.1,2.2,3.3,4.4];
-}
+function mono(a){
+  log("[*] mono warmup")
 
-function holey(){
-  let a = [1.1,2.2,3.3];
-  delete a[1];
-  return a;
-}
-
-function mixed(){
-  return [1.1,{x:1},3.3];
-}
-
-// =======================
-// WARMUP (MONO)
-// =======================
-
-function warmMono(a){
   for(let i=0;i<CFG.WARMUP;i++){
-    vuln(a);
+    vuln(a)
   }
 }
 
 // =======================
-// POLY TRAINING
+// PHASE 2: POLYMORPHIC
 // =======================
 
-function warmPoly(){
+function poly(a){
+  log("[*] polymorphic pressure")
 
-  let a1 = packed();
-  let a2 = holey();
-  let a3 = mixed();
-
-  for(let i=0;i<CFG.POLY_WARMUP;i++){
-    vuln_alt(a1,0);
-    vuln_alt(a2,0);
-    vuln_alt(a3,0);
+  for(let i=0;i<CFG.POLY;i++){
+    vuln_alt(a, i & 3)
   }
 }
 
 // =======================
-// SHAPE FLIP
+// PHASE 3: SHAPE FLIP
 // =======================
 
 function flip(a){
+  log("[*] flip shape")
 
-  a[0] = {x:1};          // type change
-  delete a[1];           // hole
-  a.length = 2;          // shrink
-  a[10] = 13.37;         // sparse
+  // ubah tipe utama
+  a[0] = {x:1}
 
-  Object.defineProperty(a,2,{
-    get(){
-      return 1.1;
-    }
-  });
+  // buat hole
+  delete a[1]
 
-  return a;
+  // ubah length
+  a.length = 8
+
+  // extend sparse
+  a[20] = 13.37
 }
 
 // =======================
-// TRIGGER
+// PHASE 4: TRIGGER
 // =======================
 
 function trigger(a){
-
-  let anomaly = false;
+  log("[*] trigger")
 
   for(let i=0;i<CFG.TRIGGER;i++){
 
-    let r1 = vuln(a);
-    let r2 = vuln_alt(a,0);
+    let r1 = vuln(a)
+    let r2 = vuln_alt(a,0)
 
-    if(check(r1,"vuln")) anomaly = true;
-    if(check(r2,"alt")) anomaly = true;
-
-    stats.calls += 2;
+    check(r1,"vuln")
+    check(r2,"alt")
   }
-
-  return anomaly;
 }
 
 // =======================
-// STRESS
+// PHASE 5: STRESS
 // =======================
 
 function stress(a){
-
-  let anomaly = false;
+  log("[*] stress")
 
   for(let i=0;i<CFG.STRESS;i++){
 
-    let idx = i & 3;
-    let r = vuln_alt(a, idx);
+    let idx = i & 7
+    let r = vuln_alt(a, idx)
 
-    if(check(r,"stress")) anomaly = true;
+    check(r,"stress")
   }
-
-  return anomaly;
 }
 
 // =======================
@@ -184,35 +153,17 @@ function stress(a){
 
 function run(){
 
-  log("[*] mono warmup");
-  let arr = packed();
-  warmMono(arr);
+  let arr = build()
 
-  log("[*] polymorphic pressure");
-  warmPoly();
+  mono(arr)
+  poly(arr)
+  flip(arr)
+  trigger(arr)
+  stress(arr)
 
-  log("[*] flip shape");
-  arr = flip(arr);
-
-  log("[*] trigger");
-  let t = trigger(arr);
-
-  log("[*] stress");
-  let s = stress(arr);
-
-  log("[*] done");
-
-  log("calls: " + stats.calls);
-  log("nonNumber: " + stats.nonNumber);
-  log("nan: " + stats.nan);
-  log("weird: " + stats.weird);
-
-  if(t || s){
-    log("⚠ anomaly detected");
-  }else{
-    log("✓ stable");
-  }
+  log("[*] done")
 }
 
-run();
+run()
+
 </script>

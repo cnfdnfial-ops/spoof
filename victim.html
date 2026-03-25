@@ -1,130 +1,157 @@
 <!doctype html>
+<html>
+<head>
 <meta charset="utf-8">
-<title>JIT Focused Stability Harness</title>
+<title>V8 Stable JIT Observation Harness</title>
 
+<style>
+body { font-family: monospace; background:#111; color:#0f0; }
+#log { white-space: pre-wrap; }
+</style>
+</head>
+
+<body>
+
+<h3>V8 JIT / IC / Deopt Observer (Stable)</h3>
 <pre id="log"></pre>
 
 <script>
 
-const log = (x) => {
-  console.log(x)
-  document.getElementById("log").textContent += x + "\n"
+const logBox = document.getElementById("log");
+const log = (m) => {
+  console.log(m);
+  logBox.textContent += m + "\n";
+};
+
+// -----------------------
+// HOT FUNCTION (monomorphic target)
+// -----------------------
+
+function hot(a, i) {
+  return a[i] + 1.1;
 }
 
-// =========================
-// HOT FUNCTION (JIT TARGET)
-// =========================
+// -----------------------
+// SECOND HOT (forces polymorphism)
+// -----------------------
 
-function hot(a, i){
-
-  // stable numeric loop-friendly pattern
-  return (a[i] * 1.0000001) + 0.1
+function hot2(a, i) {
+  return (a[i] || 0) + 1.1;
 }
 
-// =========================
-// WARMUP PHASE (CRITICAL)
-// =========================
+// -----------------------
+// WARMUP (forces JIT compilation)
+// -----------------------
 
-function warmup(){
+function warmup() {
+  const arr = new Array(200);
 
-  let arr = new Array(200)
-
-  for(let i=0;i<200;i++){
-    arr[i] = i + 0.5
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = i + 0.5;
   }
 
-  // FORCE OPTIMIZATION (hot path)
-  for(let i=0;i<200000;i++){
-    hot(arr, i % 200)
+  for (let i = 0; i < 30000; i++) {
+    hot(arr, i % arr.length);
   }
 
-  return arr
+  return arr;
 }
 
-// =========================
-// JIT DEOPT TRIGGER CONTROL
-// =========================
+// -----------------------
+// CONTROLLED MUTATION (safe transitions)
+// -----------------------
 
-function mutate_type_shift(a, step){
+function mutate(arr, i) {
 
-  // controlled type instability (NOT chaos)
+  // controlled type noise (NO deletes, NO sparse jumps)
+  arr[1] = (i % 2 === 0) ? 1.5 : 2.5;
 
-  if(step === 5000){
-    a[10] = "x"        // number → string
+  arr[5] = undefined;     // hole-like but safe
+  arr[6] = 99.9;
+
+  // small structural change
+  if (arr.length > 150) {
+    arr.length = 120;
   }
 
-  if(step === 8000){
-    a[20] = {}         // object injection
+  // controlled growth
+  if (i % 3 === 0) {
+    arr.push(42.42);
   }
 
-  if(step === 12000){
-    a[30] = undefined  // hole-like behavior
-  }
-
-  return a
+  return arr;
 }
 
-// =========================
-// TYPE OBSERVER (JIT SIGNAL)
-// =========================
+// -----------------------
+// CHECKER (IC / bounds observation)
+// -----------------------
 
-function observe(a){
+function check(arr) {
+  let sum = 0;
 
-  for(let i=0;i<50;i++){
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
 
-    let v = a[i]
-
-    if(v === undefined){
-      log("⚠ HOLE at " + i)
-      return true
-    }
-
-    let t = typeof v
-
-    if(t !== "number"){
-      log("⚠ TYPE CHANGE at " + i + " => " + t)
-      return true
-    }
-  }
-
-  return false
-}
-
-// =========================
-// MAIN LOOP (JIT STRESS)
-// =========================
-
-function run(){
-
-  log("[*] warmup JIT")
-
-  let base = warmup()
-
-  log("[*] JIT test phase")
-
-  for(let i=0;i<15000;i++){
-
-    let arr = base.slice()
-
-    arr = mutate_type_shift(arr, i)
-
-    let r = hot(arr, 50)
-
-    // periodic logging only
-    if(i % 2000 === 0){
-      log("iter " + i + " result=" + r)
-    }
-
-    // JIT SIGNAL CHECK
-    if(observe(arr)){
-      log("🚨 JIT TYPE INSTABILITY DETECTED")
-      break
+    if (typeof v === "number") {
+      sum += v;
     }
   }
 
-  log("[*] finished")
+  return sum;
 }
 
-run()
+// -----------------------
+// PERF HELPERS
+// -----------------------
+
+function now() {
+  return performance.now();
+}
+
+// -----------------------
+// MAIN LOOP
+// -----------------------
+
+function run() {
+
+  log("[*] warmup start");
+  let base = warmup();
+  log("[*] warmup done");
+
+  let t0 = now();
+
+  for (let i = 0; i < 8000; i++) {
+
+    let arr = base.slice();
+
+    arr = mutate(arr, i);
+
+    // IC stress (same + slightly different access patterns)
+    hot(arr, i % arr.length);
+    hot(arr, (i + 1) % arr.length);
+
+    hot2(arr, (i * 3) % arr.length);
+    hot2(arr, (i * 7) % arr.length);
+
+    let s = check(arr);
+
+    // periodic logging
+    if (i % 500 === 0) {
+      let dt = (now() - t0).toFixed(2);
+      log(`iter=${i} sum=${s.toFixed(2)} time=${dt}ms`);
+    }
+
+  }
+
+  let total = (now() - t0).toFixed(2);
+
+  log("[*] done in " + total + "ms");
+}
+
+// run
+run();
 
 </script>
+
+</body>
+</html>

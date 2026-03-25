@@ -1,37 +1,144 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Hybrid Signal Generator</title>
+<title>Binary Side-Channel STRONG</title>
+
+<h2>Binary Side-Channel (Strong + Stable)</h2>
+<pre id="log"></pre>
 
 <script>
-let mode = 0
-let pool = []
+const logEl = document.getElementById('log')
+const log = m => {
+  logEl.textContent += m + "\n"
+  console.log(m)
+}
 
-// toggle tiap 2 detik → bikin pattern jelas
-setInterval(() => {
-  mode ^= 1
-}, 2000)
+// ===============================
+// 🔴 SIGNAL (Victim-like)
+// ===============================
+const PREAMBLE = "11110000"
+const DATA = "1011001110"
+const pattern = PREAMBLE + DATA
+
+let idx = 0
+let currentBit = 0
 
 function burn(ms) {
   const end = performance.now() + ms
   while (performance.now() < end) {}
 }
 
-function gcBurst() {
-  for (let i = 0; i < 40; i++) {
-    pool.push(new Uint8Array(1024 * 1024)) // 1MB
+function gcStorm() {
+  let tmp = []
+  for (let i = 0; i < 120; i++) {
+    tmp.push(new Uint8Array(1024 * 1024))
   }
-  pool = pool.slice(-20)
 }
 
-setInterval(() => {
-  if (mode === 0) {
-    // LOW SIGNAL
-    burn(5)
-    gcBurst()
+function signalLoop() {
+  currentBit = Number(pattern[idx % pattern.length])
+  idx++
+
+  if (currentBit === 1) {
+    // 💣 SUPER HEAVY
+    for (let i = 0; i < 12; i++) burn(25)
+    for (let i = 0; i < 8; i++) gcStorm()
   } else {
-    // HIGH SIGNAL (kombinasi CPU + GC)
-    for (let i = 0; i < 5; i++) burn(20)
-    for (let i = 0; i < 5; i++) gcBurst()
+    // light
+    burn(5)
   }
-}, 80)
+
+  setTimeout(signalLoop, 1600)
+}
+
+signalLoop()
+
+// ===============================
+// 🔵 PROBE
+// ===============================
+function probe() {
+  const t0 = performance.now()
+
+  let x = 0
+  for (let i = 0; i < 7e6; i++) x += i
+
+  let arr = []
+  for (let i = 0; i < 20000; i++) arr.push([i])
+
+  return performance.now() - t0
+}
+
+// ===============================
+// ⚙️ CALIBRATION
+// ===============================
+let baseline = 0
+let threshold = 0
+
+function calibrate() {
+  let samples = []
+  for (let i = 0; i < 12; i++) samples.push(probe())
+
+  baseline = samples.reduce((a,b)=>a+b,0)/samples.length
+
+  // adaptive threshold
+  threshold = baseline + 6
+
+  log("Baseline = " + baseline.toFixed(2))
+  log("Threshold = " + threshold.toFixed(2))
+}
+
+// ===============================
+// 📡 DECODER (STRONG)
+// ===============================
+let bits = []
+let windowBits = []
+
+function sampleBit() {
+  let samples = []
+
+  // multi-sample (anti noise)
+  for (let i = 0; i < 5; i++) {
+    samples.push(probe())
+  }
+
+  const avg = samples.reduce((a,b)=>a+b,0)/samples.length
+  const bit = avg > threshold ? 1 : 0
+
+  windowBits.push(bit)
+
+  // majority vote (strong stabilizer)
+  if (windowBits.length === 3) {
+    const sum = windowBits.reduce((a,b)=>a+b,0)
+    const finalBit = sum >= 2 ? 1 : 0
+
+    bits.push(finalBit)
+
+    const color = finalBit ? "🟥" : "🟩"
+
+    log(`${color} avg=${avg.toFixed(2)} => BIT=${finalBit}`)
+
+    windowBits = []
+
+    // detect preamble (sync)
+    const stream = bits.join("")
+    if (stream.endsWith("11110000")) {
+      log("🔵 SYNC LOCKED (preamble detected)")
+      bits = []
+      return
+    }
+
+    // print data
+    if (bits.length === 10) {
+      log("📡 DATA: " + bits.join(""))
+      bits = []
+    }
+  }
+}
+
+// ===============================
+// 🚀 START
+// ===============================
+setTimeout(() => {
+  calibrate()
+  setInterval(sampleBit, 500)
+}, 1200)
 </script>

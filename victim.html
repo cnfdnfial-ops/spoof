@@ -1,99 +1,130 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>V8 Advanced Bug Hunter</title>
+<title>V8 Invariant Chaos Hunter</title>
 
-<h2>V8 Bug Hunting Harness</h2>
+<h2>V8 Array / Length Invariant Stress</h2>
 <pre id="log"></pre>
 
 <script>
 
-const logEl = document.getElementById("log")
+const logEl=document.getElementById("log")
 function log(x){
-  logEl.textContent += x + "\n"
+  logEl.textContent+=x+"\n"
   console.log(x)
 }
 
-const ITER = 20000
+const ITER=20000
+const BASE=64
 
-// =========================
-// GC pressure
-// =========================
-function stressGC(){
+// =====================
+// GC PRESSURE
+// =====================
+function gc(){
   let tmp=[]
-  for(let i=0;i<20;i++){
+  for(let i=0;i<50;i++){
     tmp.push(new ArrayBuffer(1024*1024))
   }
 }
 
-// =========================
-// array generators
-// =========================
-function doubleArray(){
+// =====================
+// ARRAY GENERATORS
+// =====================
+function doubleArr(){
   let a=[]
-  for(let i=0;i<64;i++) a.push(i+0.5)
+  for(let i=0;i<BASE;i++) a.push(i+0.5)
   return a
 }
 
-function objectArray(){
+function objectArr(){
   let a=[]
-  for(let i=0;i<64;i++) a.push({x:i})
+  for(let i=0;i<BASE;i++) a.push({v:i})
   return a
 }
 
-// =========================
-// JIT target
-// =========================
-function target(arr,idx,val,flag){
+function holeyArr(){
+  let a=new Array(BASE)
+  for(let i=0;i<BASE;i+=2){
+    a[i]=i+0.1
+  }
+  return a
+}
+
+// =====================
+// PROXY CHAOS
+// =====================
+function proxyWrap(arr){
+
+  return new Proxy(arr,{
+    get(target,prop,rec){
+      if(prop==="length"){
+        if(Math.random()<0.05){
+          target.push(13.37)
+        }
+      }
+      return Reflect.get(target,prop,rec)
+    }
+  })
+
+}
+
+// =====================
+// ACCESSOR TRIGGER
+// =====================
+function injectGetter(arr){
+
+  Object.defineProperty(arr,5,{
+    get(){
+      arr.push(99.99)
+      return 1.1
+    }
+  })
+
+}
+
+// =====================
+// JIT TARGET
+// =====================
+function vuln(a,x,flag){
 
   if(flag){
-    arr[idx]=val
+    a.push(x)
   }else{
-    arr[idx]=val+0.1
+    a[a.length]=x
   }
 
-  return arr[idx]
+  return a.length
+
 }
 
-// =========================
-// typed arrays
-// =========================
-let buf=new ArrayBuffer(0x200)
+// =====================
+// TYPED ARRAY TARGET
+// =====================
+let buf=new ArrayBuffer(0x400)
 let f64=new Float64Array(buf)
 let u32=new Uint32Array(buf)
 
-// =========================
-// anomaly detectors
-// =========================
+// =====================
+// CHECKERS
+// =====================
+function checkLength(a){
 
-function checkNumbers(arr){
+  let actual=0
+  for(let k in a) actual++
 
-  if(typeof arr[0]!="number") return false
+  if(actual>a.length){
+    log("IMPOSSIBLE actual>length "+actual+" > "+a.length)
+    return true
+  }
 
-  for(let i=0;i<arr.length;i++){
-
-    let v=arr[i]
-
-    if(typeof v!="number"){
-      log("TYPE CONFUSION @ "+i)
-      return true
-    }
-
-    if(!Number.isFinite(v)){
-      log("WEIRD NUMBER "+v)
-      return true
-    }
-
-    if(Math.abs(v)>1e12){
-      log("POSSIBLE POINTER "+v)
-      return true
-    }
-
+  if(a.length>100000){
+    log("SUSPICIOUS huge length "+a.length)
+    return true
   }
 
   return false
 }
 
-function checkTypedArray(){
+function checkTyped(){
 
   for(let i=0;i<f64.length;i++){
 
@@ -104,59 +135,87 @@ function checkTypedArray(){
       return true
     }
 
+    if(Math.abs(v)>1e12){
+      log("POINTER LIKE "+v)
+      return true
+    }
+
   }
 
   return false
 }
 
-// =========================
-// main
-// =========================
+function checkOOB(a){
+
+  try{
+
+    let v=a[a.length+10]
+
+    if(v!==undefined){
+      log("OOB READ "+v)
+      return true
+    }
+
+  }catch(e){
+    log("OOB exception "+e)
+    return true
+  }
+
+  return false
+
+}
+
+// =====================
+// MAIN
+// =====================
 function run(){
 
   log("[*] warmup")
 
-  let arr=doubleArray()
+  let a=doubleArr()
 
-  for(let i=0;i<10000;i++){
-    target(arr,0,1.1,true)
+  for(let i=0;i<30000;i++){
+    vuln(a,1.1,true)
   }
 
   log("[*] fuzzing")
 
   for(let i=0;i<ITER;i++){
 
-    // elements kind flip
-    if(i%13==0) arr=objectArray()
-    if(i%17==0) arr=doubleArray()
+    if(i%5==0) a=doubleArr()
+    if(i%7==0) a=holeyArr()
+    if(i%11==0) a=objectArr()
 
-    // holey transition
+    if(i%13==0) injectGetter(a)
+
+    if(i%17==0) a=proxyWrap(a)
+
+    vuln(a,i+0.1337,i%2)
+
     if(i%19==0){
-      arr[1000]=1
+      a.length=BASE
     }
 
-    // length mutation
     if(i%23==0){
-      arr.length=32
+      a[BASE+50]=13.37
     }
 
-    let idx=i%120
-    let val=i+0.1337
-
-    target(arr,idx,val,i%2)
-
-    // typed array spray
     f64[i%f64.length]=i+0.5
 
-    if(i%50==0) stressGC()
+    if(i%40==0) gc()
 
-    if(checkNumbers(arr)){
-      log("⚠ potential corruption")
+    if(checkLength(a)){
+      log("⚠ LENGTH INVARIANT BREAK")
       break
     }
 
-    if(checkTypedArray()){
-      log("⚠ typed array anomaly")
+    if(checkOOB(a)){
+      log("⚠ OOB SIGNAL")
+      break
+    }
+
+    if(checkTyped()){
+      log("⚠ MEMORY CORRUPTION SIGNAL")
       break
     }
 
@@ -167,6 +226,7 @@ function run(){
   }
 
   log("[*] done")
+
 }
 
 run()

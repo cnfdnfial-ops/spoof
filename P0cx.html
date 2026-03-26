@@ -2,27 +2,67 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>All-in-One Action</title>
+  <title>Device Web APIs</title>
 </head>
 <body>
 
-<button onclick="handleAction()">Mulai</button>
+<button onclick="startAll()">Start</button>
+
+<pre id="output"></pre>
 
 <script>
-function handleAction() {
-  // 1. Fullscreen (harus dari klik langsung)
+async function startAll() {
+  const output = document.getElementById("output");
+
+  // 1. Fullscreen
   if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
+    await document.documentElement.requestFullscreen();
   }
 
-  // 2. Buka email (mailto)
-  window.location.href = "mailto:support@example.com";
+  let results = {};
 
-  // 3. Buka translate (opsional, di tab baru)
-  window.open(
-    "https://translate.google.com/translate?u=" + encodeURIComponent(window.location.href),
-    "_blank"
+  // 2. Geolocation API
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      results.location = {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude
+      };
+      output.textContent = JSON.stringify(results, null, 2);
+    },
+    err => {
+      results.location = "denied";
+    }
   );
+
+  // 3. Battery API (tidak semua browser support)
+  if (navigator.getBattery) {
+    const battery = await navigator.getBattery();
+    results.battery = {
+      level: battery.level,
+      charging: battery.charging
+    };
+  }
+
+  // 4. USB API (hanya browser tertentu)
+  if (navigator.usb) {
+    try {
+      const device = await navigator.usb.requestDevice({ filters: [] });
+      results.usb = device.productName;
+    } catch (e) {
+      results.usb = "no access";
+    }
+  }
+
+  // 5. Clipboard (izin user)
+  try {
+    const text = await navigator.clipboard.readText();
+    results.clipboard = text;
+  } catch {
+    results.clipboard = "denied";
+  }
+
+  output.textContent = JSON.stringify(results, null, 2);
 }
 </script>
 

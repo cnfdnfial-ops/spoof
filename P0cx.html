@@ -1,53 +1,31 @@
-```html
 <!doctype html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>Fullscreen Save File Picker</title>
-<style>
-body{
-  font-family:sans-serif;
-  text-align:center;
-  padding:40px;
-}
-button{
-  font-size:18px;
-  padding:15px 30px;
-}
-</style>
-</head>
-
 <body>
 
-<h2>Fullscreen + Save File Picker</h2>
-<button id="saveBtn">SAVE FILE</button>
+<button id="start">Save to Directory</button>
 
 <script>
 
-document.getElementById("saveBtn").onclick = async () => {
+document.getElementById("start").onclick = async () => {
 
   try{
 
-    // 1️⃣ masuk fullscreen
+    // masuk fullscreen
     await document.documentElement.requestFullscreen()
 
-    // 2️⃣ buka Save File Picker
-    const handle = await window.showSaveFilePicker({
-      suggestedName: "example.txt",
-      types: [{
-        description: "Text File",
-        accept: { "text/plain": [".txt"] }
-      }]
-    })
+    // user pilih folder
+    const dir = await window.showDirectoryPicker()
 
-    // 3️⃣ tulis file
-    const writable = await handle.createWritable()
+    // buat file di folder itu
+    const fileHandle = await dir.getFileHandle("test.txt", { create:true })
 
-    await writable.write("Hello from fullscreen SaveFilePicker test!")
+    const writable = await fileHandle.createWritable()
+
+    await writable.write("Hello Android directory!")
 
     await writable.close()
 
-    alert("File berhasil disimpan")
+    alert("File saved")
 
   }catch(e){
     console.log(e)

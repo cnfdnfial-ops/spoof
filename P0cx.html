@@ -30,9 +30,14 @@
 
 <script>
 document.addEventListener("click", function handler() {
-  // 1. 全屏
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
+  // 1. 全屏 (兼容性处理)
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE/Edge */
+    elem.msRequestFullscreen();
   }
 
   // 2. 选择所有文本

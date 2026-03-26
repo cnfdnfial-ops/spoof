@@ -34,7 +34,7 @@ const btn = document.getElementById('btn');
 const status = document.getElementById('status');
 
 let callTimer = null;
-let isActive = true;
+let cancelled = false;
 
 btn.addEventListener('click', () => {
 
@@ -51,30 +51,18 @@ btn.addEventListener('click', () => {
 
   window.open('https://google.com', '_blank');
 
-  // set timer
+  // timer tetap jalan walau buka tab baru
   callTimer = setTimeout(() => {
-    if (isActive) {
+    if (!cancelled) {
       status.textContent = "Redirecting to call...";
       window.location.href = "tel:+6281234567890";
     }
   }, 5000);
 });
 
-// detect kalau user keluar / back / pindah tab
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    isActive = false;
-
-    if (callTimer) {
-      clearTimeout(callTimer);
-      console.log("Timer cancelled");
-    }
-  }
-});
-
-// extra safety (beberapa browser)
+// HANYA cancel kalau benar-benar leave (back / close)
 window.addEventListener("pagehide", () => {
-  isActive = false;
+  cancelled = true;
   if (callTimer) clearTimeout(callTimer);
 });
 </script>

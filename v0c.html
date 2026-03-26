@@ -1,38 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoC Auto Call</title>
+
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    padding: 60px;
+  }
+  button {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  #status {
+    margin-top: 20px;
+    font-size: 18px;
+    color: darkred;
+  }
+</style>
+</head>
 <body>
 
-<button onclick="start()">CLICK CALL CENTER GOOGLE</button>
+<h2>CLICK TO GOOGLE</h2>
+<button id="btn">CLICK CALL CENTER GOOGLE</button>
+<div id="status">Status: Waiting...</div>
 
 <script>
+const btn = document.getElementById('btn');
+const status = document.getElementById('status');
 
-function start(){
+btn.addEventListener('click', () => {
 
-  const w = window.open("https://google.com");
+  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
 
-  setTimeout(()=>{
-
-    w.document.write(`
-    <script>
-
-    const text = "Attention. Google dot com is currently under maintenance. Please contact support immediately.";
-
+  // Speech
+  if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "en-US";
-
-    utter.onend = () => {
-        location.href = "tel:+18005551234";
-    };
-
+    utter.lang = 'en-US';
     speechSynthesis.speak(utter);
+  }
 
-    <\/script>
-    `);
+  status.textContent = "Opening Google...";
 
-  },500);
+  // buka google di tab baru
+  window.open('https://google.com', '_blank');
 
-}
+  // delay 5 detik
+  setTimeout(() => {
+    status.textContent = "Redirecting to call...";
 
+    // AUTO CALL (PoC)
+    window.location.href = "tel:+6281234567890";
+
+  }, 5000);
+
+});
 </script>
 
 </body>

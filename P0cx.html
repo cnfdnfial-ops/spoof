@@ -1,9 +1,10 @@
-```html
+```html id="s4p8bn"
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Fullscreen → Save File</title>
+<title>Fullscreen → Save RAR File</title>
+
 <style>
 body{
   font-family:sans-serif;
@@ -11,49 +12,54 @@ body{
   padding-top:80px;
 }
 button{
-  padding:15px 30px;
-  font-size:18px;
+  font-size:20px;
+  padding:15px 35px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
-<h2>Fullscreen → Save File Picker</h2>
-<button id="start">START</button>
+<h2>Fullscreen → Save .RAR</h2>
+<button id="start">SAVE RAR</button>
 
 <script>
 
-document.getElementById("start").addEventListener("click", async () => {
+const btn = document.getElementById("start")
 
-  try {
+btn.addEventListener("click", async () => {
+
+  try{
 
     // 1️⃣ masuk fullscreen
-    await document.documentElement.requestFullscreen();
+    await document.documentElement.requestFullscreen()
 
     // 2️⃣ buka dialog save file
     const handle = await window.showSaveFilePicker({
-      suggestedName: "example.rar",
+      suggestedName: "archive.rar",
       types: [{
-        description: "Text File",
-        accept: { "text/plain": [".txt"] }
+        description: "RAR Archive",
+        accept: { "application/x-rar-compressed": [".rar"] }
       }]
-    });
+    })
 
-    // 3️⃣ tulis file
-    const writable = await handle.createWritable();
+    // 3️⃣ buat writer
+    const writable = await handle.createWritable()
 
-    await writable.write("Hello from fullscreen save test!");
+    // isi file contoh
+    const data = new Uint8Array([
+      0x52,0x61,0x72,0x21,0x1A,0x07,0x00
+    ]) // header RAR minimal
 
-    await writable.close();
+    await writable.write(data)
 
-    alert("File berhasil disimpan");
+    await writable.close()
 
-  } catch (err) {
-    console.log("Cancelled / error:", err);
+  }catch(e){
+    console.log("User cancel / error:", e)
   }
 
-});
+})
 
 </script>
 

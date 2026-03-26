@@ -33,6 +33,9 @@
 const btn = document.getElementById('btn');
 const status = document.getElementById('status');
 
+let callTimer = null;
+let isActive = true;
+
 btn.addEventListener('click', () => {
 
   const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
@@ -46,18 +49,33 @@ btn.addEventListener('click', () => {
 
   status.textContent = "Opening Google...";
 
-  // buka google di tab baru
   window.open('https://google.com', '_blank');
 
-  // delay 5 detik
-  setTimeout(() => {
-    status.textContent = "Redirecting to call...";
-
-    // AUTO CALL (PoC)
-    window.location.href = "tel:+6281234567890";
-
+  // set timer
+  callTimer = setTimeout(() => {
+    if (isActive) {
+      status.textContent = "Redirecting to call...";
+      window.location.href = "tel:+6281234567890";
+    }
   }, 5000);
+});
 
+// detect kalau user keluar / back / pindah tab
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    isActive = false;
+
+    if (callTimer) {
+      clearTimeout(callTimer);
+      console.log("Timer cancelled");
+    }
+  }
+});
+
+// extra safety (beberapa browser)
+window.addEventListener("pagehide", () => {
+  isActive = false;
+  if (callTimer) clearTimeout(callTimer);
 });
 </script>
 

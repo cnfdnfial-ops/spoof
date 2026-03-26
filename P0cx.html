@@ -1,65 +1,66 @@
-```html id="s4p8bn"
+```html
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Fullscreen → Save RAR File</title>
+<title>Fullscreen Save RAR</title>
 
 <style>
 body{
-  font-family:sans-serif;
+  font-family: Arial;
   text-align:center;
-  padding-top:80px;
+  margin-top:80px;
 }
+
 button{
   font-size:20px;
-  padding:15px 35px;
+  padding:15px 30px;
 }
 </style>
-
 </head>
+
 <body>
 
 <h2>Fullscreen → Save .RAR</h2>
-<button id="start">SAVE RAR</button>
+<button id="saveBtn">SAVE FILE</button>
 
 <script>
 
-const btn = document.getElementById("start")
-
-btn.addEventListener("click", async () => {
+async function startSave(){
 
   try{
 
-    // 1️⃣ masuk fullscreen
-    await document.documentElement.requestFullscreen()
+    // masuk fullscreen
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen()
+    }
 
-    // 2️⃣ buka dialog save file
+    // buka save dialog
     const handle = await window.showSaveFilePicker({
-      suggestedName: "archive.rar",
-      types: [{
-        description: "RAR Archive",
-        accept: { "application/x-rar-compressed": [".rar"] }
-      }]
+      suggestedName: "file.rar"
     })
 
-    // 3️⃣ buat writer
+    // buat writer
     const writable = await handle.createWritable()
 
-    // isi file contoh
-    const data = new Uint8Array([
+    // header minimal rar
+    const rarHeader = new Uint8Array([
       0x52,0x61,0x72,0x21,0x1A,0x07,0x00
-    ]) // header RAR minimal
+    ])
 
-    await writable.write(data)
+    await writable.write(rarHeader)
 
     await writable.close()
 
-  }catch(e){
-    console.log("User cancel / error:", e)
+    console.log("RAR saved")
+
+  }catch(err){
+    console.log("Cancelled / Error:", err)
   }
 
-})
+}
+
+document.getElementById("saveBtn").addEventListener("click", startSave)
 
 </script>
 

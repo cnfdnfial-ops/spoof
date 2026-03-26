@@ -1,76 +1,67 @@
+<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
     margin:0;
-    overflow:hidden;
     font-family:sans-serif;
-    background:#111;
-    color:#fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:100vh;
+    text-align:center;
 }
 
-button{
-    font-size:24px;
-    padding:20px 40px;
+h1{
+    margin:1em;
 }
 
-select{
-    height:9999px;
-    width:9999px;
-    font-size:9em;
+#link{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+}
+
+input{
+    display:none;
+}
+
+img{
+    width:100%;
+    max-height:80vh;
+    object-fit:contain;
 }
 </style>
 
-<h1>Tap to start demo</h1>
+<h1>Tap to upload photo</h1>
 
-<select id="selectElement">
-<option id="optionElement">Test</option>
-</select>
-
-<button id="start">Start</button>
+<input id="fileSelect" type="file" accept="image/*">
+<img id="img">
+<a id="link" href="#"></a>
 
 <script>
 
-const btn = document.getElementById("start")
-const select = document.getElementById("selectElement")
+const link = document.getElementById("link");
+const fileSelect = document.getElementById("fileSelect");
+const img = document.getElementById("img");
 
-btn.onclick = async () => {
+link.addEventListener("click", async (e)=>{
+    e.preventDefault();
 
-    /* fullscreen */
     try{
-        await document.documentElement.requestFullscreen()
-    }catch(e){}
-
-    /* vibration API */
-    if(navigator.vibrate){
-        navigator.vibrate([100,50,100])
+        if(!document.fullscreenElement){
+            await document.documentElement.requestFullscreen();
+        }
+    }catch(err){
+        console.log("Fullscreen blocked:",err);
     }
 
-    /* notification permission request */
-    if("Notification" in window){
-        Notification.requestPermission()
+    fileSelect.click();
+});
+
+fileSelect.addEventListener("change",(event)=>{
+    const file = event.target.files[0];
+    if(file){
+        img.src = URL.createObjectURL(file);
     }
-
-    /* speech synthesis */
-    if("speechSynthesis" in window){
-        let msg = new SpeechSynthesisUtterance("Demo running")
-        speechSynthesis.speak(msg)
-    }
-
-    /* clipboard read permission request */
-    if(navigator.clipboard){
-        navigator.clipboard.readText().catch(()=>{})
-    }
-
-    /* select overflow test */
-    requestAnimationFrame(()=>{
-        select[641811] = document.getElementById("optionElement")
-    })
-
-}
+});
 
 </script>

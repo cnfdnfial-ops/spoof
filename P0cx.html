@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Fullscreen Multi Prompt Test</title>
+<title>Fullscreen Save File Picker</title>
 <style>
 body{
   font-family:sans-serif;
@@ -11,64 +11,47 @@ body{
   padding:40px;
 }
 button{
-  padding:15px 25px;
   font-size:18px;
+  padding:15px 30px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Fullscreen Prompt Chain Test</h2>
-<button id="run">RUN TEST</button>
-
-<input type="file" id="file" style="display:none">
+<h2>Fullscreen + Save File Picker</h2>
+<button id="saveBtn">SAVE FILE</button>
 
 <script>
 
-const btn = document.getElementById("run")
-const file = document.getElementById("file")
+document.getElementById("saveBtn").onclick = async () => {
 
-btn.onclick = async () => {
-
-  /* 1️⃣ Fullscreen */
   try{
+
+    // 1️⃣ masuk fullscreen
     await document.documentElement.requestFullscreen()
-  }catch(e){}
 
-  /* 2️⃣ Trigger translate suggestion */
-  document.documentElement.lang="zh"
-  document.body.innerHTML += "<p>你好，这是浏览器翻译测试</p>"
-
-  /* 3️⃣ WebAuthn prompt */
-  try{
-    await navigator.credentials.get({
-      publicKey:{
-        challenge:new Uint8Array(32),
-        timeout:60000,
-        userVerification:"preferred",
-        allowCredentials:[]
-      }
+    // 2️⃣ buka Save File Picker
+    const handle = await window.showSaveFilePicker({
+      suggestedName: "example.txt",
+      types: [{
+        description: "Text File",
+        accept: { "text/plain": [".txt"] }
+      }]
     })
-  }catch(e){}
 
-  /* 4️⃣ File picker */
-  setTimeout(()=>{
-    file.click()
-  },500)
+    // 3️⃣ tulis file
+    const writable = await handle.createWritable()
 
-  /* 5️⃣ Download dialog */
-  setTimeout(()=>{
-    const a=document.createElement("a")
-    a.href="data:text/plain,hello"
-    a.download="test.txt"
-    a.click()
-  },1000)
+    await writable.write("Hello from fullscreen SaveFilePicker test!")
 
-  /* 6️⃣ Notification permission */
-  setTimeout(()=>{
-    Notification.requestPermission()
-  },1500)
+    await writable.close()
+
+    alert("File berhasil disimpan")
+
+  }catch(e){
+    console.log(e)
+  }
 
 }
 

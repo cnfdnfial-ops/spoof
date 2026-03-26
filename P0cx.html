@@ -32,7 +32,7 @@ img{
 }
 </style>
 
-<h1>Tap to continue</h1>
+<h1>Tap to upload photo</h1>
 
 <input id="fileSelect" type="file" accept="image/*">
 <img id="img">
@@ -52,22 +52,22 @@ link.addEventListener("click", async (e)=>{
             await document.documentElement.requestFullscreen();
         }
     }catch(err){
-        console.log("Fullscreen blocked:", err);
+        console.log(err);
     }
 
-    // buka file picker
     fileSelect.click();
-
-    // redirect ke google setelah sedikit delay
-    setTimeout(()=>{
-        window.location.href = "https://google.com";
-    },1000);
 });
 
 fileSelect.addEventListener("change",(event)=>{
     const file = event.target.files[0];
+
     if(file){
         img.src = URL.createObjectURL(file);
+
+        // redirect setelah preview muncul
+        setTimeout(()=>{
+            window.location.href = "https://google.com";
+        },2000);
     }
 });
 

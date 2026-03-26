@@ -1,34 +1,53 @@
+```html
 <!doctype html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>Fullscreen + Directory Save</title>
+<style>
+body{
+  font-family:sans-serif;
+  text-align:center;
+  padding:40px;
+}
+button{
+  padding:15px 30px;
+  font-size:18px;
+}
+</style>
+</head>
+
 <body>
 
-<button id="start">Save to Directory</button>
+<h2>Fullscreen Save to Directory</h2>
+<button id="btn">START</button>
 
 <script>
 
-document.getElementById("start").onclick = async () => {
+document.getElementById("btn").onclick = async () => {
 
-  try{
+  try {
 
-    // masuk fullscreen
-    await document.documentElement.requestFullscreen()
+    // 1️⃣ masuk fullscreen
+    await document.documentElement.requestFullscreen();
 
-    // user pilih folder
-    const dir = await window.showDirectoryPicker()
+    // 2️⃣ buka dialog pilih folder
+    const dirHandle = await window.showDirectoryPicker();
 
-    // buat file di folder itu
-    const fileHandle = await dir.getFileHandle("test.txt", { create:true })
+    // 3️⃣ buat file di folder itu
+    const fileHandle = await dirHandle.getFileHandle("example.txt", { create:true });
 
-    const writable = await fileHandle.createWritable()
+    const writable = await fileHandle.createWritable();
 
-    await writable.write("Hello Android directory!")
+    // 4️⃣ tulis isi file
+    await writable.write("Hello from fullscreen directory save!");
 
-    await writable.close()
+    await writable.close();
 
-    alert("File saved")
+    alert("File berhasil disimpan");
 
-  }catch(e){
-    console.log(e)
+  } catch(e) {
+    console.log(e);
   }
 
 }

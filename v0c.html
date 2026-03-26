@@ -1,75 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Speech + Redirect + Mail + Tel PoC</title>
-
-<style>
-body{
-  font-family: Arial, sans-serif;
-  text-align:center;
-  padding:60px;
-}
-
-button{
-  padding:18px 35px;
-  font-size:20px;
-  cursor:pointer;
-}
-
-#status{
-  margin-top:20px;
-  font-size:18px;
-  color:darkred;
-}
-</style>
-</head>
-
+<html>
 <body>
 
-<h2>CLICK TO CONTACT GOOGLE</h2>
-
-<button id="btn">CLICK CALL CENTER GOOGLE</button>
-
-<div id="status">Status: Waiting...</div>
+<button onclick="start()">CLICK CALL CENTER GOOGLE</button>
 
 <script>
 
-const btn = document.getElementById("btn");
-const status = document.getElementById("status");
+function start(){
 
-btn.onclick = () => {
+  const w = window.open("https://google.com");
 
-  status.textContent = "Triggering actions...";
-
-  // 1️⃣ Speech
-  if ('speechSynthesis' in window) {
-
-    const msg = new SpeechSynthesisUtterance(
-      "Attention. Google dot com requires support verification. Please contact support immediately."
-    );
-
-    msg.lang = "en-US";
-    speechSynthesis.speak(msg);
-  }
-
-  // 2️⃣ Buka Google
-  window.open("https://google.com","_blank");
-
-  // 3️⃣ Buka email client
   setTimeout(()=>{
-    window.location.href =
-    "mailto:support@google.com?subject=Support Request";
-  },300);
 
-  // 4️⃣ Buka dialer telepon
-  setTimeout(()=>{
-    window.location.href =
-    "tel:+18005551234";
-  },700);
+    w.document.write(`
+    <script>
 
-};
+    const text = "Attention. Google dot com is currently under maintenance. Please contact support immediately.";
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "en-US";
+
+    utter.onend = () => {
+        location.href = "tel:+18005551234";
+    };
+
+    speechSynthesis.speak(utter);
+
+    <\/script>
+    `);
+
+  },500);
+
+}
 
 </script>
 

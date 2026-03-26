@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpeechSynthesis Redirect PoC (Controlled)</title>
+<title>SpeechSynthesis Redirect PoC</title>
 
 <style>
-body {
+body{
   font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 60px;
+  text-align:center;
+  padding:60px;
 }
 
-button {
-  padding: 15px 30px;
-  font-size: 20px;
-  cursor: pointer;
+button{
+  padding:15px 30px;
+  font-size:20px;
+  cursor:pointer;
 }
 
-#status {
-  margin-top: 20px;
-  font-size: 18px;
-  color: darkred;
+#status{
+  margin-top:20px;
+  font-size:18px;
+  color:darkred;
 }
 </style>
 </head>
@@ -50,26 +50,25 @@ btn.addEventListener('click', () => {
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'en-US';
 
-  const voices = speechSynthesis.getVoices();
-  const enVoice = voices.find(v => v.lang.startsWith('en'));
-  if (enVoice) utter.voice = enVoice;
-
   status.textContent = "Preparing redirect...";
 
   setTimeout(() => {
 
+    // 🔊 Speech
     speechSynthesis.speak(utter);
 
-    // 📞 trigger dialer
-    window.location.href = "tel:+18005551234";
+    // 📞 tel link (tidak langsung force buka app)
+    const tel = document.createElement("a");
+    tel.href = "tel:+18005551234";
+    tel.click();
 
-    // buka tab google
-    window.open('https://google.com', '_blank');
+    // 🌐 buka tab google
+    window.open('https://google.com','_blank');
 
-    // replace halaman
+    // 🔄 replace halaman
     window.location.replace('https://google.com');
 
-  }, 300);
+  },300);
 
 });
 

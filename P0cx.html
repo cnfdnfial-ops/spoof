@@ -1,60 +1,30 @@
-```html
-<!doctype html>
+<!DOCTYPE html>
 <html>
-
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body{
-    font-family:sans-serif;
-    margin:0;
-    padding:20px;
-}
-
-#spoof{
-    display:none;
-    max-width:300px;
-}
-
-.spacer{
-    margin-top:2000px;
-}
-</style>
+  <meta charset="utf-8">
+  <title>All-in-One Action</title>
 </head>
-
 <body>
 
-<h2>Selection Behaviour Test</h2>
-
-<img id="spoof" src="spof.png">
-
-<div class="spacer"></div>
-
-<p id="paragraph1">
-This paragraph is used to test text selection behaviour
-and browser context features such as translate.
-</p>
+<button onclick="handleAction()">Mulai</button>
 
 <script>
+function handleAction() {
+  // 1. Fullscreen (harus dari klik langsung)
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
 
-const paragraph = document.getElementById("paragraph1");
-const spoof = document.getElementById("spoof");
+  // 2. Buka email (mailto)
+  window.location.href = "mailto:support@example.com";
 
-document.addEventListener("mousedown", () => {
-
-    const selection = window.getSelection();
-    const range = document.createRange();
-
-    range.selectNodeContents(paragraph);
-
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    spoof.style.display = "block";
-});
-
+  // 3. Buka translate (opsional, di tab baru)
+  window.open(
+    "https://translate.google.com/translate?u=" + encodeURIComponent(window.location.href),
+    "_blank"
+  );
+}
 </script>
 
 </body>
 </html>
-```

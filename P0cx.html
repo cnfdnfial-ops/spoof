@@ -1,4 +1,39 @@
-<html> <body onclick="f()">click me</body> <p></p> <script> function f() { const filePromise = window.showOpenFilePicker(); setTimeout(async () => { window.open("https://google.com") const handle = (await filePromise)[0]; console.log(`File: ${handle.name}`); // ... }, 0);
-    }
- </script>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fullscreen + WebAuthn Trigger</title>
+</head>
+<body>
+
+<button id="go">Start</button>
+
+<script>
+document.getElementById("go").onclick = async () => {
+
+  // masuk fullscreen
+  await document.documentElement.requestFullscreen();
+
+  // ubah bahasa supaya browser offer translate
+  document.documentElement.lang = "zh";
+  document.body.innerHTML += "<p>你好，这是测试页面</p>";
+
+  // WebAuthn trigger
+  try {
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array(32),
+        timeout: 60000,
+        userVerification: "preferred",
+        allowCredentials: []
+      }
+    });
+  } catch(e) {
+    console.log(e);
+  }
+
+}
+</script>
+
+</body>
 </html>

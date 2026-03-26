@@ -2,94 +2,54 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>全屏覆盖 + 通知</title>
+  <title>全屏选择文本</title>
   <style>
     body {
-      margin: 0;
-      font-family: "微软雅黑", Arial, sans-serif;
-      background: #000;
+      font-family: Arial, sans-serif;
+      background: #111;
       color: #0f0;
-    }
-    button {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 15px 25px;
-      font-size: 18px;
-      z-index: 100;
-      cursor: pointer;
-    }
-    #overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.9);
-      color: #0f0;
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 99;
-      text-align: center;
       padding: 20px;
     }
-    #closeOverlay {
-      margin-top: 20px;
-      padding: 10px 20px;
+    button {
+      padding: 15px 25px;
       font-size: 18px;
       cursor: pointer;
-      background: #0f0;
-      color: #000;
-      border: none;
+      margin-bottom: 20px;
+    }
+    #content {
+      white-space: pre-wrap;
+      border: 1px solid #0f0;
+      padding: 15px;
+      max-width: 800px;
+      margin: auto;
     }
   </style>
 </head>
 <body>
 
-<button onclick="start()">开始</button>
+<button onclick="selectAndFullscreen()">全屏并选择文本</button>
 
-<div id="overlay">
-  覆盖层已激活！<br>
-  <button id="closeOverlay" onclick="hideOverlay()">关闭覆盖层</button>
+<div id="content">
+这是示例文本。  
+点击按钮后，这些文本将会被全部选中，并且页面进入全屏模式。  
+你可以在全屏状态下复制或操作这些文本。
 </div>
 
 <script>
-async function start() {
-  // 1. 全屏模式
+function selectAndFullscreen() {
+  // 1. 全屏
   if (document.documentElement.requestFullscreen) {
-    await document.documentElement.requestFullscreen();
+    document.documentElement.requestFullscreen();
   }
 
-  // 2. 创建可控通知
-  if (Notification.permission !== "granted") {
-    await Notification.requestPermission();
-  }
+  // 2. 选择所有文本
+  const content = document.getElementById("content");
+  const range = document.createRange();
+  range.selectNodeContents(content);
 
-  let notif;
-  if (Notification.permission === "granted") {
-    notif = new Notification("通知", {
-      body: "这是可以通过覆盖层关闭的通知",
-      icon: "https://via.placeholder.com/64"
-    });
-  }
-
-  // 3. 显示覆盖层
-  const overlay = document.getElementById("overlay");
-  overlay.style.display = "flex";
-
-  // 4. 可选：在覆盖层显示后自动关闭通知
-  if (notif) {
-    setTimeout(() => notif.close(), 500); // 0.5 秒后关闭通知
-  }
-}
-
-// 隐藏覆盖层函数
-function hideOverlay() {
-  document.getElementById("overlay").style.display = "none";
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 </script>
 

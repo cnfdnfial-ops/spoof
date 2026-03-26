@@ -1,54 +1,60 @@
 ```html
 <!doctype html>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
 
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
     font-family:sans-serif;
-    text-align:center;
+    margin:0;
+    padding:20px;
 }
-img{
-    max-width:100%;
-    margin-top:20px;
+
+#spoof{
+    display:none;
+    max-width:300px;
+}
+
+.spacer{
+    margin-top:2000px;
 }
 </style>
+</head>
 
-<h2>Fullscreen + File Preview Test</h2>
+<body>
 
-<button id="start">Start</button>
-<input id="fileSelect" type="file" accept="image/*" style="display:none">
-<img id="preview">
+<h2>Selection Behaviour Test</h2>
+
+<img id="spoof" src="spof.png">
+
+<div class="spacer"></div>
+
+<p id="paragraph1">
+This paragraph is used to test text selection behaviour
+and browser context features such as translate.
+</p>
 
 <script>
 
-const start = document.getElementById("start");
-const fileSelect = document.getElementById("fileSelect");
-const preview = document.getElementById("preview");
+const paragraph = document.getElementById("paragraph1");
+const spoof = document.getElementById("spoof");
 
-start.onclick = async () => {
+document.addEventListener("mousedown", () => {
 
-    try{
-        await document.documentElement.requestFullscreen();
-    }catch(e){
-        console.log("Fullscreen blocked");
-    }
+    const selection = window.getSelection();
+    const range = document.createRange();
 
-    fileSelect.click();
-};
+    range.selectNodeContents(paragraph);
 
-fileSelect.onchange = (e)=>{
-    const file = e.target.files[0];
-    if(file){
-        preview.src = URL.createObjectURL(file);
+    selection.removeAllRanges();
+    selection.addRange(range);
 
-        // add state to history for testing back button behaviour
-        history.pushState({preview:true},"","#preview");
-    }
-};
-
-window.onpopstate = ()=>{
-    console.log("Back button pressed");
-};
+    spoof.style.display = "block";
+});
 
 </script>
+
+</body>
+</html>
 ```

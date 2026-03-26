@@ -1,59 +1,65 @@
-```html
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Fullscreen + Directory Save</title>
+<title>Fullscreen Save File</title>
+
 <style>
 body{
-  font-family:sans-serif;
+  font-family: Arial;
   text-align:center;
-  padding:40px;
+  padding-top:80px;
 }
 button{
-  padding:15px 30px;
-  font-size:18px;
+  font-size:20px;
+  padding:15px 35px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
-<h2>Fullscreen Save to Directory</h2>
-<button id="btn">START</button>
+<h2>Fullscreen → Save File</h2>
+
+<button id="start">START</button>
 
 <script>
 
-document.getElementById("btn").onclick = async () => {
+const btn = document.getElementById("start");
 
-  try {
+btn.addEventListener("click", async () => {
 
-    // 1️⃣ masuk fullscreen
+  try{
+
+    // 1. masuk fullscreen
     await document.documentElement.requestFullscreen();
 
-    // 2️⃣ buka dialog pilih folder
-    const dirHandle = await window.showDirectoryPicker();
-
-    // 3️⃣ buat file di folder itu
-    const fileHandle = await dirHandle.getFileHandle("example.txt", { create:true });
-
-    const writable = await fileHandle.createWritable();
-
-    // 4️⃣ tulis isi file
-    await writable.write("Hello from fullscreen directory save!");
-
-    await writable.close();
-
-    alert("File berhasil disimpan");
-
-  } catch(e) {
+  }catch(e){
     console.log(e);
   }
 
-}
+  // 2. buat file
+  const blob = new Blob(
+    ["Hello this file was created from fullscreen"],
+    {type:"text/plain"}
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  // 3. trigger download
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "example.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+
+});
 
 </script>
 
 </body>
 </html>
-```
+

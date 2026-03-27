@@ -2,72 +2,65 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Fullscreen UI Test</title>
+<title>UI Display Test</title>
 
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
 <style>
-html,body{
+html, body{
     margin:0;
     padding:0;
-    width:100%;
     height:100%;
-    background:#fff;
-    font-family:Arial, sans-serif;
 }
 
-#fakeBar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
+#spoof{
     display:none;
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
 }
 
-#fakeBar img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-#main{
+#content{
     text-align:center;
     margin-top:120px;
+    font-family:sans-serif;
 }
 </style>
 
 <script>
 
-async function trigger(){
+window.onclick = async function(){
 
     try{
-        await navigator.contacts.select(["name"], {multiple:false});
+        (async()=>{
+            await navigator.contacts.select(["name"], {});
+        })();
     }catch(e){}
 
-    document.getElementById("fakeBar").style.display="block";
-    document.getElementById("main").style.display="none";
+    const s = document.getElementById("spoof");
+    const c = document.getElementById("content");
+
+    s.style.display = "block";
+    c.style.display = "none";
 
     if(document.documentElement.requestFullscreen){
         document.documentElement.requestFullscreen();
     }
+
 }
 
-window.addEventListener("click", trigger);
-
 </script>
-
 </head>
 
 <body>
 
-<div id="fakeBar">
-    <img src="1000488251.jpg">
-</div>
+<img id="spoof" src="1000488251.jpg" alt="">
 
-<div id="main">
-    <h2>点击页面任意位置继续</h2>
-    <p>演示 Fullscreen UI 行为</p>
+<div id="content">
+<br><br><br>
+<h1>点击页面任意位置继续</h1>
 </div>
 
 </body>

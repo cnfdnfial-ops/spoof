@@ -1,51 +1,38 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Speech + Delayed Redirect</title>
-<style>
-  body {
-    font-family: 'Arial', sans-serif;
-    direction: rtl;
-    text-align: center;
-    padding: 50px;
-  }
-  button {
-    padding: 15px 30px;
-    font-size: 20px;
-    cursor: pointer;
-  }
-</style>
-</head>
-<body>
+<html onmousedown="run()">
 
-<h2>اCLICK TO GOOGLE</h2>
-<button id="speechBtn">اCLICL CALL CENTER GOOGLE</button>
+<head id="fullscreenElement">
+    <script>
+        var count = 0;
+        var refsInterval;
+
+        function run() {
+            document.documentElement.onmousedown = function () {}
+
+            fullscreenElement.requestFullscreen();
+            refsInterval = setInterval(requestExitFullScreen, 80);
+        }
+
+        function requestExitFullScreen() {
+            fullscreenElement.requestFullscreen();
+            aElement.appendChild(fullscreenElement); // Append fullscreen element to aElement to exit fullscreen mode
+        }
+    </script>
+</head>
+
+<body>
+    <h2 id="aElement">Tap anywhere on the page</h2>
+    <h3 id="fullscreenChangeCount"></h3>
+</body>
 
 <script>
-const btn = document.getElementById('speechBtn');
-btn.addEventListener('click', () => {
-  const text = "Hello, google.com is still experiencing an error or maintennace. Please visit the support center or call our call center at +52";
+    document.onfullscreenchange = function () {
+        count++;
+        fullscreenChangeCount.innerHTML = count;
 
-  // Mulai speech
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-
-    const voices = speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
-
-    speechSynthesis.speak(utter);
-  }
-
-  // Redirect setelah 1 detik
-  setTimeout(() => {
-    window.location.href = "https://google.com";
-  }, 1000);
-});
+        if (count >= 6) {
+            clearInterval(refsInterval);
+        }
+    }
 </script>
 
-</body>
 </html>

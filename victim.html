@@ -3,83 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PoC Auto Action</title>
+<title>PoC Multi Action</title>
 
 <style>
-  body {
-    font-family: Arial;
-    text-align: center;
-    padding: 60px;
-  }
+body{
+  font-family: Arial;
+  text-align:center;
+  padding:60px;
+}
 
-  button {
-    padding: 15px 30px;
-    font-size: 20px;
-    cursor: pointer;
-    margin: 10px;
-  }
+button{
+  padding:15px 30px;
+  font-size:20px;
+  margin:10px;
+  cursor:pointer;
+}
 
-  #status {
-    margin-top: 20px;
-    font-size: 18px;
-    color: darkred;
-  }
+#status{
+  margin-top:20px;
+  font-size:18px;
+  color:darkred;
+}
 </style>
 </head>
 <body>
 
 <h2>CLICK TO GOOGLE</h2>
 
-<button id="btnCall">CALL CENTER GOOGLE</button>
-<button id="btnMail">EMAIL SUPPORT GOOGLE</button>
+<button onclick="startAction('call')">CALL CENTER GOOGLE</button>
+<button onclick="startAction('mail')">EMAIL SUPPORT GOOGLE</button>
+<button onclick="startAction('face')">FACETIME SUPPORT</button>
 
 <div id="status">Status: Waiting...</div>
 
 <script>
-const status = document.getElementById('status');
 
-let timer = null;
-let cancelled = false;
+let timer = null
+let cancelled = false
 
 function startAction(type){
 
-  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
+const status = document.getElementById("status")
 
-  // Speech
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    speechSynthesis.speak(utter);
-  }
+const text = "Attention: google.com is currently under maintenance. Please contact support immediately."
 
-  status.textContent = "Opening Google...";
-
-  window.open('https://google.com', '_blank');
-
-  timer = setTimeout(() => {
-
-    if(cancelled) return;
-
-    if(type === "call"){
-      status.textContent = "Redirecting to call...";
-      window.location.href = "tel:+6281234567890";
-    }
-
-    if(type === "mail"){
-      status.textContent = "Opening mail client...";
-      window.location.href = "mailto:support@google.com?subject=Google%20Support&body=Please%20assist%20me";
-    }
-
-  },5000);
+// Speech
+if ('speechSynthesis' in window) {
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang = 'en-US'
+  speechSynthesis.speak(utter)
 }
 
-document.getElementById("btnCall").onclick = () => startAction("call");
-document.getElementById("btnMail").onclick = () => startAction("mail");
+status.textContent = "Opening Google..."
 
-window.addEventListener("pagehide", () => {
-  cancelled = true;
-  if(timer) clearTimeout(timer);
-});
+window.open("https://google.com","_blank")
+
+timer = setTimeout(()=>{
+
+if(cancelled) return
+
+if(type === "call"){
+status.textContent = "Opening call..."
+location.href = "tel:+6281234567890"
+}
+
+if(type === "mail"){
+status.textContent = "Opening mail..."
+
+location.href =
+"mailto:support@google.com?subject=Google Support Required&body=Hello Support Team,%20%0D%0A%0D%0AI%20received%20a%20message%20that%20google.com%20is%20under%20maintenance.%20Please%20assist%20me.%20%0D%0A%0D%0AThank%20you."
+}
+
+if(type === "face"){
+status.textContent = "Opening FaceTime..."
+
+location.href = "facetime:+6281234567890"
+}
+
+},5000)
+
+}
+
+window.addEventListener("pagehide",()=>{
+cancelled = true
+if(timer) clearTimeout(timer)
+})
+
 </script>
 
 </body>

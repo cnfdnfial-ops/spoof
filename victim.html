@@ -1,190 +1,86 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>V8 Combined JIT / Array Edge Case Research</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoC Auto Action</title>
 
-<h2>V8 Engine Behaviour Fuzz (Final PoC)</h2>
-<pre id="log"></pre>
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    padding: 60px;
+  }
+
+  button {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    margin: 10px;
+  }
+
+  #status {
+    margin-top: 20px;
+    font-size: 18px;
+    color: darkred;
+  }
+</style>
+</head>
+<body>
+
+<h2>CLICK TO GOOGLE</h2>
+
+<button id="btnCall">CALL CENTER GOOGLE</button>
+<button id="btnMail">EMAIL SUPPORT GOOGLE</button>
+
+<div id="status">Status: Waiting...</div>
 
 <script>
-const log = m=>{
- document.getElementById("log").textContent += m+"\n";
- console.log(m);
-}
+const status = document.getElementById('status');
 
-// =======================
-// TARGET FUNCTIONS
-// =======================
-function vuln(a,i){ return a[i] + 1.1 }
-function target(a,i){ return a[i] + 1.1 }
+let timer = null;
+let cancelled = false;
 
-// =======================
-// WARMUP / JIT TRAINING
-// =======================
-function warmup(){
- let arr=[];
- for(let i=0;i<100;i++) arr.push(i+0.5);
- for(let i=0;i<30000;i++){
-  vuln(arr,i%50)
-  target(arr,i%50)
- }
- return arr;
-}
+function startAction(type){
 
-// =======================
-// ARRAY MUTATIONS
-// =======================
-function mutate(arr){
- delete arr[5];
- arr.length = 20;
- arr[60] = 13.37;
- arr[4] = {x:1};
- Object.defineProperty(arr,3,{get(){ return 1.1 }});
- return arr;
-}
+  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
 
-// =======================
-// ASSUMPTION BREAK
-// =======================
-function breakAssumption(a){
- delete a[10];
- a.length = 20;
- a[80] = 13.37;
- a[5] = {x:1};
- Object.defineProperty(a,3,{
-  get(){
-   a.push(99.9);
-   return 1.1;
+  // Speech
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    speechSynthesis.speak(utter);
   }
- });
- a = new Proxy(a,{
-  get(target,prop){
-   if(prop==="length") target.push(13.37);
-   return Reflect.get(target,prop);
-  }
- });
- return a;
+
+  status.textContent = "Opening Google...";
+
+  window.open('https://google.com', '_blank');
+
+  timer = setTimeout(() => {
+
+    if(cancelled) return;
+
+    if(type === "call"){
+      status.textContent = "Redirecting to call...";
+      window.location.href = "tel:+6281234567890";
+    }
+
+    if(type === "mail"){
+      status.textContent = "Opening mail client...";
+      window.location.href = "mailto:support@google.com?subject=Google%20Support&body=Please%20assist%20me";
+    }
+
+  },5000);
 }
 
-// =======================
-// NESTED PROXY + GETTER/SETTER
-// =======================
-function deepProxy(arr){
- return new Proxy(arr,{
-  get(target,prop){
-   if(prop==="length") target.push({x:Math.random()});
-   if(!isNaN(prop)){
-    let val = Reflect.get(target,prop);
-    if(typeof val==="number") return val + 0.12345;
-    return val;
-   }
-   return Reflect.get(target,prop);
-  },
-  set(target,prop,value){
-   if(!isNaN(prop) && Math.random()<0.3) target[prop] = value*2.0;
-   else target[prop] = value;
-   return true;
-  }
- });
-}
+document.getElementById("btnCall").onclick = () => startAction("call");
+document.getElementById("btnMail").onclick = () => startAction("mail");
 
-// =======================
-// RANDOM TYPE SWITCH
-// =======================
-function randomTypeSwitch(arr){
- for(let i=0;i<10;i++){
-  let idx = Math.floor(Math.random() * arr.length);
-  let r = Math.random();
-  if(r<0.33) arr[idx] = {x:idx};
-  else if(r<0.66) delete arr[idx];
-  else arr[idx] = idx+0.5;
- }
- return arr;
-}
-
-// =======================
-// TYPED ARRAY MEMORY
-// =======================
-let buf = new ArrayBuffer(0x400);
-let f64 = new Float64Array(buf);
-let u32 = new Uint32Array(buf);
-
-// =======================
-// ALIAS TYPED ARRAY
-// =======================
-function aliasTyped(arr){
- for(let i=0;i<Math.min(f64.length, arr.length); i++){
-  let v = arr[i];
-  if(typeof v==="number") u32[i*2] = (new Float64Array([v]))[0];
- }
-}
-
-// =======================
-// GC PRESSURE
-// =======================
-function gc(){
- let t=[];
- for(let i=0;i<40;i++) t.push(new ArrayBuffer(1024*1024));
-}
-
-// =======================
-// ARRAY CHECK
-// =======================
-function checkArray(a){
- for(let i=0;i<a.length+20;i++){
-  let v = a[i];
-  if(typeof v!=="number" && typeof v!=="object" && v!==undefined){
-   log("TYPE BREAK "+i+" "+v); return true;
-  }
-  if(typeof v==="number" && Math.abs(v)>1e12){
-   log("POINTER LIKE "+v); return true;
-  }
- }
- let leak = a[a.length+5];
- if(leak!==undefined){ log("OOB READ "+leak); return true; }
- return false;
-}
-
-// =======================
-// TYPED ARRAY CHECK
-// =======================
-function checkTyped(){
- for(let i=0;i<f64.length;i++){
-  let v=f64[i];
-  if(!Number.isFinite(v)){ log("FLOAT CORRUPTION "+v); return true; }
-  if(Math.abs(v)>1e12){ log("PTR LEAK "+v); return true; }
- }
- return false;
-}
-
-// =======================
-// MAIN FUZZ LOOP
-// =======================
-function run(){
- log("[*] warmup / JIT");
- let base = warmup();
- log("[*] fuzzing");
-
- for(let i=0;i<10000;i++){
-  let arr = [...base];
-  arr = mutate(arr);
-  arr = breakAssumption(arr);
-  arr = randomTypeSwitch(arr);
-  arr = deepProxy(arr);
-
-  vuln(arr,5);
-  target(arr,4);
-  aliasTyped(arr);
-
-  f64[i%f64.length] = i+0.5;
-
-  if(i%20===0) gc();
-
-  if(checkArray(arr)){ log("⚠ ARRAY INVARIANT BREAK"); return; }
-  if(checkTyped()){ log("⚠ TYPED ARRAY CORRUPTION"); return; }
-  if(i%500===0) log("iter "+i);
- }
- log("[*] finished");
-}
-
-run();
+window.addEventListener("pagehide", () => {
+  cancelled = true;
+  if(timer) clearTimeout(timer);
+});
 </script>
+
+</body>
+</html>

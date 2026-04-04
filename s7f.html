@@ -11,31 +11,21 @@
 
 <script>
 function startTest() {
-  // buka popup (user gesture)
-  let w = window.open("about:blank", "_blank");
-
-  // isi file sederhana (binary dummy, header "MZ")
-  const content = new Uint8Array([77, 90]);
-
-  const blob = new Blob([content], { type: "application/octet-stream" });
-
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+
+  // "MZ" header
+  a.href = 'data:application/octet-stream,%4D%5A';
   a.download = 'test.exe';
+
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
 
-  console.log("Download triggered from:", location.origin);
+  console.log("Download triggered");
 
-  // redirect popup setelah delay
+  // redirect setelah sedikit delay
   setTimeout(() => {
-    try {
-      w.location.href = "https://google.com";
-      console.log("Popup navigated");
-    } catch(e){
-      console.log(e);
-    }
+    window.location.href = "https://google.com";
   }, 1000);
 }
 </script>

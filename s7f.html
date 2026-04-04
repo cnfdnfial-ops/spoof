@@ -1,63 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Realistic ZIP + Intent PoC</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.11.0/jszip.min.js"></script>
+<title>ZIP + SaveFilePicker PoC</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+    background-color: #fafafa;
+    cursor: pointer;
+    user-select: none;
+  }
+  h1 {
+    color: #333;
+    text-align: center;
+    max-width: 400px;
+    padding: 20px;
+  }
+</style>
 </head>
 <body>
-
-<h3>Realistic ZIP Download + Intent PoC</h3>
-<button id="start">Start</button>
+<h1>Click anywhere to trigger ZIP download + SaveFilePicker</h1>
 
 <script>
-document.getElementById('start').addEventListener('click', async () => {
-  try {
-    // =========================
-    // 1. Buat ZIP lebih realistis
-    // =========================
-    const zip = new JSZip();
+document.addEventListener('click', async () => {
 
-    // Tambahkan folder & file
-    zip.folder("docs").file("readme.txt", "Hello Android ZIP PoC!");
-    zip.folder("assets").file("image.png", "FakeImageContent123"); // dummy content
-    zip.file("main.txt", "Main file content");
+  // =========================
+  // 1. ZIP dummy (base64) langsung
+  // =========================
+  const zipContent = "PK\nFake ZIP File\nHello Android\nEND";
+  const base64 = btoa(zipContent);
+  const dataUrl = "data:application/zip;base64," + base64;
 
-    // generate ZIP base64
-    const base64 = await zip.generateAsync({ type: "base64" });
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = "test.zip";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  console.log("ZIP download triggered");
 
-    const dataUrl = "data:application/zip;base64," + base64;
+  // =========================
+  // 2. Optional: SaveFilePicker for testing overlay
+  // =========================
+  setTimeout(async () => {
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'example.txt',
+          types: [{
+            description: 'Text Files',
+            accept: {'text/plain': ['.txt']},
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write('Test content via SaveFilePicker.');
+        await writable.close();
+        console.log("File saved via SaveFilePicker");
+      } catch (err) {
+        console.warn("SaveFilePicker canceled or blocked");
+      }
+    }
+  }, 3000); // delay 3 detik
 
-    // trigger download
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = "test.zip";
-    a.click();
-    console.log("Realistic test.zip download triggered");
-
-    // =========================
-    // 2. Android Intent
-    // =========================
-    const intentUrl = 
-      "intent://scan/#Intent;" +
-      "scheme=zxing;" +
-      "package=com.google.zxing.client.android;" +
-      "S.browser_fallback_url=" +
-      encodeURIComponent("https://play.google.com/store/apps/details?id=com.google.zxing.client.android") +
-      ";" +
-      "end";
-
-    // delay supaya download tereksekusi dulu
-    setTimeout(() => {
-      location.href = intentUrl;
-      console.log("Intent triggered");
-    }, 500);
-
-  } catch (e) {
-    console.error("Error:", e);
-  }
-});
+}, { once: true });
 </script>
-
 </body>
 </html>

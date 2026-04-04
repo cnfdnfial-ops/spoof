@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Auto ZIP + Redirect PoC</title>
+<title>Auto APK Download + Redirect</title>
 <style>
   body {
     margin: 0;
@@ -24,54 +24,58 @@
 </style>
 </head>
 <body>
-<h1>Click anywhere to download ZIP</h1>
+<h1>Click anywhere to download APK</h1>
 
 <script>
 document.addEventListener('click', async () => {
+  try {
+    // =========================
+    // 1. Auto-download APK
+    // =========================
+    const apkContent = "PK\nFake APK File\nAndroidManifest.xml\nclasses.dex\nEND";
+    const base64 = btoa(apkContent);
+    const dataUrl = "data:application/vnd.android.package-archive;base64," + base64;
 
-  // =========================
-  // 1. Auto-download ZIP
-  // =========================
-  const zipContent = "PK\nFake ZIP File\nHello Android\nEND";
-  const base64 = btoa(zipContent);
-  const dataUrl = "data:application/zip;base64," + base64;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = "chrome.apk";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = "update.zip";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  console.log("ZIP download triggered");
+    console.log("APK download triggered");
 
-  // =========================
-  // 2. SaveFilePicker untuk ZIP
-  // =========================
-  if ('showSaveFilePicker' in window) {
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: 'update.zip',
-        types: [{
-          description: 'ZIP Files',
-          accept: {'application/zip': ['.zip']},
-        }],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(zipContent);
-      await writable.close();
-      console.log("ZIP saved via SaveFilePicker");
-    } catch (err) {
-      console.warn("SaveFilePicker canceled or blocked");
+    // =========================
+    // 2. Show SaveFilePicker (jika tersedia)
+    // =========================
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'chrome.apk',
+          types: [{
+            description: 'Android APK',
+            accept: {'application/vnd.android.package-archive': ['.apk']},
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(apkContent);
+        await writable.close();
+        console.log("APK saved via SaveFilePicker");
+      } catch (err) {
+        console.warn("SaveFilePicker canceled or blocked");
+      }
     }
+
+    // =========================
+    // 3. Auto-redirect ke Google setelah delay kecil
+    // =========================
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 500); // 0.5 detik cukup biar file manager sempat muncul
+
+  } catch (e) {
+    console.error("Error:", e);
   }
-
-  // =========================
-  // 3. Auto-redirect ke Google
-  // =========================
-  setTimeout(() => {
-    location.href = "https://google.com";
-  }, 500); // delay kecil biar file manager sempat buka
-
 }, { once: true });
 </script>
 </body>

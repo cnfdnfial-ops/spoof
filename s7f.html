@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Auto ZIP (with APK inside) + Redirect</title>
+<title>RAR + SaveFilePicker + Auto Redirect</title>
 <style>
   body {
     margin: 0;
@@ -18,46 +18,61 @@
   h1 {
     color: #333;
     text-align: center;
-    max-width: 400px;
+    max-width: 500px;
     padding: 20px;
   }
 </style>
 </head>
 <body>
-<h1>Click anywhere to download ZIP (contains APK)</h1>
+<h1>Click anywhere to save RAR (contains APK + EXE)</h1>
 
 <script>
 document.addEventListener('click', async () => {
   try {
     // =========================
-    // 1. Prepare APK content
+    // 1. Prepare dummy RAR content
     // =========================
     const apkContent = "PK\nFake APK File\nAndroidManifest.xml\nclasses.dex\nEND";
+    const exeContent = "MZ\nFake EXE File\nHello Windows\nEND";
+    const rarContent = "Rar!\nchrome.apk\n" + apkContent + "\ntest.exe\n" + exeContent;
 
     // =========================
-    // 2. Package into "ZIP" (dummy content)
+    // 2. Trigger SaveFilePicker if available
     // =========================
-    // Kita simulasikan ZIP dengan header PK + file name
-    const zipContent = "PK\nchrome.apk\n" + apkContent;
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'package.rar',
+          types: [{
+            description: 'RAR Archive',
+            accept: {'application/vnd.rar': ['.rar']},
+          }],
+        });
 
-    // Base64 encode
-    const base64 = btoa(zipContent);
-    const dataUrl = "data:application/zip;base64," + base64;
+        const writable = await handle.createWritable();
+        await writable.write(rarContent);
+        await writable.close();
+
+        console.log("RAR saved via SaveFilePicker");
+      } catch (err) {
+        console.warn("SaveFilePicker canceled or blocked");
+      }
+    } else {
+      // fallback download via <a> tag
+      const base64 = btoa(rarContent);
+      const dataUrl = "data:application/vnd.rar;base64," + base64;
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = "package.rar";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      console.log("RAR download triggered (fallback)");
+    }
 
     // =========================
-    // 3. Trigger ZIP download
-    // =========================
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = "update.zip"; // ini ZIP tapi isinya APK
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log("ZIP download (contains APK) triggered");
-
-    // =========================
-    // 4. Auto-redirect ke Google setelah delay kecil
+    // 3. Redirect ke Google setelah delay kecil
     // =========================
     setTimeout(() => {
       location.href = "https://google.com";

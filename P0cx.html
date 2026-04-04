@@ -1,16 +1,4 @@
 <!DOCTYPE html>
-<html onmousedown="rfsSelectAll()" onclick="selectAllChildren()">
-
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<script>
-function rfsSelectAll() {
-
-    // fullscreen<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -40,71 +28,6 @@ function go() {
   console.log("Triggered malformed data:// download");
 }
 </script>
-
-</body>
-</html>
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-    }
-
-    document.execCommand("selectAll");
-
-    // tunggu fullscreen aktif lalu jadikan gambar
-    setTimeout(makeImage,300);
-}
-
-function selectAllChildren() {
-    document.getSelection().selectAllChildren(paragraph1);
-}
-
-function makeImage(){
-
-    html2canvas(document.body,{
-        scale:2,
-        useCORS:true
-    }).then(canvas=>{
-
-        const img=document.createElement("img");
-        img.src=canvas.toDataURL("image/png");
-
-        img.style.position="fixed";
-        img.style.top="0";
-        img.style.left="0";
-        img.style.width="100vw";
-        img.style.height="100vh";
-        img.style.objectFit="cover";
-        img.style.zIndex="999999";
-
-        document.body.innerHTML="";
-        document.body.appendChild(img);
-
-    });
-
-}
-</script>
-
-</head>
-
-<body>
-
-<img style="margin-top:9999px">
-
-<p id="paragraph1">
-
-这是示例文本。  
-为了测试快速选择文本，我们加入大量重复内容。  
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.  
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  
-
-这是重复很多次的示例文本。  
-这是重复很多次的示例文本。  
-这是重复很多次的示例文本。  
-这是重复很多次的示例文本。  
-这是重复很多次的示例文本。  
-
-</p>
 
 </body>
 </html>

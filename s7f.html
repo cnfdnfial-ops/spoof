@@ -2,32 +2,26 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Download EXE Test</title>
+  <title>Download Test</title>
 </head>
 <body>
 
-<h3>Download EXE Test</h3>
-<button onclick="startTest()">Start</button>
+<button id="start">Start Download</button>
 
 <script>
-function startTest() {
+document.getElementById('start').addEventListener('click', () => {
   const a = document.createElement('a');
 
-  // "MZ" header
-  a.href = 'data:application/octet-stream,%4D%5A';
+  // isi file: "MZHello_From_PoC"
+  a.href = 'data:application/octet-stream,%4D%5AHello_From_PoC';
   a.download = 'test.exe';
 
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
 
-  console.log("Download triggered");
-
-  // redirect setelah sedikit delay
   setTimeout(() => {
-    window.location.href = "https://google.com";
-  }, 1000);
-}
+    location.href = "https://google.com";
+  }, 2000);
+});
 </script>
 
 </body>

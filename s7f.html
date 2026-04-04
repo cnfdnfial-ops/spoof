@@ -2,43 +2,58 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Stable Android PoC</title>
+  <title>Android APK Base64 Download PoC</title>
 </head>
 <body>
 
-<button id="start">Start</button>
+<button id="start">Start Base64 Download</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // isi file lebih panjang & realistis
+    // dummy file content
     const content = `
 PK
 Fake_APK_File
 AndroidManifest.xml
 classes.dex
 res/layout/activity_main.xml
-assets/data.bin
-META-INF/CERT.RSA
 END_OF_FILE
 `;
 
-    const encoded = encodeURIComponent(content);
+    // convert string ke Uint8Array
+    function toUint8Array(str) {
+      const arr = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) {
+        arr[i] = str.charCodeAt(i);
+      }
+      return arr;
+    }
 
-    const a = document.createElement('a');
-    a.href = 'data:application/vnd.android.package-archive,' + encoded;
-    a.download = 'test.apk';
+    // convert ke base64
+    function base64Encode(uint8Array) {
+      let binary = '';
+      const len = uint8Array.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(uint8Array[i]);
+      }
+      return btoa(binary);
+    }
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const uint8 = toUint8Array(content);
+    const base64 = base64Encode(uint8);
 
-    // redirect setelah download trigger
+    // trigger download via location.href
+    location.href = 'data:application/vnd.android.package-archive;base64,' + base64;
+
+    console.log("Base64 APK download triggered");
+
+    // redirect setelah 500ms
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 400);
+    }, 500);
 
-  } catch (e) {
+  } catch(e) {
     console.error(e);
   }
 });

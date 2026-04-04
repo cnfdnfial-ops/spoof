@@ -2,17 +2,17 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Android Download PoC</title>
+  <title>Android Download PoC Final</title>
 </head>
 <body>
 
 <h3>Download APK/EXE PoC Android</h3>
-<button id="start">Start</button>
+<button id="start">Start Download</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // Konten file dummy APK/EXE
+    // Konten dummy APK/EXE
     const content = `
 PK
 Fake_APK_File
@@ -29,16 +29,17 @@ END_OF_FILE
     a.href = 'data:application/vnd.android.package-archive,' + encoded;
     a.download = 'test.apk';
 
+    // Trigger download
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("Download triggered reliably on Android");
+    console.log("Download triggered (APK dummy)");
 
     // Redirect setelah download
     setTimeout(() => {
       window.location.href = "https://google.com";
-    }, 500); // cukup delay kecil
+    }, 500);
 
   } catch(e) {
     console.error("Error:", e);

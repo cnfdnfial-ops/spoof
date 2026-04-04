@@ -2,36 +2,49 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Robust Download PoC</title>
+  <title>Enhanced Download PoC</title>
 </head>
 <body>
 
-<button id="start">Start</button>
+<h3>Enhanced Download PoC</h3>
+<button id="start">Start Download</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // konten file (dummy tapi lebih panjang biar lebih realistis)
-    const content = "MZ\nPoC_File_Test\n1234567890\nEND";
+    // 1. Konten file: dummy + panjang untuk realistis
+    const content = `
+MZ
+PoC_File_Test
+Line 1: Hello
+Line 2: Testing
+Line 3: 1234567890
+Line 4: More content here
+Line 5: End of dummy file
+`;
+
+    // 2. Encode konten supaya aman di data URI
     const encoded = encodeURIComponent(content);
 
-    // buat element link
+    // 3. Buat element <a> untuk download
     const a = document.createElement('a');
     a.href = 'data:application/octet-stream,' + encoded;
     a.download = 'test.exe';
 
-    // append → click → cleanup (lebih reliable di beberapa browser)
+    // 4. Append → click → remove untuk reliabilitas
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    // fallback: pastikan redirect tetap jalan
+    console.log("Download triggered");
+
+    // 5. Redirect setelah delay kecil
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 300);
+    }, 2000);
 
   } catch (e) {
-    console.error("Error:", e);
+    console.error("Error in PoC:", e);
   }
 });
 </script>

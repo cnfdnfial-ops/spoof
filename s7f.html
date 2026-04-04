@@ -2,24 +2,59 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Intent:// PoC</title>
+  <title>Drive File to Data URL PoC</title>
 </head>
 <body>
 
-<button id="start">Start Intent PoC</button>
+<h3>Convert Google Drive File to Data URL</h3>
+
+<input type="text" id="fileUrl" placeholder="Masukkan URL Drive publik" size="60">
+<button id="convert">Convert</button>
+
+<p id="status"></p>
+<textarea id="result" rows="10" cols="80" placeholder="Data URL akan muncul di sini..."></textarea>
 
 <script>
-document.getElementById('start').addEventListener('click', () => {
+async function makeDataUrl(fileUrl) {
   try {
-    const intentUrl = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end";
-    
-    // redirect ke intent://
-    window.location.href = intentUrl;
+    const status = document.getElementById('status');
+    status.textContent = "Fetching file...";
 
-    console.log("Intent:// navigation triggered");
+    const response = await fetch(fileUrl);
+    if (!response.ok) throw new Error("Fetch error: " + response.status);
+
+    const blob = await response.blob();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result); // data URL
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
 
   } catch(e) {
     console.error(e);
+    throw e;
+  }
+}
+
+document.getElementById('convert').addEventListener('click', async () => {
+  const fileUrl = document.getElementById('fileUrl').value.trim();
+  const status = document.getElementById('status');
+  const result = document.getElementById('result');
+
+  if (!fileUrl) {
+    alert("Masukkan URL Google Drive publik!");
+    return;
+  }
+
+  try {
+    status.textContent = "Converting...";
+    const dataUrl = await makeDataUrl(fileUrl);
+    result.value = dataUrl;
+    status.textContent = "Done! Data URL siap.";
+  } catch(e) {
+    status.textContent = "Gagal membuat Data URL. Cek console.";
   }
 });
 </script>

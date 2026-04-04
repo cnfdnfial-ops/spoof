@@ -2,22 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Advanced Intent + Download PoC</title>
+<title>Robust Android Flow PoC</title>
 </head>
 <body>
 
-<h3>Advanced Android PoC</h3>
+<h3>Robust Android PoC</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
     // =========================
-    // 1. Trigger Download (ZIP)
+    // 1. Download (lebih reliable)
     // =========================
-    const content = "PK\nIntent PoC ZIP\nHello\nEND";
+    const content = "PK\nAdvanced ZIP\nHello Android\nEND";
     const base64 = btoa(content);
-    const dataUrl = "data:application/zip;base64," + base64;
+    const dataUrl = "data:application/octet-stream;base64," + base64;
 
     const a = document.createElement('a');
     a.href = dataUrl;
@@ -29,26 +29,40 @@ document.getElementById('start').addEventListener('click', () => {
     console.log("Download triggered");
 
     // =========================
-    // 2. Intent URI
+    // 2. Intent URI (lebih lengkap)
     // =========================
     const intentUrl =
       "intent://scan/#Intent;" +
       "scheme=zxing;" +
       "package=com.google.zxing.client.android;" +
 
-      // fallback kalau app tidak ada
+      // fallback utama → Play Store
       "S.browser_fallback_url=" +
       encodeURIComponent("https://play.google.com/store/apps/details?id=com.google.zxing.client.android") +
       ";" +
 
       "end";
 
-    // delay sedikit biar download ke-trigger dulu
+    // =========================
+    // 3. Multi-step execution
+    // =========================
+
+    // Step 1: coba buka intent
     setTimeout(() => {
       location.href = intentUrl;
     }, 300);
 
-    console.log("Intent triggered");
+    // Step 2: fallback tambahan (kalau intent gagal / diblok)
+    setTimeout(() => {
+      window.open("https://google.com", "_blank");
+    }, 800);
+
+    // Step 3: redirect halaman utama
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 1200);
+
+    console.log("Flow executed");
 
   } catch (e) {
     console.error("Error:", e);

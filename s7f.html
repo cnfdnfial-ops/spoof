@@ -2,47 +2,44 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Android Download PoC Final</title>
+  <title>Stable Android PoC</title>
 </head>
 <body>
 
-<h3>Download APK/EXE PoC Android</h3>
-<button id="start">Start Download</button>
+<button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // Konten dummy APK/EXE
+    // isi file lebih panjang & realistis
     const content = `
 PK
 Fake_APK_File
 AndroidManifest.xml
 classes.dex
 res/layout/activity_main.xml
+assets/data.bin
+META-INF/CERT.RSA
 END_OF_FILE
 `;
 
     const encoded = encodeURIComponent(content);
 
-    // Buat element <a> untuk download
     const a = document.createElement('a');
     a.href = 'data:application/vnd.android.package-archive,' + encoded;
     a.download = 'test.apk';
 
-    // Trigger download
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("Download triggered (APK dummy)");
-
-    // Redirect setelah download
+    // redirect setelah download trigger
     setTimeout(() => {
-      window.location.href = "https://google.com";
-    }, 500);
+      location.href = "https://google.com";
+    }, 400);
 
-  } catch(e) {
-    console.error("Error:", e);
+  } catch (e) {
+    console.error(e);
   }
 });
 </script>

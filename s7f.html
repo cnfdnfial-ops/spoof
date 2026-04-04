@@ -2,29 +2,21 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>RAR data:// PoC</title>
+  <title>Intent:// PoC</title>
 </head>
 <body>
 
-<button id="start">Start</button>
+<button id="start">Start Intent PoC</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    const content = "Rar!\nFake RAR\nTest\nEND";
-    const base64 = btoa(content);
+    const intentUrl = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end";
+    
+    // redirect ke intent://
+    window.location.href = intentUrl;
 
-    // malformed URL (tidak akan spoof di Chrome baru)
-    const payload = "data://google.com/application/vnd.rar;base64," + base64;
-
-    const a = document.createElement('a');
-    a.href = payload;
-    a.download = "google.rar";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log("Triggered data://google PoC");
+    console.log("Intent:// navigation triggered");
 
   } catch(e) {
     console.error(e);

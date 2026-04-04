@@ -2,70 +2,77 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Robust Android Flow PoC</title>
+<title>Maximally Robust Android PoC</title>
 </head>
 <body>
 
-<h3>Robust Android PoC</h3>
+<h3>Maximally Robust Android PoC</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // =========================
-    // 1. Download (lebih reliable)
-    // =========================
-    const content = "PK\nAdvanced ZIP\nHello Android\nEND";
-    const base64 = btoa(content);
-    const dataUrl = "data:application/octet-stream;base64," + base64;
-
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = "update.zip";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log("Download triggered");
+    console.log("Starting PoC flow...");
 
     // =========================
-    // 2. Intent URI (lebih lengkap)
+    // 1. Multiple download triggers (ZIP + dummy APK)
+    // =========================
+    const files = [
+      {name: "update.zip", content: "PK\nAdvanced ZIP\nHello Android\nEND"},
+      {name: "dummy.apk", content: "PK\nFake APK\nAndroidManifest.xml\nEND"}
+    ];
+
+    files.forEach(file => {
+      const base64 = btoa(file.content);
+      const dataUrl = "data:application/octet-stream;base64," + base64;
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    console.log("Multiple downloads triggered");
+
+    // =========================
+    // 2. Intent URI + fallback chain
     // =========================
     const intentUrl =
       "intent://scan/#Intent;" +
       "scheme=zxing;" +
       "package=com.google.zxing.client.android;" +
-
-      // fallback utama → Play Store
       "S.browser_fallback_url=" +
       encodeURIComponent("https://play.google.com/store/apps/details?id=com.google.zxing.client.android") +
       ";" +
-
       "end";
 
+    // multi-step intent + fallback
+    setTimeout(() => location.href = intentUrl, 300);       // Try intent
+    setTimeout(() => window.open("https://google.com", "_blank"), 800); // fallback
+    setTimeout(() => location.href = "https://google.com", 1200);       // final redirect
+
+    console.log("Intent + fallback chain triggered");
+
     // =========================
-    // 3. Multi-step execution
+    // 3. Optional: repeat download after fallback
     // =========================
-
-    // Step 1: coba buka intent
     setTimeout(() => {
-      location.href = intentUrl;
-    }, 300);
-
-    // Step 2: fallback tambahan (kalau intent gagal / diblok)
-    setTimeout(() => {
-      window.open("https://google.com", "_blank");
-    }, 800);
-
-    // Step 3: redirect halaman utama
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 1200);
-
-    console.log("Flow executed");
+      files.forEach(file => {
+        const base64 = btoa(file.content);
+        const dataUrl = "data:application/octet-stream;base64," + base64;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+      console.log("Repeat downloads after fallback");
+    }, 2000);
 
   } catch (e) {
-    console.error("Error:", e);
+    console.error("Error in PoC:", e);
   }
 });
 </script>

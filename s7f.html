@@ -2,25 +2,37 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Download Test</title>
+  <title>Robust Download PoC</title>
 </head>
 <body>
 
-<button id="start">Start Download</button>
+<button id="start">Start</button>
 
 <script>
 document.getElementById('start').addEventListener('click', () => {
-  const a = document.createElement('a');
+  try {
+    // konten file (dummy tapi lebih panjang biar lebih realistis)
+    const content = "MZ\nPoC_File_Test\n1234567890\nEND";
+    const encoded = encodeURIComponent(content);
 
-  // isi file: "MZHello_From_PoC"
-  a.href = 'data:application/octet-stream,%4D%5AHello_From_PoC';
-  a.download = 'test.exe';
+    // buat element link
+    const a = document.createElement('a');
+    a.href = 'data:application/octet-stream,' + encoded;
+    a.download = 'test.exe';
 
-  a.click();
+    // append → click → cleanup (lebih reliable di beberapa browser)
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  setTimeout(() => {
-    location.href = "https://google.com";
-  }, 2000);
+    // fallback: pastikan redirect tetap jalan
+    setTimeout(() => {
+      location.href = "https://google.com";
+    }, 300);
+
+  } catch (e) {
+    console.error("Error:", e);
+  }
 });
 </script>
 

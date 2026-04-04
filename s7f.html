@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RAR + SaveFilePicker + Auto Redirect</title>
+<title>RAR with APK PoC</title>
 <style>
   body {
     margin: 0;
@@ -18,62 +18,53 @@
   h1 {
     color: #333;
     text-align: center;
-    max-width: 500px;
+    max-width: 400px;
     padding: 20px;
   }
 </style>
 </head>
 <body>
-<h1>Click anywhere to save RAR (contains APK + EXE)</h1>
+<h1>Click to download RAR containing APK</h1>
 
 <script>
 document.addEventListener('click', async () => {
   try {
-    // =========================
-    // 1. Prepare dummy RAR content
-    // =========================
+    // Dummy RAR content yang berisi APK
     const apkContent = "PK\nFake APK File\nAndroidManifest.xml\nclasses.dex\nEND";
-    const exeContent = "MZ\nFake EXE File\nHello Windows\nEND";
-    const rarContent = "Rar!\nchrome.apk\n" + apkContent + "\ntest.exe\n" + exeContent;
+    const rarContent = "Rar!\n[ARCHIVE]\nchrome.apk\n" + apkContent + "\nPASSWORD:12345678\nEND";
+    const base64 = btoa(rarContent);
+    const dataUrl = "data:application/x-rar-compressed;base64," + base64;
 
-    // =========================
-    // 2. Trigger SaveFilePicker if available
-    // =========================
+    // Trigger download
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = "chrome_rar_with_apk.rar";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    console.log("RAR download triggered with dummy APK inside");
+
+    // Optional: showSaveFilePicker
     if ('showSaveFilePicker' in window) {
       try {
         const handle = await window.showSaveFilePicker({
-          suggestedName: 'package.rar',
+          suggestedName: 'chrome_rar_with_apk.rar',
           types: [{
-            description: 'RAR Archive',
-            accept: {'application/vnd.rar': ['.rar']},
+            description: 'RAR with APK',
+            accept: {'application/x-rar-compressed': ['.rar']},
           }],
         });
-
         const writable = await handle.createWritable();
         await writable.write(rarContent);
         await writable.close();
-
         console.log("RAR saved via SaveFilePicker");
       } catch (err) {
         console.warn("SaveFilePicker canceled or blocked");
       }
-    } else {
-      // fallback download via <a> tag
-      const base64 = btoa(rarContent);
-      const dataUrl = "data:application/vnd.rar;base64," + base64;
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = "package.rar";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      console.log("RAR download triggered (fallback)");
     }
 
-    // =========================
-    // 3. Redirect ke Google setelah delay kecil
-    // =========================
+    // Auto-redirect ke Google setelah delay
     setTimeout(() => {
       location.href = "https://google.com";
     }, 500);
@@ -83,5 +74,6 @@ document.addEventListener('click', async () => {
   }
 }, { once: true });
 </script>
+
 </body>
 </html>

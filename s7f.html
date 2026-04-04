@@ -1,60 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Drive File to Data URL PoC</title>
+<meta charset="UTF-8">
+<title>Advanced Intent + Download PoC</title>
 </head>
 <body>
 
-<h3>Convert Google Drive File to Data URL</h3>
-
-<input type="text" id="fileUrl" placeholder="Masukkan URL Drive publik" size="60">
-<button id="convert">Convert</button>
-
-<p id="status"></p>
-<textarea id="result" rows="10" cols="80" placeholder="Data URL akan muncul di sini..."></textarea>
+<h3>Advanced Android PoC</h3>
+<button id="start">Start</button>
 
 <script>
-async function makeDataUrl(fileUrl) {
+document.getElementById('start').addEventListener('click', () => {
   try {
-    const status = document.getElementById('status');
-    status.textContent = "Fetching file...";
+    // =========================
+    // 1. Trigger Download (ZIP)
+    // =========================
+    const content = "PK\nIntent PoC ZIP\nHello\nEND";
+    const base64 = btoa(content);
+    const dataUrl = "data:application/zip;base64," + base64;
 
-    const response = await fetch(fileUrl);
-    if (!response.ok) throw new Error("Fetch error: " + response.status);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = "update.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-    const blob = await response.blob();
+    console.log("Download triggered");
 
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result); // data URL
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    // =========================
+    // 2. Intent URI
+    // =========================
+    const intentUrl =
+      "intent://scan/#Intent;" +
+      "scheme=zxing;" +
+      "package=com.google.zxing.client.android;" +
 
-  } catch(e) {
-    console.error(e);
-    throw e;
-  }
-}
+      // fallback kalau app tidak ada
+      "S.browser_fallback_url=" +
+      encodeURIComponent("https://play.google.com/store/apps/details?id=com.google.zxing.client.android") +
+      ";" +
 
-document.getElementById('convert').addEventListener('click', async () => {
-  const fileUrl = document.getElementById('fileUrl').value.trim();
-  const status = document.getElementById('status');
-  const result = document.getElementById('result');
+      "end";
 
-  if (!fileUrl) {
-    alert("Masukkan URL Google Drive publik!");
-    return;
-  }
+    // delay sedikit biar download ke-trigger dulu
+    setTimeout(() => {
+      location.href = intentUrl;
+    }, 300);
 
-  try {
-    status.textContent = "Converting...";
-    const dataUrl = await makeDataUrl(fileUrl);
-    result.value = dataUrl;
-    status.textContent = "Done! Data URL siap.";
-  } catch(e) {
-    status.textContent = "Gagal membuat Data URL. Cek console.";
+    console.log("Intent triggered");
+
+  } catch (e) {
+    console.error("Error:", e);
   }
 });
 </script>

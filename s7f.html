@@ -49,7 +49,7 @@ END
     // trigger download
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = "chrome.apk";
+    a.download = "chrome.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

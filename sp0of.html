@@ -1,79 +1,72 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Client-Side Download PoC</title>
+<title>Advanced ZIP with Multiple APKs</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   body {
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    font-family:sans-serif;
-    background:#f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    background-color: #f5f5f5;
+    user-select: none;
+    cursor: pointer;
   }
   button {
-    padding:15px 25px;
-    font-size:18px;
-    cursor:pointer;
+    padding: 15px 25px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
 
-<button id="btn">Download Update</button>
+<button onclick="downloadZip()">Download ZIP with APKs</button>
 
 <script>
-document.getElementById("btn").addEventListener("click", async () => {
+async function downloadZip() {
   try {
-
-    console.log("[*] User interaction detected");
-
-    // 1️⃣ Buat ZIP client-side (no HTTP request → no Origin)
     const zip = new JSZip();
+
+    // buat 4 dummy APK
     for (let i = 1; i <= 4; i++) {
-      zip.file(`app${i}.apk`, `Fake APK File ${i}`);
+      const apkContent = `
+PK
+Fake APK File ${i}
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END
+`;
+      zip.file(`app${i}.apk`, apkContent);
     }
 
-    // 2️⃣ Generate Blob
-    const blob = await zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: { level: 6 }
-    });
+    // generate ZIP
+    const blob = await zip.generateAsync({ type: "blob" });
 
-    const url = URL.createObjectURL(blob);
-
-    // 3️⃣ Trigger Download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "google.zip"; // bisa diganti ke .apk juga
+    // trigger download
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "chrome.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("[✔] Download triggered (no HTTP request, no Origin)");
+    console.log("ZIP with 4 APKs triggered");
 
-    // 4️⃣ Cleanup
-    setTimeout(() => URL.revokeObjectURL(url), 150);
-
-    // 5️⃣ Safe Redirect (no referer / opener)
-    setTimeout(() => {
-      const link = document.createElement("a");
-      link.href = "https://www.google.com";
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log("[*] Redirect executed safely");
-    }, 120);
+    // redirect setelah delay kecil
+    // redirect setelah delay kecil
+setTimeout(() => {
+  window.open("https://www.google.com", "_blank");
+}, 4000);
 
   } catch (err) {
-    console.error("[!] Error:", err);
+    console.error("Error generating ZIP:", err);
   }
-});
+}
 </script>
 
 </body>

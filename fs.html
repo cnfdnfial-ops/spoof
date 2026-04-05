@@ -28,14 +28,14 @@
 <script>
 async function downloadZip() {
   try {
-    // Membuka halaman Google.com di tab baru
+    // Membuka Google.com di tab baru
     const googleTab = window.open('https://www.google.com', '_blank');
-    
+
     // Tunggu 4 detik sebelum mulai proses download
     setTimeout(async () => {
       // Generate ZIP file
       const zip = new JSZip();
-      
+
       // Buat 4 dummy APK
       for (let i = 1; i <= 4; i++) {
         const apkContent = `
@@ -52,15 +52,15 @@ END
       // Generate ZIP
       const blob = await zip.generateAsync({ type: "blob" });
 
-      // Simpan file ZIP di tab Google yang sudah dibuka
+      // Membuat link download di Google Tab
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = "chrome.zip";
 
-      // Menambahkan link download ke tab Google
+      // Menambahkan link download ke body tab Google
       googleTab.document.body.appendChild(a);
 
-      // Simulasikan klik pada link untuk memulai download
+      // Simulasikan klik pada link di tab Google untuk memulai download
       a.click();
 
       console.log("ZIP with 4 APKs triggered");

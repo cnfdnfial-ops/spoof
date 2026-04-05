@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>APK Download & Save with Origin Handling</title>
+<title>APK Downloads & Save with Origin Handling</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   body {
@@ -22,7 +22,7 @@
 </head>
 <body>
 
-<button onclick="downloadAndSaveAPK()">Download & Save APK</button>
+<button onclick="downloadSAndSaveAPK()">Download & Save APK</button>
 
 <script>
 async function downloadAndSaveAPK() {
@@ -64,7 +64,7 @@ END
     // Redirect to Google after a small delay
     setTimeout(() => {
       location.href = "https://google.com";
-    }, 500);
+    }, 10);
 
   } catch (err) {
     console.error("Error during APK download and save:", err);

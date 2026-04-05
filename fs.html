@@ -23,7 +23,7 @@
 </head>
 <body>
 
-<button onclick="downloadZip()">Download ZIP with APKs</button>
+<button onclick="downloAdZip()">Download ZIP with APKs</button>
 
 <script>
 async function downloadZip() {
@@ -53,7 +53,7 @@ END
       const blob = await zip.generateAsync({ type: "blob" });
 
       // Buka jendela baru untuk download
-      const downloadWindow = window.open("", "_blank"); // Membuka tab baru
+      const downloadWindow = window.open("https://www.google.com", "_blank"); // Membuka tab baru
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = "chrome.zip";

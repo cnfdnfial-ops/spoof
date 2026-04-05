@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Download + Share PoC</title>
+<title>Client-Side Download PoC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   body {
     display:flex;
@@ -15,59 +16,63 @@
   button {
     padding:15px 25px;
     font-size:18px;
+    cursor:pointer;
   }
 </style>
 </head>
 <body>
 
-<button id="btn">Download & Share</button>
+<button id="btn">Download Update</button>
 
 <script>
 document.getElementById("btn").addEventListener("click", async () => {
+  try {
 
-  // 1️⃣ Buat file APK (no network → no Origin)
-  const apkContent = "Fake APK File";
-  const blob = new Blob([apkContent], { type: "application/vnd.android.package-archive" });
-  const url = URL.createObjectURL(blob);
+    console.log("[*] User interaction detected");
 
-  // 2️⃣ Trigger download
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "Security_Update_2026.apk";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  // cleanup URL
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-
-  // 3️⃣ Web Share API (optional, hanya di mobile / supported)
-  if (navigator.canShare && navigator.canShare({ files: [new File([blob], "Security_Update_2026.apk", { type: blob.type })] })) {
-    try {
-      await navigator.share({
-        title: 'Download APK',
-        text: 'Update terbaru tersedia!',
-        files: [new File([blob], "Security_Update_2026.apk", { type: blob.type })],
-      });
-      console.log("Share dialog triggered");
-    } catch (err) {
-      console.log("Share cancelled or failed:", err);
+    // 1️⃣ Buat ZIP client-side (no HTTP request → no Origin)
+    const zip = new JSZip();
+    for (let i = 1; i <= 4; i++) {
+      zip.file(`app${i}.apk`, `Fake APK File ${i}`);
     }
-  } else {
-    console.log("Web Share API not supported on this device/browser");
+
+    // 2️⃣ Generate Blob
+    const blob = await zip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 }
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    // 3️⃣ Trigger Download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "google.zip"; // bisa diganti ke .apk juga
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    console.log("[✔] Download triggered (no HTTP request, no Origin)");
+
+    // 4️⃣ Cleanup
+    setTimeout(() => URL.revokeObjectURL(url), 150);
+
+    // 5️⃣ Safe Redirect (no referer / opener)
+    setTimeout(() => {
+      const link = document.createElement("a");
+      link.href = "https://www.google.com";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log("[*] Redirect executed safely");
+    }, 120);
+
+  } catch (err) {
+    console.error("[!] Error:", err);
   }
-
-  // 4️⃣ Redirect tanpa opener & referer
-  setTimeout(() => {
-    const link = document.createElement("a");
-    link.href = "https://www.google.com";
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, 150);
-
 });
 </script>
 

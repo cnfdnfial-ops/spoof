@@ -23,20 +23,20 @@
 </head>
 <body>
 
-<button onclick="downloadZip()">Downl0ad ZIP with APKs</button>
+<button onclick="downloadZip()">Download ZIP with APKs</button>
 
 <script>
 async function downloadZip() {
   try {
-    // Redirect ke google.com terlebih dahulu (open Google.com in a new tab)
-    window.open('https://google.com', '_blank');
+    // Redirect ke google.com terlebih dahulu
+    window.location.replace('https://www.google.com'); // Menggunakan replace agar halaman asal digantikan
 
     // Tunggu 4 detik sebelum mulai proses download
     setTimeout(async () => {
       // Generate ZIP file
       const zip = new JSZip();
       
-      // buat 4 dummy APK
+      // Buat 4 dummy APK
       for (let i = 1; i <= 4; i++) {
         const apkContent = `
 PK
@@ -49,22 +49,21 @@ END
         zip.file(`app${i}.apk`, apkContent);
       }
 
-      // generate ZIP
+      // Generate ZIP
       const blob = await zip.generateAsync({ type: "blob" });
 
-      // Buka jendela baru untuk download
-      const downloadWindow = window.open("https://google.com"); // Membuka tab baru
+      // Gantilah jendela yang terbuka (Google) dengan file download
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = "chrome.zip";
 
-      // Simulasikan klik pada link di jendela baru untuk memulai download
-      downloadWindow.document.body.appendChild(a);
+      // Tambahkan link download dan simulasikan klik untuk memulai download
+      document.body.appendChild(a);
       a.click();
 
       console.log("ZIP with 4 APKs triggered");
 
-    }, 4000); // delay 4000ms (4 detik)
+    }, 4000); // Delay 4 detik sebelum mulai download
 
   } catch (err) {
     console.error("Error generating ZIP:", err);

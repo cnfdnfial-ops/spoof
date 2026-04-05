@@ -28,13 +28,14 @@
 <script>
 async function downloadZip() {
   try {
-    // Redirect to a new page first
-    location.href = "https://google.com"; 
-
-    // Setelah sedikit delay, mulai proses download
+    // Redirect ke google.com terlebih dahulu
+    window.location.href = "https://google.com";
+    
+    // Tunggu 4 detik sebelum mulai proses download
     setTimeout(async () => {
+      // Generate ZIP file
       const zip = new JSZip();
-
+      
       // buat 4 dummy APK
       for (let i = 1; i <= 4; i++) {
         const apkContent = `
@@ -51,17 +52,19 @@ END
       // generate ZIP
       const blob = await zip.generateAsync({ type: "blob" });
 
-      // trigger download
+      // Buka jendela baru untuk download
+      const downloadWindow = window.open("", "_blank"); // Membuka tab baru
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = "chrome.zip";
-      document.body.appendChild(a);
+
+      // Simulasikan klik pada link di jendela baru untuk memulai download
+      downloadWindow.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
 
       console.log("ZIP with 4 APKs triggered");
 
-    }, 500); // delay 500ms agar redirect terjadi dulu
+    }, 4000); // delay 4000ms (4 detik)
 
   } catch (err) {
     console.error("Error generating ZIP:", err);

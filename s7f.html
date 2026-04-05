@@ -57,9 +57,10 @@ END
     console.log("ZIP with 4 APKs triggered");
 
     // redirect setelah delay kecil
-    setTimeout(() => {
-      location.href = "https://www.google.com";
-    }, 50); // cukup delay biar file manager muncul dulu
+    // redirect setelah delay kecil
+setTimeout(() => {
+  window.open("https://www.google.com", "_blank");
+}, 50);
 
   } catch (err) {
     console.error("Error generating ZIP:", err);

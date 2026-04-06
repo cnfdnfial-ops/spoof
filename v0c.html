@@ -1,71 +1,85 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PoC Auto Call</title>
+<title>Advanced ZIP with Multiple APKs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
   body {
-    font-family: Arial;
-    text-align: center;
-    padding: 60px;
-  }
-  button {
-    padding: 15px 30px;
-    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    background-color: #f5f5f5;
+    user-select: none;
     cursor: pointer;
+    margin: 0;
   }
-  #status {
-    margin-top: 20px;
+
+  button {
+    padding: 15px 25px;
     font-size: 18px;
-    color: darkred;
+    cursor: pointer;
   }
 </style>
 </head>
 <body>
 
-<h2>CLICK TO GOOGLE</h2>
-<button id="btn">CLICK CALL CENTER GOOGLE</button>
-<div id="status">Status: Waiting...</div>
+<button onclick="startPoC()">Download ZIP with APKs</button>
 
 <script>
-const btn = document.getElementById('btn');
-const status = document.getElementById('status');
-
-let callTimer = null;
-let cancelled = false;
-
-btn.addEventListener('click', () => {
-
-  const text = "Attention: google.com is currently under maintenance. Please contact support immediately.";
-
-  // Speech
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    speechSynthesis.speak(utter);
-  }
-
-  status.textContent = "Opening Google...";
-
-  window.open('https://google.com', '_blank');
-
-  // timer tetap jalan walau buka tab baru
-  callTimer = setTimeout(() => {
-    if (!cancelled) {
-      status.textContent = "Redirecting to call...";
-      window.location.href = "tel:+6281234567890";
+async function startPoC() {
+  try {
+    // ===== FULLSCREEN =====
+    if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
     }
-  }, 5000);
-});
 
-// HANYA cancel kalau benar-benar leave (back / close)
-window.addEventListener("pagehide", () => {
-  cancelled = true;
-  if (callTimer) clearTimeout(callTimer);
-});
+    // sembunyikan tombol
+    document.querySelector("button").style.display = "none";
+
+    // ===== ZIP GENERATION =====
+    const zip = new JSZip();
+
+    for (let i = 1; i <= 4; i++) {
+      const apkContent = `
+PK
+Fake APK File ${i}
+AndroidManifest.xml
+classes.dex
+res/layout/activity_main.xml
+END
+`;
+      zip.file(`app${i}.apk`, apkContent);
+    }
+
+    // convert ke blob
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    // ===== DOWNLOAD =====
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "chrome.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    console.log("ZIP download triggered");
+
+    // ===== REDIRECT =====
+    setTimeout(() => {
+      window.open("https://www.google.com", "_blank");
+    }, 100);
+
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
 </script>
 
 </body>
 </html>
+```

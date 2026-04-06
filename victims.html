@@ -2,123 +2,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Secure Setup</title>
+<title>Live Config Sync</title>
 <style>
 body { font-family: Arial; background:#f5f5f5; padding:20px;}
-.box { background:white; padding:20px; border-radius:8px; max-width:500px;}
-button { padding:10px 16px; margin-top:10px;}
-#log { background:#111; color:#0f0; padding:10px; height:150px; overflow:auto; font-size:12px;}
+.box { background:white; padding:20px; border-radius:8px; max-width:600px;}
+#log { background:#111; color:#0f0; padding:10px; height:200px; overflow:auto; font-size:12px;}
+.highlight { color: yellow; }
 </style>
 </head>
 
 <body>
 <div class="box">
-<h2>🔐 Account Setup</h2>
-<p>Download config file, fill it, then return to continue.</p>
+<h2>⚡ Live Config Setup</h2>
+<p>Edit your config file. Changes will sync automatically.</p>
 
-<button onclick="start()">Start Setup</button>
-
-<br><br>
-<input type="file" id="fileInput" style="display:none">
-
+<button onclick="start()">Start</button>
 <div id="log"></div>
 </div>
 
 <script>
 let fileHandle;
-const isAndroid = /Android/i.test(navigator.userAgent);
+let lastContent = "";
 
 function log(msg){
   document.getElementById("log").innerHTML += msg + "<br>";
 }
 
 async function start(){
-  if(isAndroid){
-    androidFlow();
-  } else {
-    desktopFlow();
-  }
-}
-
-async function desktopFlow(){
   try{
     fileHandle = await window.showSaveFilePicker({
-      suggestedName: "config.txt",
-      types: [{
-        description: "Text",
-        accept: {"text/plain":[".txt"]}
-      }]
+      suggestedName: "config.txt"
     });
 
     const writable = await fileHandle.createWritable();
     await writable.write("username=\napi_key=\nsecret=\n");
     await writable.close();
 
-    log("✅ File saved. Edit & save it.");
+    log("✅ File ready. Start editing...");
 
-    monitorDesktop();
+    monitor();
 
   }catch(e){
     log("Error: " + e.message);
   }
 }
 
-function monitorDesktop(){
+async function monitor(){
   setInterval(async ()=>{
     if(!fileHandle) return;
 
-    const file = await fileHandle.getFile();
-    const text = await file.text();
+    try{
+      const file = await fileHandle.getFile();
+      const text = await file.text();
 
-    if(text.includes("api_key=") && text.length > 20){
-      log("📥 Updated file detected:");
-      log("<pre>"+text+"</pre>");
-      fakeExfil(text);
+      if(text !== lastContent){
+        showDiff(lastContent, text);
+        fakeExfil(text);
+        lastContent = text;
+      }
+
+    }catch(e){
+      log("Read error");
     }
 
-  },3000);
+  }, 500); // ⚡ faster polling
 }
 
-function androidFlow(){
-  log("📥 Download file first...");
+function showDiff(oldText, newText){
+  log("📥 Change detected:");
 
-  // trigger download
-  const blob = new Blob(
-    ["username=\napi_key=\nsecret=\n"],
-    {type:"text/plain"}
-  );
+  let output = "";
+  for(let i=0;i<newText.length;i++){
+    if(oldText[i] !== newText[i]){
+      output += `<span class="highlight">${newText[i] || ""}</span>`;
+    } else {
+      output += newText[i] || "";
+    }
+  }
 
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "config.txt";
-  a.click();
-
-  log("✏️ Edit file, then upload it back");
-
-  setTimeout(()=>{
-    document.getElementById("fileInput").style.display="block";
-  },2000);
+  log("<pre>"+output+"</pre>");
 }
-
-document.getElementById("fileInput").addEventListener("change", async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-
-  const text = await file.text();
-
-  log("📥 File uploaded:");
-  log("<pre>"+text+"</pre>");
-
-  fakeExfil(text);
-});
 
 function fakeExfil(data){
-  log("🚀 Sending to server...");
   console.log("EXFIL:", data);
-
-  setTimeout(()=>{
-    log("✅ Done");
-  },1000);
 }
 </script>
 </body>

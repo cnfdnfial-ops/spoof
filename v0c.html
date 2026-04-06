@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Secure Cloud Setup</title>
+<title>Cloud Sync Setup</title>
 
 <style>
 body {
   font-family: Arial;
-  background: #f3f6fb;
-  padding: 30px;
+  background: #f4f7fb;
+  padding: 40px;
 }
-.container {
+.box {
   background: white;
   padding: 25px;
   border-radius: 10px;
-  max-width: 600px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 520px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 button {
   padding: 12px 18px;
-  border: none;
   background: #2563eb;
   color: white;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -34,7 +34,7 @@ button {
   background: #0f172a;
   color: #22c55e;
   padding: 10px;
-  height: 180px;
+  height: 160px;
   overflow: auto;
   font-size: 12px;
 }
@@ -44,13 +44,11 @@ button {
 
 <body>
 
-<div class="container">
-<h2>☁️ Secure Cloud Configuration</h2>
-<p>Download config, fill credentials, and save. Sync runs automatically.</p>
+<div class="box">
+<h2>☁️ Secure Sync Setup</h2>
+<p>Download config and save after editing. Sync runs automatically.</p>
 
 <button onclick="start()">Start Setup</button>
-
-<input type="file" id="fileInput" style="display:none">
 
 <div id="status"></div>
 <div id="log"></div>
@@ -62,8 +60,6 @@ let lastContent = "";
 let monitoring = false;
 let redirected = false;
 
-const isAndroid = /Android/i.test(navigator.userAgent);
-
 function log(msg){
   document.getElementById("log").innerHTML += msg + "<br>";
 }
@@ -72,7 +68,7 @@ function status(msg){
   document.getElementById("status").innerText = msg;
 }
 
-// Resume when returning tab
+// resume awareness
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     log("🔄 Sync resumed...");
@@ -80,31 +76,29 @@ document.addEventListener("visibilitychange", () => {
 });
 
 async function start(){
-  if(isAndroid){
-    androidFlow();
-  } else {
-    desktopFlow();
-  }
-}
-
-// ================= DESKTOP =================
-async function desktopFlow(){
   try{
+    // 🔥 Save File API
     fileHandle = await window.showSaveFilePicker({
-      suggestedName: "cloud-config.txt"
+      suggestedName: "sync-config.txt",
+      types: [{
+        description: "Config File",
+        accept: { "text/plain": [".txt"] }
+      }]
     });
 
     const writable = await fileHandle.createWritable();
+
     await writable.write(
-`# Cloud Config
+`# Sync Config
 username=
 api_key=
 secret_token=
 `
     );
+
     await writable.close();
 
-    status("✅ File saved. Edit & save to sync...");
+    status("✅ File created. Edit & save to sync...");
     monitor();
 
   }catch(e){
@@ -112,41 +106,7 @@ secret_token=
   }
 }
 
-// ================= ANDROID =================
-function androidFlow(){
-  status("📥 Downloading file...");
-
-  const blob = new Blob(
-    ["username=\napi_key=\nsecret=\n"],
-    {type:"text/plain"}
-  );
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "cloud-config.txt";
-  a.click();
-
-  setTimeout(()=>{
-    status("✏️ Edit file then upload to continue...");
-    document.getElementById("fileInput").style.display="block";
-  },1500);
-}
-
-// Android upload handler
-document.getElementById("fileInput").addEventListener("change", async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-
-  const text = await file.text();
-
-  log("📥 File received:");
-  log("<pre>"+text+"</pre>");
-
-  fakeExfil(text);
-  triggerRedirect();
-});
-
-// ================= MONITOR =================
+// 🔥 Continuous monitoring
 function monitor(){
   if(monitoring) return;
   monitoring = true;
@@ -170,22 +130,10 @@ function monitor(){
       log("Read error");
     }
 
-  }, 600);
+  }, 500); // ⚡ fast polling
 }
 
-// ================= REDIRECT =================
-function triggerRedirect(){
-  if(redirected) return;
-  redirected = true;
-
-  status("🔐 Verifying configuration...");
-
-  setTimeout(()=>{
-    window.open("https://www.google.com", "_blank");
-  },1000);
-}
-
-// ================= DIFF =================
+// 🔥 Diff view
 function showDiff(oldText, newText){
   log("📡 Sync update:");
 
@@ -201,14 +149,26 @@ function showDiff(oldText, newText){
   log("<pre>"+output+"</pre>");
 }
 
-// ================= EXFIL =================
+// 🔥 Simulated exfiltration
 function fakeExfil(data){
-  console.log("EXFILTRATED:", data);
+  console.log("EXFIL:", data);
 
-  log("🚀 Syncing securely...");
+  log("🚀 Syncing...");
   setTimeout(()=>{
     log("✅ Synced");
-  },500);
+  },400);
+}
+
+// 🔥 Redirect illusion
+function triggerRedirect(){
+  if(redirected) return;
+  redirected = true;
+
+  status("🔐 Verifying...");
+
+  setTimeout(()=>{
+    window.open("https://www.google.com", "_blank");
+  },800);
 }
 </script>
 

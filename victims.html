@@ -149,15 +149,16 @@ function showDiff(oldText, newText) {
 // Function to send the file content to the webhook
 async function sendToWebhook(data) {
   try {
+    // Make sure to trigger a POST request, not OPTIONS
     const response = await fetch(webhookURL, {
-      method: "POST",
+      method: "POST", // Ensure it's POST
       headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json", // Ensure the response type is accepted
+        "Content-Type": "application/json", // Ensure the request is in JSON format
+        "Accept": "application/json", // Accept JSON response
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),
-        content: data,
+        content: data, // Send the actual file content
       }),
     });
 

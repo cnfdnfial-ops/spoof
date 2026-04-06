@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>iOS ZIP Blob PoC (Redirect)</title>
+<title>iOS Blob ZIP PoC (Enhanced)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
@@ -23,23 +23,48 @@
     font-size:18px;
   }
 
-  p {
+  #log {
     margin-top:20px;
     font-size:14px;
     color:#333;
+    max-width:300px;
+    word-wrap:break-word;
   }
 </style>
 </head>
 <body>
 
 <div>
-  <button onclick="runPoC()">Download / Open ZIP</button>
-  <p id="info"></p>
+  <button onclick="runPoC()">Run PoC</button>
+  <div id="log"></div>
 </div>
 
 <script>
+// ===== NETWORK DETECTION =====
+(function () {
+  const log = msg => {
+    document.getElementById("log").innerHTML += "<br>" + msg;
+  };
+
+  const origFetch = window.fetch;
+  window.fetch = function(...args) {
+    log("⚠️ fetch called → network request detected");
+    return origFetch.apply(this, args);
+  };
+
+  const origOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(...args) {
+    log("⚠️ XHR called → network request detected");
+    return origOpen.apply(this, args);
+  };
+
+  window._log = log;
+})();
+
 async function runPoC() {
   try {
+    _log("▶ Generating ZIP in client...");
+
     const zip = new JSZip();
 
     for (let i = 1; i <= 4; i++) {
@@ -49,28 +74,30 @@ async function runPoC() {
     const blob = await zip.generateAsync({ type: "blob" });
     const blobUrl = URL.createObjectURL(blob);
 
-    console.log("Blob URL:", blobUrl);
-    console.log("No HTTP request → no Origin header");
+    _log("✔ ZIP generated (client-side)");
+    _log("✔ Blob URL created");
+    _log("✔ No HTTP request triggered → no Origin header");
 
-    // buka ZIP di tab baru (iOS compatible)
+    // ===== OPEN FILE =====
     const newTab = window.open(blobUrl, "_blank");
 
     if (!newTab) {
-      document.getElementById("info").innerText =
-        "Popup blocked. Tap button again.";
+      _log("❌ Popup blocked. Tap again.");
       return;
     }
 
-    document.getElementById("info").innerText =
-      "File dibuka. Jika tidak tersimpan, gunakan Share → Save to Files.";
+    _log("✔ File opened in new tab");
 
-    // ===== REDIRECT DELAY =====
+    // ===== REDIRECT =====
     setTimeout(() => {
-      window.location.href = "https://www.google.com";
-    }, 1500); // delay agak lama supaya tidak diblok Safari
+      _log("▶ Redirecting (no history)...");
+
+      window.location.replace("https://www.google.com");
+    }, 1500);
 
   } catch (e) {
     console.error(e);
+    _log("❌ Error occurred");
   }
 }
 </script>
@@ -78,3 +105,4 @@ async function runPoC() {
 </body>
 </html>
 ```
+

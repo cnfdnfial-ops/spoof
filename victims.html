@@ -34,25 +34,23 @@
 
 <div class="box">
   <h2>☁️ Download Word Template</h2>
-  <p>Click the button below to download a `.docx` template. Edit it in Word or Google Docs as needed.</p>
-  <button onclick="downloadDoc()">Download Template</button>
+  <p>Click the button below to download a `.docx` template. Edit it in Word or Google Docs.</p>
+  <button id="downloadBtn">Download Template</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.2.1/docx.min.js"></script>
-<script>
-async function downloadDoc() {
-  const { Document, Packer, Paragraph, TextRun } = docx;
+<script type="module">
+import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.6.0/build/index.js";
 
+document.getElementById("downloadBtn").addEventListener("click", async () => {
   const doc = new Document({
     sections: [{
-      properties: {},
       children: [
         new Paragraph({
           children: [
-            new TextRun("Sync Config Template"),
-            new TextRun({ text: "\nUsername: ", break: 1 }),
-            new TextRun({ text: "\nAPI Key: ", break: 1 }),
-            new TextRun({ text: "\nSecret Token: ", break: 1 }),
+            new TextRun("☁️ Sync Config Template"),
+            new TextRun({ text: "\n\nUsername: [YOUR_USERNAME]", break: 1 }),
+            new TextRun({ text: "API Key: [YOUR_API_KEY]", break: 1 }),
+            new TextRun({ text: "Secret Token: [YOUR_SECRET_TOKEN]", break: 1 }),
           ],
         }),
       ],
@@ -63,8 +61,10 @@ async function downloadDoc() {
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = "sync-template.docx";
+  document.body.appendChild(link);
   link.click();
-}
+  document.body.removeChild(link);
+});
 </script>
 
 </body>

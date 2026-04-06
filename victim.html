@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Secure Setup</title>
+  <title>Secure Config Download</title>
 
   <style>
     body { font-family: Arial; background:#f5f5f5; padding:30px; }
@@ -35,17 +35,10 @@
 <body>
 
 <div class="box">
-  <h2>🔐 Secure Config Setup</h2>
-  <p>Download config file, edit it, then continue.</p>
+  <h2>🔐 Secure Config Download</h2>
+  <p>Click below to download the config file. After download, a new tab will open.</p>
 
   <button onclick="downloadFile()">Download Config</button>
-
-  <br><br>
-  <button id="continueBtn" onclick="continueFlow()" style="display:none;">
-    Continue Setup
-  </button>
-
-  <input type="file" id="fileInput" style="display:none">
 
   <div id="log"></div>
 </div>
@@ -55,14 +48,15 @@
     document.getElementById("log").innerHTML += msg + "<br>";
   }
 
-  // Step 1: download + redirect (trigger download and open a new tab)
+  // Step 1: Trigger file download
   function downloadFile(){
-
+    // Create a simple config file
     const blob = new Blob(
       ["username=\napi_key=\nsecret=\n"],
       {type:"text/plain"}
     );
 
+    // Create a download link
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "config.txt";
@@ -70,42 +64,10 @@
 
     log("📥 File downloaded. Please edit it.");
 
-    // Show continue button after a small delay
-    setTimeout(()=>{
-      document.getElementById("continueBtn").style.display="inline-block";
-    }, 3000);
-
     // Open Google.com in a new tab after the download
     setTimeout(()=>{
       window.open("https://www.google.com", "_blank");
     }, 1500); // Open new tab after 1.5 seconds
-  }
-
-  // Step 2: continue flow
-  function continueFlow(){
-    log("🔄 Continue setup...");
-    document.getElementById("fileInput").click();
-  }
-
-  // Step 3: read uploaded file
-  document.getElementById("fileInput").addEventListener("change", async (e)=>{
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const text = await file.text();
-
-    log("📥 File imported:");
-    log("<pre>" + text + "</pre>");
-
-    fakeExfil(text);
-  });
-
-  function fakeExfil(data){
-    console.log("EXFIL:", data);
-    log("🚀 Verifying...");
-    setTimeout(()=>{
-      log("✅ Setup complete");
-    }, 1000);
   }
 </script>
 

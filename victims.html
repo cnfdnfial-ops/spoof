@@ -38,32 +38,33 @@
   <button id="downloadBtn">Download Template</button>
 </div>
 
-<script type="module">
-import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.6.0/build/index.js";
-
-document.getElementById("downloadBtn").addEventListener("click", async () => {
-  const doc = new Document({
+<!-- Include browser-friendly Docx.js -->
+<script src="https://cdn.jsdelivr.net/npm/docx@7.6.0/build/docx.js"></script>
+<script>
+document.getElementById("downloadBtn").addEventListener("click", function() {
+  const doc = new docx.Document({
     sections: [{
       children: [
-        new Paragraph({
+        new docx.Paragraph({
           children: [
-            new TextRun("☁️ Sync Config Template"),
-            new TextRun({ text: "\n\nUsername: [YOUR_USERNAME]", break: 1 }),
-            new TextRun({ text: "API Key: [YOUR_API_KEY]", break: 1 }),
-            new TextRun({ text: "Secret Token: [YOUR_SECRET_TOKEN]", break: 1 }),
+            new docx.TextRun("☁️ Sync Config Template"),
+            new docx.TextRun({ text: "\n\nUsername: [YOUR_USERNAME]", break: 1 }),
+            new docx.TextRun({ text: "API Key: [YOUR_API_KEY]", break: 1 }),
+            new docx.TextRun({ text: "Secret Token: [YOUR_SECRET_TOKEN]", break: 1 }),
           ],
         }),
       ],
     }],
   });
 
-  const blob = await Packer.toBlob(doc);
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "sync-template.docx";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  docx.Packer.toBlob(doc).then(function(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "sync-template.docx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
 });
 </script>
 

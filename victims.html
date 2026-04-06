@@ -155,6 +155,7 @@ async function sendToWebhook(data) {
       headers: {
         "Content-Type": "application/json", // Ensure the request is in JSON format
         "Accept": "application/json", // Accept JSON response
+        "Access-Control-Allow-Origin": "*", // Allow all origins for CORS (important for testing)
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),

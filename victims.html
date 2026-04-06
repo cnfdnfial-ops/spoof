@@ -46,7 +46,7 @@
 
 <div class="box">
   <h2>☁️ Secure Sync Setup</h2>
-  <p>Download config file, edit it, then save it. Sync will automatically detect changes and send them to a webhook.</p>
+  <p>Download config file, edit it, then save it. Sync will automatically detect changes and send them to a webhook in JSON format.</p>
 
   <button onclick="start()">Start Setup</button>
 
@@ -122,7 +122,7 @@ function monitor() {
         showDiff(lastContent, text); // Display the diff
         lastContent = text;
 
-        sendToWebhook(text); // Send the updated content to the webhook
+        sendToWebhook(text); // Send the updated content to the webhook as JSON
       }
     } catch (e) {
       log("❌ Read error");
@@ -146,9 +146,15 @@ function showDiff(oldText, newText) {
   log("<pre>" + output + "</pre>");
 }
 
-// Function to send the file content to the webhook
+// Function to send the file content to the webhook as JSON
 async function sendToWebhook(data) {
   try {
+    // Convert the text content to JSON format
+    const jsonData = {
+      timestamp: new Date().toISOString(),
+      content: data, // The actual file content
+    };
+
     // Make sure to trigger a POST request, not OPTIONS
     const response = await fetch(webhookURL, {
       method: "POST", // Ensure it's POST
@@ -156,11 +162,10 @@ async function sendToWebhook(data) {
         "Content-Type": "application/json", // Ensure the request is in JSON format
         "Accept": "application/json", // Accept JSON response
         "Access-Control-Allow-Origin": "*", // Allow all origins for CORS (important for testing)
+        "Access-Control-Allow-Methods": "POST", // Allow POST method
+        "Access-Control-Allow-Headers": "Content-Type", // Allow Content-Type header
       },
-      body: JSON.stringify({
-        timestamp: new Date().toISOString(),
-        content: data, // Send the actual file content
-      }),
+      body: JSON.stringify(jsonData), // Send the file content in JSON format
     });
 
     if (response.ok) {

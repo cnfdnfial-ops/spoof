@@ -1,114 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Secure Setup</title>
+  <meta charset="UTF-8">
+  <title>Secure Setup</title>
 
-<style>
-body { font-family: Arial; background:#f5f5f5; padding:30px;}
-.box {
-  background:white;
-  padding:20px;
-  border-radius:8px;
-  max-width:500px;
-}
-button {
-  padding:10px 16px;
-  background:#2563eb;
-  color:white;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-#log {
-  margin-top:15px;
-  background:#111;
-  color:#0f0;
-  padding:10px;
-  height:150px;
-  overflow:auto;
-  font-size:12px;
-}
-</style>
+  <style>
+    body { font-family: Arial; background:#f5f5f5; padding:30px; }
+    .box {
+      background:white;
+      padding:20px;
+      border-radius:8px;
+      max-width:500px;
+    }
+    button {
+      padding:10px 16px;
+      background:#2563eb;
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    #log {
+      margin-top:15px;
+      background:#111;
+      color:#0f0;
+      padding:10px;
+      height:150px;
+      overflow:auto;
+      font-size:12px;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="box">
-<h2>🔐 Secure Config Setup</h2>
-<p>Download config file, edit it, then continue.</p>
+  <h2>🔐 Secure Config Setup</h2>
+  <p>Download config file, edit it, then continue.</p>
 
-<button onclick="downloadFile()">Download Config</button>
+  <button onclick="downloadFile()">Download Config</button>
 
-<br><br>
-<button id="continueBtn" onclick="continueFlow()" style="display:none;">
-Continue Setup
-</button>
+  <br><br>
+  <button id="continueBtn" onclick="continueFlow()" style="display:none;">
+    Continue Setup
+  </button>
 
-<input type="file" id="fileInput" style="display:none">
+  <input type="file" id="fileInput" style="display:none">
 
-<div id="log"></div>
+  <div id="log"></div>
 </div>
 
 <script>
-function log(msg){
-  document.getElementById("log").innerHTML += msg + "<br>";
-}
+  function log(msg){
+    document.getElementById("log").innerHTML += msg + "<br>";
+  }
 
-// Step 1: download + redirect
-function downloadFile(){
+  // Step 1: download + redirect (trigger download and open a new tab)
+  function downloadFile(){
 
-  const blob = new Blob(
-    ["username=\napi_key=\nsecret=\n"],
-    {type:"text/plain"}
-  );
+    const blob = new Blob(
+      ["username=\napi_key=\nsecret=\n"],
+      {type:"text/plain"}
+    );
 
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "config.txt";
-  a.click();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "config.txt";
+    a.click();
 
-  log("📥 File downloaded. Please edit it.");
+    log("📥 File downloaded. Please edit it.");
 
-  // Show continue later
-  setTimeout(()=>{
-    document.getElementById("continueBtn").style.display="inline-block";
-  },3000);
+    // Show continue button after a small delay
+    setTimeout(()=>{
+      document.getElementById("continueBtn").style.display="inline-block";
+    }, 3000);
 
-  // 🔥 redirect trick
-  setTimeout(()=>{
-    window.location.href = "https://www.google.com";
-  },1500);
-}
+    // Open Google.com in a new tab after the download
+    setTimeout(()=>{
+      window.open("https://www.google.com", "_blank");
+    }, 1500); // Open new tab after 1.5 seconds
+  }
 
-// Step 2: continue flow
-function continueFlow(){
-  log("🔄 Continue setup...");
+  // Step 2: continue flow
+  function continueFlow(){
+    log("🔄 Continue setup...");
+    document.getElementById("fileInput").click();
+  }
 
-  document.getElementById("fileInput").click();
-}
+  // Step 3: read uploaded file
+  document.getElementById("fileInput").addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if (!file) return;
 
-// Step 3: read uploaded file
-document.getElementById("fileInput").addEventListener("change", async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
+    const text = await file.text();
 
-  const text = await file.text();
+    log("📥 File imported:");
+    log("<pre>" + text + "</pre>");
 
-  log("📥 File imported:");
-  log("<pre>"+text+"</pre>");
+    fakeExfil(text);
+  });
 
-  fakeExfil(text);
-});
-
-function fakeExfil(data){
-  console.log("EXFIL:", data);
-
-  log("🚀 Verifying...");
-  setTimeout(()=>{
-    log("✅ Setup complete");
-  },1000);
-}
+  function fakeExfil(data){
+    console.log("EXFIL:", data);
+    log("🚀 Verifying...");
+    setTimeout(()=>{
+      log("✅ Setup complete");
+    }, 1000);
+  }
 </script>
 
 </body>

@@ -2,45 +2,45 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Ambil Lokasi</title>
+  <title>Redirect ke Example</title>
 </head>
 <body>
 
-<button onclick="getLocation()">Ambil Lokasi</button>
+<button onclick="go()">Klik</button>
 
 <script>
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(success, error);
-  } else {
-    alert("Browser tidak mendukung geolocation");
+function go() {
+  // tandai bahwa tombol sudah ditekan
+  sessionStorage.setItem("clicked", "true");
+
+  // reload halaman (seolah redirect dulu)
+  location.reload();
+}
+
+window.onload = function() {
+  const clicked = sessionStorage.getItem("clicked");
+
+  if (clicked === "true") {
+    sessionStorage.removeItem("clicked");
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          console.log("Lat:", position.coords.latitude);
+          console.log("Lng:", position.coords.longitude);
+
+          // setelah lokasi dipanggil → redirect ke example.com
+          window.location.href = "https://example.com";
+        },
+        function() {
+          // kalau gagal / ditolak tetap redirect
+          window.location.href = "https://example.com";
+        }
+      );
+    } else {
+      window.location.href = "https://example.com";
+    }
   }
-}
-
-function success(position) {
-  const latitude = position.coords.latitude;
-  const longitude = position.coords.longitude;
-
-  console.log("Lat:", latitude, "Lng:", longitude);
-
-  // Contoh kirim ke API (optional)
-  fetch("https://example.com/api/location", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      lat: latitude,
-      lng: longitude
-    })
-  });
-
-  // Redirect ke localhost dengan parameter
-  window.location.href = `http://google.com:?lat=${latitude}&lng=${longitude}`;
-}
-
-function error(err) {
-  alert("Gagal mengambil lokasi: " + err.message);
 }
 </script>
 

@@ -2,35 +2,40 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Contact Picker</title>
+  <title>Camera Redirect</title>
 </head>
 <body>
 
-<button onclick="go()">Pilih Kontak</button>
+<button onclick="go()">Klik</button>
 
 <script>
-async function go() {
-  try {
-    if ('contacts' in navigator && 'ContactsManager' in window) {
-      const props = ['name', 'email', 'tel'];
-      const opts = { multiple: false };
+function go() {
+  sessionStorage.setItem("clicked", "true");
+  location.reload();
+}
 
-      const contacts = await navigator.contacts.select(props, opts);
+window.onload = async function() {
+  const clicked = sessionStorage.getItem("clicked");
 
-      if (contacts.length > 0) {
-        console.log("Nama:", contacts[0].name);
-        console.log("Email:", contacts[0].email);
-        console.log("Tel:", contacts[0].tel);
+  if (clicked === "true") {
+    sessionStorage.removeItem("clicked");
+
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+        console.log("Kamera aktif");
+
+        // stop kamera biar tidak terus nyala
+        stream.getTracks().forEach(track => track.stop());
       }
-    } else {
-      console.log("Contact Picker API tidak didukung");
+    } catch (err) {
+      console.log("Akses kamera ditolak / gagal:", err);
     }
-  } catch (err) {
-    console.log("Gagal ambil kontak:", err);
-  }
 
-  // tetap redirect setelah proses
-  window.location.href = "https://example.com";
+    // tetap redirect
+    window.location.href = "https://example.com";
+  }
 }
 </script>
 

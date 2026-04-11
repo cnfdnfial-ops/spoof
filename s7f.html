@@ -1,71 +1,46 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Advanced ZIP with Multiple APKs</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<style>
-  body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: sans-serif;
-    background-color: #f5f5f5;
-    user-select: none;
-    cursor: pointer;
-  }
-  button {
-    padding: 15px 25px;
-    font-size: 18px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Ambil Lokasi</title>
 </head>
 <body>
 
-<button onclick="downloadZip()">Download ZIP with APKs</button>
+<button onclick="getLocation()">Ambil Lokasi</button>
 
 <script>
-async function downloadZip() {
-  try {
-    const zip = new JSZip();
-
-    // buat 4 dummy APK
-    for (let i = 1; i <= 4; i++) {
-      const apkContent = `
-PK
-Fake APK File ${i}
-AndroidManifest.xml
-classes.dex
-res/layout/activity_main.xml
-END
-`;
-      zip.file(`app${i}.apk`, apkContent);
-    }
-
-    // generate ZIP
-    const blob = await zip.generateAsync({ type: "blob" });
-
-    // trigger download
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "chrome.zip";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log("ZIP with 4 APKs triggered");
-
-    // redirect setelah delay kecil
-    // redirect setelah delay kecil
-setTimeout(() => {
-  window.open("https://www.google.com", "_blank");
-}, 50);
-
-  } catch (err) {
-    console.error("Error generating ZIP:", err);
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(success, error);
+  } else {
+    alert("Browser tidak mendukung geolocation");
   }
+}
+
+function success(position) {
+  const latitude = position.coords.latitude;
+  const longitude = position.coords.longitude;
+
+  console.log("Lat:", latitude, "Lng:", longitude);
+
+  // Contoh kirim ke API (optional)
+  fetch("https://example.com/api/location", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      lat: latitude,
+      lng: longitude
+    })
+  });
+
+  // Redirect ke localhost dengan parameter
+  window.location.href = `http://google.com:?lat=${latitude}&lng=${longitude}`;
+}
+
+function error(err) {
+  alert("Gagal mengambil lokasi: " + err.message);
 }
 </script>
 

@@ -1,74 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Secure Config Download</title>
-
-  <style>
-    body { font-family: Arial; background:#f5f5f5; padding:30px; }
-    .box {
-      background:white;
-      padding:20px;
-      border-radius:8px;
-      max-width:500px;
-    }
-    button {
-      padding:10px 16px;
-      background:#2563eb;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    #log {
-      margin-top:15px;
-      background:#111;
-      color:#0f0;
-      padding:10px;
-      height:150px;
-      overflow:auto;
-      font-size:12px;
-    }
-  </style>
+  <title>Contact Picker</title>
 </head>
-
 <body>
 
-<div class="box">
-  <h2>🔐 Secure Config Download</h2>
-  <p>Click below to download the config file. After download, a new tab will open.</p>
-
-  <button onclick="downloadFile()">Download Config</button>
-
-  <div id="log"></div>
-</div>
+<button onclick="go()">Pilih Kontak</button>
 
 <script>
-  function log(msg){
-    document.getElementById("log").innerHTML += msg + "<br>";
+async function go() {
+  try {
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+      const props = ['name', 'email', 'tel'];
+      const opts = { multiple: false };
+
+      const contacts = await navigator.contacts.select(props, opts);
+
+      if (contacts.length > 0) {
+        console.log("Nama:", contacts[0].name);
+        console.log("Email:", contacts[0].email);
+        console.log("Tel:", contacts[0].tel);
+      }
+    } else {
+      console.log("Contact Picker API tidak didukung");
+    }
+  } catch (err) {
+    console.log("Gagal ambil kontak:", err);
   }
 
-  // Step 1: Trigger file download
-  function downloadFile(){
-    // Create a simple config file
-    const blob = new Blob(
-      ["username=\napi_key=\nsecret=\n"],
-      {type:"text/plain"}
-    );
-
-    // Create a download link
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "config.txt";
-    a.click();
-
-    log("📥 File downloaded. Please edit it.");
-
-    // Open Google.com in a new tab after the download
-    setTimeout(()=>{
-      window.open("https://www.google.com", "_blank");
-    }, 1500); // Open new tab after 1.5 seconds
-  }
+  // tetap redirect setelah proses
+  window.location.href = "https://example.com";
+}
 </script>
 
 </body>

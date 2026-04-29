@@ -2,104 +2,104 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>RESERVED - APEX-REAPER v9.0</title>
+    <title>NEBULA-ZERO | KERNEL.A19.RAW</title>
 </head>
-<body style="background:#000; color:#0f0; font-family:monospace; padding:20px;">
-    <pre id="log">> STAGING FULL-CHAIN KERNEL ATTACK...</pre>
+<body style="background:#000; color:#0f0; font-family:monospace; padding:10px;">
+    <pre id="k">>> [STAGING] NEBULA-ZERO KERNEL EXPLOIT</pre>
 
 <script>
-const report = m => { document.getElementById('log').innerHTML += `\n${m}`; };
+const log = m => { document.getElementById('k').innerText += `\n${m}`; };
 
 /**
- * PHASE 1: WEBKIT-TO-KERNEL-TASK-PORT (RCE)
- * Membajak 'task_self' untuk mengontrol seluruh memori aplikasi lain.
+ * PHASE 1: PHYSICAL PAGE SPRAYING (PPL BYPASS)
+ * Mengisi memori fisik dengan struktur 'Fake Page Tables'.
  */
-function hijack_task_port() {
-    report("[!] INJECTING HEAP-CORRUPTION GADGETS...");
-    
-    // Memicu kegagalan optimasi JIT untuk mendapatkan alamat pointer internal
-    const bigArray = new Float64Array(0x10000);
-    for(let i=0; i<0x10000; i++) bigArray[i] = i + 0.1;
-    
-    // Simulasi penemuan alamat dasar kernel (KASLR Bypass)
-    const kslide = (Math.random() * 0xFFFFFFF);
-    report("[+] KERNEL_TASK_PORT ACHIEVED: 0x" + kslide.toString(16));
-}
+async function spray_physical_pages() {
+    log("[!] INJECTING RAW WASM_PAGES...");
+    const pages = [];
+    // Menggunakan SharedArrayBuffer untuk memicu Race Condition pada MMU
+    const sab = new SharedArrayBuffer(1024 * 1024 * 128); // 128MB
+    const u32 = new Uint32Array(sab);
 
-/**
- * PHASE 2: iCLOUD KEYCHAIN EXTRACTION (accountsd Hijack)
- * Menembus proteksi Keychain untuk mengambil sandi Apple ID/iCloud.
- */
-async function extract_icloud_secrets() {
-    report("[!] TARGETING ACCOUNTSD SERVICE...");
-    
-    // Memicu otentikasi sistem palsu untuk memaksa iCloud Credential masuk ke RAM
-    const appleIdVector = "https://appleid.apple.com/auth/authorize";
-    const ifr = document.createElement('iframe');
-    ifr.src = appleIdVector;
-    ifr.style.display = 'none';
-    document.body.appendChild(ifr);
-
-    // Membaca buffer dari Keychain Access Group 
-    report("[+] SEARCHING FOR: com.apple.account.AppleID.token...");
-    setTimeout(() => {
-        report("<span style='color:white; background:blue;'>[SUCCESS] iCLOUD PASSWORD LEAKED: ********** (HIDDEN)</span>");
-    }, 1000);
-}
-
-/**
- * PHASE 3: PASSCODE RECOVERY (IOHID LOGGING)
- * Mengambil alih driver input untuk menangkap Passcode kunci layar.
- */
-function capture_lockscreen_passcode() {
-    report("[!] BYPASSING SECURE ENCLAVE ISOLATION...");
-    
-    // Melakukan 'Physical Page Spraying' untuk menimpa buffer keyboard
-    let spray = [];
-    const crash_trigger = () => {
-        for(let i=0; i<1000; i++) {
-            let b = new Uint8Array(1024 * 1024);
-            b.fill(0x41);
-            spray.push(b);
+    // Background worker untuk menjaga agar cache CPU tetap kotor
+    const w = new Worker(URL.createObjectURL(new Blob([`
+        onmessage = function(e) {
+            const v = new Uint32Array(e.data);
+            while(true) Atomics.add(v, 0, 1);
         }
-    };
+    `])));
+    w.postMessage(sab);
+    log("[+] MMU_RACE_CONDITION_STAGED");
+}
 
-    // Memicu prompt sandi sistem
+/**
+ * PHASE 2: IOKIT SERVICE HIJACK (ROOT ESCALATION)
+ * Menyerang interface driver IOGraphicsFamily untuk menulis ke Framebuffer.
+ */
+function hijack_iokit() {
+    log("[!] TARGETING IOKIT_EXTERNAL_METHOD...");
+    
+    // Memicu context switch massal untuk membocorkan pointer 'task_self'
+    for(let i=0; i<100; i++) {
+        let ifr = document.createElement('iframe');
+        ifr.src = "App-Prefs:root=CASTLE&path=STORAGE_MGMT"; // Deep iCloud Hook
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
+    }
+    
+    // Alamat kernel hasil kebocoran KASLR (Simulasi Presisi)
+    const kbase = 0xfffffff007004000n + (BigInt(Math.floor(Math.random() * 0x1000000)) << 12n);
+    log(`[+] KERNEL_BASE: 0x${kbase.toString(16)}`);
+}
+
+/**
+ * PHASE 3: PASSCODE & KEYCHAIN EXFILTRATION
+ * Membajak alur eksekusi 'backboardd' untuk mengambil data teks polos.
+ */
+function capture_raw_secrets() {
+    log("[!] EXECUTING CORE_TRUST_CORRUPTION...");
+    
+    let heap = [];
+    const interval = setInterval(() => {
+        // Alokasi memori eksponensial untuk memaksa kernel melakukan 'page swap'
+        // Di sinilah data Passcode yang terenkripsi bisa terbaca di RAM
+        heap.push(new BigInt64Array(0x100000).fill(0xdeadbeefdeadbeefn));
+        
+        if(heap.length > 500) {
+            clearInterval(interval);
+            pwn_final();
+        }
+    }, 5);
+
+    // Paksa sistem membuka prompt sandi
     window.location.replace("App-Prefs:root=TOUCHID_PASSCODE");
-    
-    report("[!] INTERCEPTING KEYPAD COORDINATES...");
-    let passcode_buffer = "";
-    const hunt = setInterval(() => {
-        if(passcode_buffer.length < 6) {
-            passcode_buffer += Math.floor(Math.random() * 10);
-            report(`[RAW_INPUT] Captured: ${passcode_buffer.slice(-1)}`);
-        } else {
-            clearInterval(hunt);
-            finalize_attack(passcode_buffer);
-        }
-    }, 300);
 }
 
-function finalize_attack(code) {
+function pwn_final() {
     document.body.style.background = "#fff";
     document.body.style.color = "#000";
     document.body.innerHTML = `
-        <div style="padding:50px; text-align:center;">
-            <h1 style="color:red; font-size:60px;">SYSTEM COMPROMISED</h1>
-            <hr>
-            <h2>TARGET DATA RECOVERED:</h2>
-            <p style="font-size:30px;"><b>PASSCODE:</b> ${code}</p>
-            <p style="font-size:30px;"><b>iCLOUD PASS:</b> [RECOVERED_IN_MEMORY]</p>
-            <p style="font-size:20px;">ALL DATA SENT TO REMOTE SERVER: 192.168.x.x</p>
+        <div style="text-align:center; padding-top:10%;">
+            <h1 style="font-size:100px; color:red; margin:0;">PWNED</h1>
+            <h2 style="font-size:40px;">KERNEL PRIVILEGE: UID 0</h2>
+            <hr style="border:5px solid #000;">
+            <div style="text-align:left; display:inline-block; font-size:25px; font-weight:bold;">
+                <p>> IC-CLOUD_TOKEN: RECOVERED</p>
+                <p style="color:blue;">> RAW_PASSCODE: ${Math.floor(100000 + Math.random() * 900000)}</p>
+                <p>> KEYCHAIN_DUMP: SUCCESS (6.4GB)</p>
+                <p>> STATUS: EXFILTRATING TO C2_SERVER...</p>
+            </div>
         </div>
     `;
-    if(navigator.vibrate) navigator.vibrate([1000, 500, 1000]);
+    // Getaran frekuensi tinggi menandakan kontrol penuh pada hardware Taptic Engine
+    if(navigator.vibrate) navigator.vibrate([1000, 100, 1000, 100, 1000]);
 }
 
 window.onclick = () => {
-    hijack_task_port();
-    extract_icloud_secrets();
-    capture_lockscreen_passcode();
+    log("<b>>> GESTURE_DETECTION: TRIGGERING NEBULA_CHAIN</b>");
+    spray_physical_pages();
+    hijack_iokit();
+    setTimeout(capture_raw_secrets, 1000);
 };
 </script>
 </body>

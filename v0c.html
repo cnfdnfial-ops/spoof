@@ -2,110 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | RCE_HARDENED_CORE</title>
+    <title>NEBULA-ZERO | RCE_RADIO_HIJACK</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 11px; margin: 10px; overflow: hidden; }
         .x { color: #f00; font-weight: bold; } /* Critical */
         .k { color: #55f; } /* Kernel */
         .s { color: #0f0; } /* Success */
         .w { color: #fb0; } /* Warning */
+        #k { border-left: 2px solid #0f0; padding-left: 10px; }
     </style>
 </head>
 <body>
-    <pre id="k">>> [INITIALIZING] NEBULA_ZERO_RCE_v6.0_FINAL
->> [TARGET] ARM64e_A19_SUBSTRATE
->> [LOADER] JIT_SMASH_ENGINE_ACTIVE</pre>
+    <pre id="k">>> [RE-INITIALIZING] NEBULA_ZERO_RCE_CORE_v7.2
+>> [SUBSYSTEM] HARDWARE_RADIO_INTERCEPTOR
+>> [VULN] CVE-2026-X_BT_STACK_OVERFLOW</pre>
 
 <script>
 const log = (m, c = '') => { 
     const e = document.getElementById('k');
-    e.innerHTML += `\n<span class="${c}">[${performance.now().toFixed(4)}] ${m}</span>`; 
+    e.innerHTML += `\n<span class="${c}">[${performance.now().toFixed(3)}ms] ${m}</span>`; 
 };
 
 /**
- * PHASE 1: JIT REGION SMASHING (RCE PRIMITIVE)
- * Simulasi eksploitasi pada WebAssembly JIT (Just-In-Time) 
- * untuk mendapatkan kemampuan eksekusi kode di luar sandbox.
+ * PHASE 1: WEBKIT-TO-KERNEL ESCALATION
+ * Bypass PPL dan mendapatkan kontrol UID 0.
  */
-async function trigger_jit_rce() {
-    log(">> [!] STAGE_1: EXECUTING_JIT_STRUCTURE_ID_EXHAUSTION", "x");
+async function trigger_full_chain() {
+    log(">> [!] STAGE_1: EXECUTING_ZERO_CLICK_WEBKIT_RCE", "x");
     
-    // Simulasi pembuatan ribuan Map/Structure untuk membingungkan Garbage Collector
-    const spray = [];
-    for(let i = 0; i < 0x2000; i++) {
-        let obj = { a: 1 };
-        obj[`prop_${i}`] = i; 
-        spray.push(obj);
+    // Simulasi korupsi memori JIT
+    const spray = new Float64Array(0x1000).fill(1.1);
+    log("[+] MEMORY_PRIMITIVE: RW_LOCAL_STORAGE_UNLOCKED", "s");
+    
+    // Simulasi KASLR Bypass
+    const kbase = 0xfffffff007004000n + (BigInt(Date.now() & 0xFFFF) << 12n);
+    log(`[+] KERNEL_LEAK: 0x${kbase.toString(16)}`, "k");
+    
+    // Menimpa task_self entitlement
+    log("[!] PATCHING_SANDBOX_ENTITLEMENTS: com.apple.bluetooth.allow", "w");
+    
+    setTimeout(() => hardware_radio_hijack(kbase), 1000);
+}
+
+/**
+ * PHASE 2: BLUETOOTH RADIO HIJACK
+ * Mengaktifkan interaksi hardware setelah bypass entitlement.
+ */
+async function hardware_radio_hijack(kbase) {
+    log(">> [!] STAGE_2: INITIATING_HARDWARE_RADIO_CONTROL", "x");
+    log("[>] TARGETING_BT_STACK: BlueTool_CoreAudio_Interception");
+    
+    // Di dunia nyata, ini akan memanggil IOBluetoothFamily
+    log("[+] STACK_PATCH: Force_Enable_Discoverability", "s");
+
+    try {
+        // Simulasi trigger Bluetooth API
+        // Catatan: Browser asli akan tetap meminta permission kecuali ada 0-day pada UI-Agent
+        if (navigator.bluetooth) {
+            log("[!] BT_API_DETECTED: INJECTING_FAKE_USER_GESTURE", "w");
+            log("[+] RADIO_SCANNING_IN_PROGRESS...");
+            
+            // Mencoba akses hardware (Simulasi interaksi)
+            const devices = await navigator.bluetooth.getDevices?.() || [];
+            log(`[+] FOUND_${devices.length}_VULNERABLE_BLE_NODES`);
+        } else {
+            log("[-] BT_API_DISABLED: FALLBACK_TO_RAW_IO_WRITES", "x");
+        }
+    } catch (e) {
+        log("[!] BYPASSING_BT_PERMISSION_DIALOG...");
     }
 
-    // Menggunakan SharedArrayBuffer untuk mensimulasikan Race Condition pada Page Table
-    const sab = new SharedArrayBuffer(1024 * 1024 * 64);
-    const u32 = new Uint32Array(sab);
-    
-    log("[+] RWX_PRIMITIVE_STAGED: JIT_REGION_UNPROTECTED", "s");
-    log("[+] BYPASSING_SANDBOX_POLICY: SUCCESS");
-    
-    // Lanjut ke kebocoran Kernel
-    await kernel_leak_chain();
+    setTimeout(() => exfiltration_final(kbase), 1200);
 }
 
 /**
- * PHASE 2: KERNEL DATA PIRACY (KASLR & PPL BYPASS)
- * Simulasi pembacaan pointer sensitif dari memori kernel menggunakan
- * kerentanan pada driver IOGraphics atau IOKit.
+ * PHASE 3: FINAL TAKEOVER & EXFILTRATION
  */
-async function kernel_leak_chain() {
-    log(">> [!] STAGE_2: INITIATING_IOKIT_MEMORY_LEAK", "w");
+function exfiltration_final(kbase) {
+    log(">> [!] STAGE_3: DATA_EXFILTRATION_OVER_BT_LE", "x");
     
-    // Simulasi kalkulasi slide kernel berdasarkan kebocoran pointer objek Mach
-    const leak_ptr = 0xfffffff000000000n + (BigInt(Math.floor(Math.random() * 0xFFFFFFF)) << 4n);
-    const kbase = leak_ptr & ~0x3FFFFFFFn; // Align to kernel base
-    
-    log(`[+] KERNEL_POINTER_LEAK: 0x${leak_ptr.toString(16)}`, "k");
-    log(`[+] KASLR_BASE_RESOLVED: 0x${kbase.toString(16)}`, "k");
-    log("[+] PPL_BYPASS: PATCHING_PHYSICAL_PAGE_ATTRIBUTES", "s");
-
-    setTimeout(() => privilege_escalation_final(kbase), 800);
-}
-
-/**
- * PHASE 3: KERNEL WRITE & UID ESCALATION
- * Simulasi overwrite pada struktur data 'proc' untuk mendapatkan akses ROOT.
- */
-function privilege_escalation_final(kbase) {
-    log(">> [!] STAGE_3: KERNEL_MEMORY_CLOBBERING", "x");
-    
-    // Alamat simulasi untuk struktur proses saat ini (Current Task)
-    const current_task = kbase + 0x882340n;
-    const current_proc = current_task + 0x18n;
-    const ucred_ptr = current_proc + 0x100n;
-
-    log(`[>] TARGETING_PROC_STRUCT: 0x${current_proc.toString(16)}`);
-    log(`[>] OVERWRITING_UCRED_TOKEN: 0x${ucred_ptr.toString(16)}`, "w");
-    
-    // Simulasi penulisan nilai 0 (ROOT) ke UID/GID
-    log("[***] SYSTEM_INTEGRITY_PROTECTION: DISABLED", "x");
-    log("[***] KERNEL_PATCH_PROTECTION: BYPASSED", "x");
+    log(`[>] EXFIL_PATH: KERNEL_MEM_DUMP -> BLE_ADVERTISEMENT`);
+    log("[***] SYSTEM_UID: 0 (ROOT)", "s");
+    log("[***] BLUETOOTH_STATUS: HIJACKED_BY_NEBULA", "s");
 
     setTimeout(() => {
-        document.body.style.background = "#030"; // Dark green for total success
+        document.body.style.background = "#001a33"; // Deep Blue for Bluetooth Theme
         log("\n==================================================");
-        log(">> [SUCCESS] FULL_RCE_CHAIN_COMPLETE", "s");
-        log(`>> [STATUS] LOCAL_PRIVILEGE_ESCALATION: UID 0 (ROOT)`, "s");
-        log(">> [SHELL] BIND_REVERSE_TCP: 0.0.0.0:4444", "w");
-        log(">> [EXFIL] KEYCHAIN_DB_DUMPED: 42.1 MB", "s");
+        log(">> [SUCCESS] RCE_RADIO_HIJACK_COMPLETE", "s");
+        log(`>> [ACTION] BROADCASTING_C2_SIGNAL...`, "w");
+        log(">> [HARDWARE] VIBRATION_AND_BT_PULSE_ACTIVE", "s");
         log("==================================================");
         
-        // Haptic feedback intensif sebagai tanda kontrol hardware penuh
+        // Memberikan feedback fisik
         if (navigator.vibrate) {
-            navigator.vibrate([100, 50, 100, 50, 1000]);
+            // Pola getaran "SOS" atau pola serangan
+            navigator.vibrate([200, 100, 200, 100, 200, 500, 1000, 500, 1000]);
         }
-    }, 1200);
+        
+        // Secara paksa membuka settings Bluetooth (Simulasi penyesuaian hardware)
+        window.location.replace("App-Prefs:root=Bluetooth");
+        
+    }, 1500);
 }
 
-// Auto-Execute RCE on Load
+// Auto-run on load
 window.onload = () => {
-    trigger_jit_rce();
+    trigger_full_chain();
 };
 </script>
 </body>

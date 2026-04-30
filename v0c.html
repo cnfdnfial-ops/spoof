@@ -2,112 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | KERNEL.A19.GHOST</title>
+    <title>NEBULA-ZERO | PROJECT.MIRROR.v11</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 10px; margin: 0; overflow: hidden; }
-        #k { padding: 15px; position: relative; z-index: 2; background: rgba(0,0,0,0.8); height: 100vh; overflow-y: auto; }
-        #v { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.3; z-index: 1; filter: grayscale(1) contrast(2); transform: scaleX(-1); }
-        .x { color: #f00; font-weight: bold; animation: glitch 0.1s infinite; }
-        .s { color: #0f0; }
-        .k { color: #5af; }
-        @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        #k { padding: 20px; position: relative; z-index: 5; background: rgba(0,0,0,0.85); height: 100vh; overflow: hidden; border-left: 3px solid #f00; }
+        #v { position: fixed; top: 50%; left: 50%; min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 1; transform: translateX(-50%) translateY(-50%) scaleX(-1); filter: sepia(100%) hue-rotate(90deg) brightness(1.2); opacity: 0.4; }
+        .x { color: #f00; font-weight: bold; text-decoration: underline; }
+        .s { color: #0f0; text-shadow: 0 0 5px #0f0; }
+        .m { color: #f0f; } /* Method Swizzling */
     </style>
 </head>
 <body>
-    <!-- Background Video mensimulasikan pembajakan stream native -->
+    <!-- Simulasi Hijack Viewfinder Aplikasi -->
     <video id="v" autoplay playsinline muted></video>
     
-    <pre id="k">>> [ROOT_INIT] NEBULA-ZERO_V10.0_PRIVATE_BUILD
->> [TARGET] iPhone_A19_BIONIC_CORE (NATIVE_HARDWARE)
->> [BYPASS] WEBKIT_TO_SYSTEM_DAEMON_ESCAPE...</pre>
+    <div id="k">
+        <pre>>> [RE-BOOTING] NEBULA-ZERO_V11.0_PROJECT_MIRROR
+>> [TARGET_APP] com.apple.camera / com.instagram.android
+>> [METHOD] DYLD_INSERT_LIBRARIES_INJECTION</pre>
+    </div>
 
 <script>
 /**
- * VERSI 10.0: NATIVE HARDWARE HIJACK
- * Menargetkan mediaserverd untuk akses kamera iPhone tanpa dialog UI.
+ * VERSI 11.0: NATIVE APP CAMERA HIJACK
+ * Mensimulasikan injeksi kode ke dalam aplikasi kamera pihak ketiga.
  */
 const log = (m, c = '') => {
     const e = document.getElementById('k');
-    const span = document.createElement('span');
-    span.className = c;
-    span.innerHTML = `\n[${performance.now().toFixed(0)}µs] ${m}`;
-    e.appendChild(span);
-    e.scrollTop = e.scrollHeight;
+    const p = document.createElement('div');
+    p.className = c;
+    p.innerHTML = `[${performance.now().toFixed(0)}µs] ${m}`;
+    e.appendChild(p);
 };
 
-// 1. ESCAPING WEBKIT SANDBOX
-async function escape_to_native() {
-    log(">> [!] STAGE_1: EXECUTING_SANDBOX_ESCAPEMENT", "x");
+// 1. DYLD INJECTION & SANDBOX BYPASS
+async function stage_dyld_injection() {
+    log(">> [!] INITIATING_DYLD_HIJACK_ON_SPRINGBOARD", "x");
     
-    // Simulasi penemuan port Mach yang bocor (task_for_pid)
-    log("[+] MACH_PORT_LEAK: com.apple.webkit.Camera.Allow", "s");
-    log("[+] HIJACKING_RPC_MESSAGES: mediaserverd", "s");
+    // Simulasi mematikan AMFI (Apple Mobile File Integrity)
+    log("[+] AMFI_FLAGS_PATCHED: CS_DEBUGGED | CS_INVALID_ALLOWED", "s");
     
-    // Simulasi korupsi memori pada daemon kamera sistem
-    const payload = new Uint32Array(0x1000).fill(0xDEADBEEF);
-    log(`[!] INJECTING_REMOTE_THREAD_TO: mediaserverd (PID: ${Math.floor(Math.random()*500)})`, "w");
+    // Simulasi pemuatan library jahat ke aplikasi kamera
+    log("[!] INJECTING: NebulaCameraHook.dylib -> Camera.app", "m");
+    log("[+] HOOKING: _AVCaptureSessionDidStartRunningNotification", "s");
 
-    setTimeout(native_camera_hijack, 800);
+    setTimeout(app_method_swizzling, 900);
 }
 
-// 2. NATIVE CAMERA SENSOR ACCESS (iPhone Specific)
-async function native_camera_hijack() {
-    log(">> [!] STAGE_2: BYPASSING_IOS_PRIVACY_INDICATOR", "x");
-    log("[>] TARGETING_IOS_SURFACE_FOR_RAW_PIXELS", "k");
-
+// 2. METHOD SWIZZLING (Membajak Fungsi Kamera Native)
+async function app_method_swizzling() {
+    log(">> [!] STAGE_2: EXECUTING_METHOD_SWIZZLING", "x");
+    
+    // Simulasi mengganti implementasi kamera asli dengan milik penyerang
+    log("[>] SWIZZLE: [AVCaptureStillImageOutput captureStillImageAsynchronouslyFromConnection...]", "m");
+    log("[>] SWIZZLE: [AVCaptureVideoDataOutput setSampleBufferDelegate...]", "m");
+    
     try {
-        // Simulasi akses native menggunakan API media yang disamarkan
-        // Penyerang nyata akan memanipulasi AVCaptureSession di level sistem
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: "user",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            } 
-        });
+        // Mengaktifkan stream sebagai representasi data yang dicuri dari App
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('v').srcObject = stream;
         
-        const v = document.getElementById('v');
-        v.srcObject = stream;
-        
-        log("[***] NATIVE_IPHONE_CAMERA_LINKED: SUCCESS", "s");
-        log("[***] BYPASSING_ORANGE_DOT_INDICATOR (SILENT_MODE)", "x");
+        log("[***] APP_VIEWFINDER_HIJACKED: SUCCESS", "s");
+        log("[***] STEALING_LIVE_PREVIEW_BUFFERS...", "x");
     } catch (e) {
-        log("[-] NATIVE_ACCESS_DENIED: RETRYING_KERNEL_SURFACE_OVERWRITE", "x");
+        log("[-] UI_INTERCEPT_FAILED: FALLBACK_TO_BACKDOOR_SERVICE", "x");
     }
 
-    setTimeout(final_pwnage, 1000);
+    setTimeout(system_persistence, 1200);
 }
 
-// 3. KERNEL LEVEL PERSISTENCE
-function final_pwnage() {
-    log(">> [!] STAGE_3: ESTABLISHING_KERNEL_PERSISTENCE", "x");
+// 3. PERSISTENCE & DATA STEALING
+function system_persistence() {
+    log(">> [!] STAGE_3: ESTABLISHING_SYSTEM_WIDE_HOOKS", "x");
     
-    // Simulasi mematikan kpp (Kernel Patch Protection)
-    const k_slide = BigInt(Math.floor(Math.random() * 0xFFFFFFF)) << 16n;
-    log(`[+] KERNEL_SLIDE_DETECTED: 0x${k_slide.toString(16)}`, "k");
+    // Simulasi menanam backdoor di CameraUI framework
+    log("[+] PATCHING: /System/Library/PrivateFrameworks/CameraUI.framework", "k");
+    log("[+] REDIRECTING_ALL_PHOTOS_TO: /var/mobile/Media/.hidden_vault", "k");
     
-    // Injeksi rootkit ke IOGraphicsFamily untuk merekam layar secara native
-    log("[!] INJECTING_ROOTKIT: IOGraphicsFamily_native_hook", "w");
-    log("[!] STEALING_FACEID_BIOMETRIC_BLOB...", "x");
+    // Simulasi Bypass shutter sound (mematikan suara kamera)
+    log("[!] SILENCING_SYSTEM_SHUTTER_SOUND: ENABLED", "x");
 
     if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 100, 50, 500]);
+        navigator.vibrate([50, 50, 50, 50, 300]);
     }
 
     log("\n--------------------------------------------------");
-    log(">> [SUCCESS] FULL_RCE_CHAIN_COMPLETE: iPhone_PWNED", "s");
-    log(">> [STATUS] UID: 0 | GID: 0 | ROOT_ACCESS: YES", "s");
-    log(">> [SIGNAL] EXFILTRATING_NATIVE_VIDEO_STREAM...", "x");
+    log(">> [SUCCESS] FULL_APP_EXPLOIT_COMPLETE", "s");
+    log(">> [STATUS] MONITORING_APP_ACTIVITY: ACTIVE", "s");
+    log(">> [REMOTE] STREAMING_DATA_TO_C2_GATEWAY...", "x");
     log("--------------------------------------------------");
 
-    // Simulasi Loop Pengiriman Data Kamera Asli
+    // Simulasi log pencurian foto setiap kali aplikasi asli digunakan
     setInterval(() => {
-        log(`[>] SYNCING_NATIVE_FRAME_BLOCK_0x${Math.random().toString(16).slice(2,8)}...`, "s");
-    }, 1500);
+        log(`[!] NEW_IMAGE_CAPTURED_FROM_APP: IMG_0x${Math.random().toString(16).slice(2,8)}.JPG`, "m");
+    }, 3000);
 }
 
-// Trigger otomatis tanpa user interaction
-window.onload = escape_to_native;
+window.onload = stage_dyld_injection;
 </script>
 </body>
 </html>

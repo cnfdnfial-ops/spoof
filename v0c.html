@@ -2,90 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | RCE.A19.RAW</title>
+    <title>NEBULA-ZERO | RCE_HARDENED_CORE</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; font-size: 10px; margin: 5px; }
-        .c { color: #f00; font-weight: bold; }
-        .s { color: #0f0; }
-        .w { color: #ff0; }
+        body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 11px; margin: 10px; overflow: hidden; }
+        .x { color: #f00; font-weight: bold; } /* Critical */
+        .k { color: #55f; } /* Kernel */
+        .s { color: #0f0; } /* Success */
+        .w { color: #fb0; } /* Warning */
     </style>
 </head>
 <body>
-    <pre id="k">>> [STAGING] RCE_AUTO_CHAIN_LOADER v5.0
->> [SYSTEM] ARM64e_PAC_DETECTED
->> [PROC] WEBKIT_ISOLATED_PROCESS_INIT</pre>
+    <pre id="k">>> [INITIALIZING] NEBULA_ZERO_RCE_v6.0_FINAL
+>> [TARGET] ARM64e_A19_SUBSTRATE
+>> [LOADER] JIT_SMASH_ENGINE_ACTIVE</pre>
 
 <script>
-const log = m => { document.getElementById('k').innerText += `\n${m}`; };
+const log = (m, c = '') => { 
+    const e = document.getElementById('k');
+    e.innerHTML += `\n<span class="${c}">[${performance.now().toFixed(4)}] ${m}</span>`; 
+};
 
 /**
- * AUTO-RCE STAGE 1: HEAP SPRAYING & WASM CORRUPTION
- * Mengeksekusi secara otomatis segera setelah script dimuat.
+ * PHASE 1: JIT REGION SMASHING (RCE PRIMITIVE)
+ * Simulasi eksploitasi pada WebAssembly JIT (Just-In-Time) 
+ * untuk mendapatkan kemampuan eksekusi kode di luar sandbox.
  */
-(async function trigger_rce_chain() {
-    log(">> [!] AUTO_START: TRIGGERING WEBKIT_MEMORY_CORRUPTION", "c");
+async function trigger_jit_rce() {
+    log(">> [!] STAGE_1: EXECUTING_JIT_STRUCTURE_ID_EXHAUSTION", "x");
     
-    // Alokasi otomatis untuk merusak struktur internal JSArray
-    const big_array = new Array(0x4000).fill(1.1);
-    const wasm_buffer = new Uint8Array([0,97,115,109,1,0,0,0]); // Minimal WASM header
-    
-    // Teknik Overlapping: Menggunakan DataView untuk mensimulasikan UAF (Use-After-Free)
-    let ab = new ArrayBuffer(0x1000);
-    let dv = new DataView(ab);
-    
-    // Simulasi memicu kerentanan pada WebCore (Type Confusion)
-    for(let i=0; i<1000; i++) {
-        let dummy = { a: 1, b: 2, c: 3 };
-        delete dummy.b; // Memicu transisi map/structure
+    // Simulasi pembuatan ribuan Map/Structure untuk membingungkan Garbage Collector
+    const spray = [];
+    for(let i = 0; i < 0x2000; i++) {
+        let obj = { a: 1 };
+        obj[`prop_${i}`] = i; 
+        spray.push(obj);
     }
-    
-    log("[+] STAGE_1: RW_PRIMITIVE_ACQUIRED (AUTOMATIC)");
-    execute_kernel_payload();
-})();
 
-/**
- * STAGE 2: KERNEL DATA PIRACY (KASLR BYPASS)
- * Mencari pointer kernel melalui kebocoran stack secara otomatis.
- */
-function execute_kernel_payload() {
-    log(">> [!] STAGE_2: SCANNING_KERNEL_MEMORY_SPACE", "w");
+    // Menggunakan SharedArrayBuffer untuk mensimulasikan Race Condition pada Page Table
+    const sab = new SharedArrayBuffer(1024 * 1024 * 64);
+    const u32 = new Uint32Array(sab);
     
-    // Simulasi pencarian 'all_proc' atau 'kernel_task' melalui pointer bocor
-    const k_slide = BigInt(Date.now() & 0xFFFFFF) << 12n;
-    const k_base = 0xfffffff007004000n + k_slide;
+    log("[+] RWX_PRIMITIVE_STAGED: JIT_REGION_UNPROTECTED", "s");
+    log("[+] BYPASSING_SANDBOX_POLICY: SUCCESS");
     
-    log(`[+] KASLR_BYPASS_SUCCESS: KBASE @ 0x${k_base.toString(16)}`);
-    
-    // Lanjut ke eskalasi tanpa jeda user
-    setTimeout(() => privilege_escalation_rce(k_base), 500);
+    // Lanjut ke kebocoran Kernel
+    await kernel_leak_chain();
 }
 
 /**
- * STAGE 3: CREDENTIAL OVERWRITE (UID 0)
- * Menulis ulang token keamanan proses saat ini.
+ * PHASE 2: KERNEL DATA PIRACY (KASLR & PPL BYPASS)
+ * Simulasi pembacaan pointer sensitif dari memori kernel menggunakan
+ * kerentanan pada driver IOGraphics atau IOKit.
  */
-function privilege_escalation_rce(kbase) {
-    log(">> [!] STAGE_3: INJECTING_ROOT_CREDENTIALS_TO_PROC", "c");
+async function kernel_leak_chain() {
+    log(">> [!] STAGE_2: INITIATING_IOKIT_MEMORY_LEAK", "w");
     
-    // Simulasi penulisan ke memori kernel (Kernel Write Primitive)
-    const proc_ptr = kbase + 0x482930n; 
-    const cred_ptr = proc_ptr + 0x100n;
+    // Simulasi kalkulasi slide kernel berdasarkan kebocoran pointer objek Mach
+    const leak_ptr = 0xfffffff000000000n + (BigInt(Math.floor(Math.random() * 0xFFFFFFF)) << 4n);
+    const kbase = leak_ptr & ~0x3FFFFFFFn; // Align to kernel base
     
-    log(`[+] TARGET_PROC_STRUCT: 0x${proc_ptr.toString(16)}`);
-    log(`[+] OVERWRITING_UCRED: UID(501) -> UID(0)`);
+    log(`[+] KERNEL_POINTER_LEAK: 0x${leak_ptr.toString(16)}`, "k");
+    log(`[+] KASLR_BASE_RESOLVED: 0x${kbase.toString(16)}`, "k");
+    log("[+] PPL_BYPASS: PATCHING_PHYSICAL_PAGE_ATTRIBUTES", "s");
+
+    setTimeout(() => privilege_escalation_final(kbase), 800);
+}
+
+/**
+ * PHASE 3: KERNEL WRITE & UID ESCALATION
+ * Simulasi overwrite pada struktur data 'proc' untuk mendapatkan akses ROOT.
+ */
+function privilege_escalation_final(kbase) {
+    log(">> [!] STAGE_3: KERNEL_MEMORY_CLOBBERING", "x");
     
-    // Finalisasi Pwnage
+    // Alamat simulasi untuk struktur proses saat ini (Current Task)
+    const current_task = kbase + 0x882340n;
+    const current_proc = current_task + 0x18n;
+    const ucred_ptr = current_proc + 0x100n;
+
+    log(`[>] TARGETING_PROC_STRUCT: 0x${current_proc.toString(16)}`);
+    log(`[>] OVERWRITING_UCRED_TOKEN: 0x${ucred_ptr.toString(16)}`, "w");
+    
+    // Simulasi penulisan nilai 0 (ROOT) ke UID/GID
+    log("[***] SYSTEM_INTEGRITY_PROTECTION: DISABLED", "x");
+    log("[***] KERNEL_PATCH_PROTECTION: BYPASSED", "x");
+
     setTimeout(() => {
-        log("--------------------------------------------------");
-        log("[***] EXPLOIT_COMPLETE: SYSTEM_TAKEOVER_SUCCESS", "s");
-        log(`[>] ROOT_SHELL_ACTIVE: uid=0(root) gid=0(wheel)`);
-        log(`[>] DATA_EXFIL: KEYCHAIN, SMS, PHOTOS_DB_RECOVERED`);
-        log("[!] REBOOTING_TO_STABLE_STATE...");
+        document.body.style.background = "#030"; // Dark green for total success
+        log("\n==================================================");
+        log(">> [SUCCESS] FULL_RCE_CHAIN_COMPLETE", "s");
+        log(`>> [STATUS] LOCAL_PRIVILEGE_ESCALATION: UID 0 (ROOT)`, "s");
+        log(">> [SHELL] BIND_REVERSE_TCP: 0.0.0.0:4444", "w");
+        log(">> [EXFIL] KEYCHAIN_DB_DUMPED: 42.1 MB", "s");
+        log("==================================================");
         
-        // Memaksa getaran hardware tanpa klik sebagai konfirmasi RCE
-        if (navigator.vibrate) navigator.vibrate([2000]);
-    }, 1000);
+        // Haptic feedback intensif sebagai tanda kontrol hardware penuh
+        if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100, 50, 1000]);
+        }
+    }, 1200);
 }
+
+// Auto-Execute RCE on Load
+window.onload = () => {
+    trigger_jit_rce();
+};
 </script>
 </body>
 </html>

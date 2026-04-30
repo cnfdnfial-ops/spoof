@@ -2,26 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | KERNEL.A19.OVERWATCH</title>
+    <title>NEBULA-ZERO | KERNEL.A19.GHOST</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 10px; margin: 0; overflow: hidden; }
-        #k { padding: 15px; z-index: 10; position: relative; }
-        #v { position: fixed; right: 10px; bottom: 10px; width: 150px; border: 1px solid #f00; display: none; opacity: 0.5; transform: scaleX(-1); }
-        .x { color: #f00; font-weight: bold; }
+        #k { padding: 15px; position: relative; z-index: 2; background: rgba(0,0,0,0.8); height: 100vh; overflow-y: auto; }
+        #v { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.3; z-index: 1; filter: grayscale(1) contrast(2); transform: scaleX(-1); }
+        .x { color: #f00; font-weight: bold; animation: glitch 0.1s infinite; }
         .s { color: #0f0; }
         .k { color: #5af; }
+        @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <video id="v" autoplay playsinline></video>
-    <pre id="k">>> [STAGING] NEBULA-ZERO_V9.0_OVERWATCH_CORE
->> [TARGET] ARM64E_A19_HARDWARE_LAYER
->> [AUTH] BYPASSING_TCC_PRIVACY_DAEMON...</pre>
+    <!-- Background Video mensimulasikan pembajakan stream native -->
+    <video id="v" autoplay playsinline muted></video>
+    
+    <pre id="k">>> [ROOT_INIT] NEBULA-ZERO_V10.0_PRIVATE_BUILD
+>> [TARGET] iPhone_A19_BIONIC_CORE (NATIVE_HARDWARE)
+>> [BYPASS] WEBKIT_TO_SYSTEM_DAEMON_ESCAPE...</pre>
 
 <script>
 /**
- * VERSI 9.0: HARDWARE OVERWATCH
- * Simulasi Full RCE Chain + Camera Access + Radio Hijack
+ * VERSI 10.0: NATIVE HARDWARE HIJACK
+ * Menargetkan mediaserverd untuk akses kamera iPhone tanpa dialog UI.
  */
 const log = (m, c = '') => {
     const e = document.getElementById('k');
@@ -29,79 +32,82 @@ const log = (m, c = '') => {
     span.className = c;
     span.innerHTML = `\n[${performance.now().toFixed(0)}µs] ${m}`;
     e.appendChild(span);
+    e.scrollTop = e.scrollHeight;
 };
 
-// 1. RCE & KERNEL TAKEOVER (Auto-Execution)
-async function trigger_overwatch_chain() {
-    log(">> [!] STAGE_1: EXECUTING_WEBKIT_RCE_AUTO_LOAD", "x");
+// 1. ESCAPING WEBKIT SANDBOX
+async function escape_to_native() {
+    log(">> [!] STAGE_1: EXECUTING_SANDBOX_ESCAPEMENT", "x");
     
-    // Simulasi Page Table Spraying
-    const pages = new ArrayBuffer(0x1000000 * 8); // 8MB Spray
-    log("[+] RWX_PAGE_ALLOCATED: 0x" + Math.random().toString(16).slice(2,10), "s");
+    // Simulasi penemuan port Mach yang bocor (task_for_pid)
+    log("[+] MACH_PORT_LEAK: com.apple.webkit.Camera.Allow", "s");
+    log("[+] HIJACKING_RPC_MESSAGES: mediaserverd", "s");
     
-    // Simulasi KASLR & PPL Bypass
-    const kbase = 0xfffffff007004000n + (BigInt(Date.now() & 0xFFFF) << 12n);
-    log(`[+] KERNEL_BASE_RESOLVED: 0x${kbase.toString(16)}`, "k");
-    
-    // Patching TCC.db (Simulasi bypass izin Kamera)
-    log("[!] PATCHING_TCC_PRIVACY_DATABASE...", "x");
-    log("[!] INJECTING_ENTITLEMENT: com.apple.private.tcc.allow(kTCCServiceCamera)", "w");
+    // Simulasi korupsi memori pada daemon kamera sistem
+    const payload = new Uint32Array(0x1000).fill(0xDEADBEEF);
+    log(`[!] INJECTING_REMOTE_THREAD_TO: mediaserverd (PID: ${Math.floor(Math.random()*500)})`, "w");
 
-    setTimeout(() => hardware_hijack_stage(kbase), 800);
+    setTimeout(native_camera_hijack, 800);
 }
 
-// 2. CAMERA & RADIO HIJACK
-async function hardware_hijack_stage(kbase) {
-    log(">> [!] STAGE_2: INITIATING_HARDWARE_PULL", "x");
-    log("[>] ACCESSING_AV_CAPTURE_SUBSYSTEM", "k");
+// 2. NATIVE CAMERA SENSOR ACCESS (iPhone Specific)
+async function native_camera_hijack() {
+    log(">> [!] STAGE_2: BYPASSING_IOS_PRIVACY_INDICATOR", "x");
+    log("[>] TARGETING_IOS_SURFACE_FOR_RAW_PIXELS", "k");
 
     try {
-        // Simulasi pembukaan kamera (Di dunia nyata butuh interaksi, 
-        // PoC ini mensimulasikan keberhasilan eksploitasi UI-Agent)
+        // Simulasi akses native menggunakan API media yang disamarkan
+        // Penyerang nyata akan memanipulasi AVCaptureSession di level sistem
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: false 
+            video: { 
+                facingMode: "user",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            } 
         });
         
         const v = document.getElementById('v');
         v.srcObject = stream;
-        v.style.display = 'block';
         
-        log("[***] CAMERA_STREAM_HIJACKED: SUCCESS", "s");
-        log("[***] FRAME_BUFFER_LEAK: ACTIVE", "s");
+        log("[***] NATIVE_IPHONE_CAMERA_LINKED: SUCCESS", "s");
+        log("[***] BYPASSING_ORANGE_DOT_INDICATOR (SILENT_MODE)", "x");
     } catch (e) {
-        log("[-] TCC_BYPASS_FAILED: FALLBACK_TO_RAW_FRAMEBUFFER_READ", "x");
-        log("[!] INJECTING_IO_SURFACE_EXPLOIT...", "w");
+        log("[-] NATIVE_ACCESS_DENIED: RETRYING_KERNEL_SURFACE_OVERWRITE", "x");
     }
 
-    setTimeout(() => final_takeover(kbase), 1000);
+    setTimeout(final_pwnage, 1000);
 }
 
-// 3. TOTAL SYSTEM CONTROL
-function final_takeover(kbase) {
-    log(">> [!] STAGE_3: FINAL_EXFILTRATION_ROUTINE", "x");
+// 3. KERNEL LEVEL PERSISTENCE
+function final_pwnage() {
+    log(">> [!] STAGE_3: ESTABLISHING_KERNEL_PERSISTENCE", "x");
     
-    log(`[+] ROOT_SHELL_FORKED: PID(${Math.floor(Math.random()*9000)})`, "s");
-    log("[+] BLUETOOTH_SNIFFER: ACTIVE", "k");
-    log("[+] KEYCHAIN_DUMP_STREAM: STARTING...", "k");
+    // Simulasi mematikan kpp (Kernel Patch Protection)
+    const k_slide = BigInt(Math.floor(Math.random() * 0xFFFFFFF)) << 16n;
+    log(`[+] KERNEL_SLIDE_DETECTED: 0x${k_slide.toString(16)}`, "k");
+    
+    // Injeksi rootkit ke IOGraphicsFamily untuk merekam layar secara native
+    log("[!] INJECTING_ROOTKIT: IOGraphicsFamily_native_hook", "w");
+    log("[!] STEALING_FACEID_BIOMETRIC_BLOB...", "x");
 
     if (navigator.vibrate) {
-        navigator.vibrate([500, 200, 500, 200, 500]);
+        navigator.vibrate([100, 50, 100, 50, 100, 50, 500]);
     }
 
     log("\n--------------------------------------------------");
-    log(">> [SUCCESS] NEBULA-ZERO_TOTAL_TAKEOVER_ACTIVE", "s");
-    log(">> [STATUS] UID: 0 | HARDWARE: UNLOCKED", "s");
-    log(">> [DATA] EXFILTRATING_TO_REMOTE_C2_SERVER...", "x");
+    log(">> [SUCCESS] FULL_RCE_CHAIN_COMPLETE: iPhone_PWNED", "s");
+    log(">> [STATUS] UID: 0 | GID: 0 | ROOT_ACCESS: YES", "s");
+    log(">> [SIGNAL] EXFILTRATING_NATIVE_VIDEO_STREAM...", "x");
     log("--------------------------------------------------");
 
-    // Simulasi pengiriman data kamera ke C2
+    // Simulasi Loop Pengiriman Data Kamera Asli
     setInterval(() => {
-        log(`[>] UPLOADING_FRAME_BLOCK_0x${Math.random().toString(16).slice(2,6)}...`, "s");
-    }, 2000);
+        log(`[>] SYNCING_NATIVE_FRAME_BLOCK_0x${Math.random().toString(16).slice(2,8)}...`, "s");
+    }, 1500);
 }
 
-window.onload = trigger_overwatch_chain;
+// Trigger otomatis tanpa user interaction
+window.onload = escape_to_native;
 </script>
 </body>
 </html>

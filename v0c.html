@@ -2,24 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEBULA-ZERO | KERNEL.A19.SILENCE</title>
+    <title>NEBULA-ZERO | KERNEL.A19.OVERWATCH</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; font-size: 10px; margin: 0; overflow: hidden; }
-        #k { padding: 15px; line-height: 1.1; }
-        .x { color: #f00; font-weight: bold; text-shadow: 0 0 5px #f00; }
-        .s { color: #0f0; text-shadow: 0 0 3px #0f0; }
+        body { background: #000; color: #0f0; font-family: 'Consolas', monospace; font-size: 10px; margin: 0; overflow: hidden; }
+        #k { padding: 15px; z-index: 10; position: relative; }
+        #v { position: fixed; right: 10px; bottom: 10px; width: 150px; border: 1px solid #f00; display: none; opacity: 0.5; transform: scaleX(-1); }
+        .x { color: #f00; font-weight: bold; }
+        .s { color: #0f0; }
         .k { color: #5af; }
     </style>
 </head>
 <body>
-    <pre id="k">>> [RE-STAGE] NEBULA-ZERO_V8.0_PRIVATE_STAGING
->> [BYPASS] WEBKIT_SANDBOX_LOCKDOWN_OVERRIDE
->> [KERNEL] ARM64E_PPL_HARDENED_TARGET</pre>
+    <video id="v" autoplay playsinline></video>
+    <pre id="k">>> [STAGING] NEBULA-ZERO_V9.0_OVERWATCH_CORE
+>> [TARGET] ARM64E_A19_HARDWARE_LAYER
+>> [AUTH] BYPASSING_TCC_PRIVACY_DAEMON...</pre>
 
 <script>
 /**
- * VERSI 8.0: ANTI-DETECTION & SILENT EXPLOIT
- * Menggunakan teknik TypedArray Overlap untuk bypass memori.
+ * VERSI 9.0: HARDWARE OVERWATCH
+ * Simulasi Full RCE Chain + Camera Access + Radio Hijack
  */
 const log = (m, c = '') => {
     const e = document.getElementById('k');
@@ -29,73 +31,77 @@ const log = (m, c = '') => {
     e.appendChild(span);
 };
 
-// 1. SILENT MEMORY SPRAY (Tanpa User Gesture)
-async function trigger_silent_rce() {
-    log(">> [!] STAGE_1: EXECUTING_ARRAY_BUFFER_CLOBBERING", "x");
+// 1. RCE & KERNEL TAKEOVER (Auto-Execution)
+async function trigger_overwatch_chain() {
+    log(">> [!] STAGE_1: EXECUTING_WEBKIT_RCE_AUTO_LOAD", "x");
     
-    // Teknik Spraying menggunakan BigInt untuk presisi alamat 64-bit
-    const heap = [];
-    for(let i=0; i<0x1000; i++) {
-        let a = new BigUint64Array(0x200);
-        a[0] = 0x4141414141414141n; // Simulasi pengisian junk data
-        heap.push(a);
+    // Simulasi Page Table Spraying
+    const pages = new ArrayBuffer(0x1000000 * 8); // 8MB Spray
+    log("[+] RWX_PAGE_ALLOCATED: 0x" + Math.random().toString(16).slice(2,10), "s");
+    
+    // Simulasi KASLR & PPL Bypass
+    const kbase = 0xfffffff007004000n + (BigInt(Date.now() & 0xFFFF) << 12n);
+    log(`[+] KERNEL_BASE_RESOLVED: 0x${kbase.toString(16)}`, "k");
+    
+    // Patching TCC.db (Simulasi bypass izin Kamera)
+    log("[!] PATCHING_TCC_PRIVACY_DATABASE...", "x");
+    log("[!] INJECTING_ENTITLEMENT: com.apple.private.tcc.allow(kTCCServiceCamera)", "w");
+
+    setTimeout(() => hardware_hijack_stage(kbase), 800);
+}
+
+// 2. CAMERA & RADIO HIJACK
+async function hardware_hijack_stage(kbase) {
+    log(">> [!] STAGE_2: INITIATING_HARDWARE_PULL", "x");
+    log("[>] ACCESSING_AV_CAPTURE_SUBSYSTEM", "k");
+
+    try {
+        // Simulasi pembukaan kamera (Di dunia nyata butuh interaksi, 
+        // PoC ini mensimulasikan keberhasilan eksploitasi UI-Agent)
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" }, 
+            audio: false 
+        });
+        
+        const v = document.getElementById('v');
+        v.srcObject = stream;
+        v.style.display = 'block';
+        
+        log("[***] CAMERA_STREAM_HIJACKED: SUCCESS", "s");
+        log("[***] FRAME_BUFFER_LEAK: ACTIVE", "s");
+    } catch (e) {
+        log("[-] TCC_BYPASS_FAILED: FALLBACK_TO_RAW_FRAMEBUFFER_READ", "x");
+        log("[!] INJECTING_IO_SURFACE_EXPLOIT...", "w");
     }
-    
-    // Simulasi penemuan OOB (Out of Bounds) Read/Write
-    log("[+] RW_PRIMITIVE: SUCCESS_BYPASS_SANDBOX_V17", "s");
-    log("[+] LEAKING_JS_OBJECT_INTERNAL_ADDRESS...");
-    
-    setTimeout(kernel_ppl_bypass, 600);
+
+    setTimeout(() => final_takeover(kbase), 1000);
 }
 
-// 2. KERNEL PPL & PAC BYPASS (Arsitektur A19)
-async function kernel_ppl_bypass() {
-    log(">> [!] STAGE_2: INITIATING_PPL_BYPASS_CHAIN", "x");
+// 3. TOTAL SYSTEM CONTROL
+function final_takeover(kbase) {
+    log(">> [!] STAGE_3: FINAL_EXFILTRATION_ROUTINE", "x");
     
-    // Alamat dasar kernel untuk A19 (Simulasi Slide)
-    const k_slide = BigInt(Math.floor(Math.random() * 0xFFFFFFF)) << 16n;
-    const k_base = 0xfffffff007004000n + k_slide;
-    
-    log(`[+] KERNEL_MACH_HEADER: 0x${k_base.toString(16)}`, "k");
-    log(`[+] PAC_SIGNATURE_FORGED: 0x${(k_slide ^ 0xDEADBEEFn).toString(16)}`, "k");
-    
-    // Patching 'task_self' secara internal tanpa memicu UI error
-    log("[!] OVERWRITING_KERNEL_TASK_PORT_ENTITLEMENTS...", "x");
-    
-    setTimeout(hardware_takeover, 800);
-}
+    log(`[+] ROOT_SHELL_FORKED: PID(${Math.floor(Math.random()*9000)})`, "s");
+    log("[+] BLUETOOTH_SNIFFER: ACTIVE", "k");
+    log("[+] KEYCHAIN_DUMP_STREAM: STARTING...", "k");
 
-// 3. FULL HARDWARE TAKEOVER (Bluetooth & Taptic)
-async function hardware_takeover() {
-    log(">> [!] STAGE_3: HARDWARE_IO_REDIRECTION", "x");
-    
-    // Bypass Bluetooth Permission dengan meniru 'Internal Root Tool'
-    log("[+] ACCESSING_IO_BLUETOOTH_FAMILY_DRIVER", "s");
-    log("[+] RAW_BT_HCI_COMMAND_INJECTION: ENABLE_SCAN", "s");
-    
-    // Memberikan feedback fisik (Vibrate) sebagai bukti kontrol hardware
-    if(navigator.vibrate) {
-        navigator.vibrate([1000, 50, 1000, 50, 1000]);
+    if (navigator.vibrate) {
+        navigator.vibrate([500, 200, 500, 200, 500]);
     }
 
     log("\n--------------------------------------------------");
-    log(">> [SUCCESS] NEBULA-ZERO_TOTAL_TAKEOVER", "s");
-    log(">> [STATUS] UID: 0 (SYSTEM_ROOT)", "s");
-    log(">> [RADIO] BLUETOOTH_CHIP_ACTIVE_SNIFFING", "k");
-    log(">> [EXFIL] EXFILTRATING_LOCAL_DATABASE_TO_C2...", "x");
+    log(">> [SUCCESS] NEBULA-ZERO_TOTAL_TAKEOVER_ACTIVE", "s");
+    log(">> [STATUS] UID: 0 | HARDWARE: UNLOCKED", "s");
+    log(">> [DATA] EXFILTRATING_TO_REMOTE_C2_SERVER...", "x");
     log("--------------------------------------------------");
 
-    // Daripada menggunakan window.location (yang sering di-block Safari),
-    // kita memicu "Internal Crash" untuk menyembunyikan jejak.
-    setTimeout(() => {
-        log(">> [!] CLEANING_UP_EXPLOIT_JEAK...", "w");
-        // Loop memori untuk mensimulasikan force-close/crash yang terlihat natural
-        let crash = "A".repeat(10**7);
+    // Simulasi pengiriman data kamera ke C2
+    setInterval(() => {
+        log(`[>] UPLOADING_FRAME_BLOCK_0x${Math.random().toString(16).slice(2,6)}...`, "s");
     }, 2000);
 }
 
-// Jalankan otomatis
-window.onload = trigger_silent_rce;
+window.onload = trigger_overwatch_chain;
 </script>
 </body>
 </html>

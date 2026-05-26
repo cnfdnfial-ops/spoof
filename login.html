@@ -1,114 +1,75 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Webhook Login Demo</title>
-
-  <style>
-    body{
-      font-family: Arial;
-      background:#f4f4f4;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-
-    .box{
-      background:white;
-      padding:30px;
-      border-radius:12px;
-      width:320px;
-      box-shadow:0 0 15px rgba(0,0,0,0.1);
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:1px solid #ccc;
-      border-radius:8px;
-    }
-
-    button{
-      width:100%;
-      padding:12px;
-      margin-top:15px;
-      border:none;
-      background:#007bff;
-      color:white;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-
-    button:hover{
-      background:#0056b3;
-    }
-
-    #status{
-      margin-top:15px;
-      font-size:14px;
-      color:green;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Login Demo</title>
 </head>
+
 <body>
 
-<div class="box">
-  <h2>Login Demo</h2>
+<h2>Login Demo</h2>
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+<input type="text" id="username" placeholder="Username">
+<br><br>
 
-  <button onclick="send()">LOGIN</button>
+<input type="password" id="password" placeholder="Password">
+<br><br>
 
-  <p id="status"></p>
-</div>
+<button onclick="sendData()">
+LOGIN
+</button>
+
+<p id="status"></p>
 
 <script>
-const WEBHOOK_URL = "https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6";
 
-async function send() {
+const WEBHOOK_URL =
+"https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6";
 
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+async function sendData(){
 
-  if(!username || !password){
-    alert("Username dan password wajib diisi");
-    return;
-  }
+    const username =
+    document.getElementById("username").value;
 
-  // Password TIDAK dikirim
-  const data = {
-    username: username,
-    password_length: password.length,
-    action: "login_demo",
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent
-  };
+    const password =
+    document.getElementById("password").value;
 
-  try {
+    if(!username || !password){
+        alert("Isi semua field");
+        return;
+    }
 
-    await fetch(WEBHOOK_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify(data)
-    });
+    const form = new FormData();
 
-    document.getElementById("status").innerText =
-      "✅ Data demo berhasil dikirim ke webhook";
+    form.append("username", username);
 
-  } catch(err){
+    // demo only
+    form.append("password_length", password.length);
 
-    document.getElementById("status").innerText =
-      "❌ Gagal mengirim data";
+    form.append("action", "demo_login");
 
-    console.error(err);
-  }
+    form.append("time", new Date().toISOString());
+
+    try{
+
+        await fetch(WEBHOOK_URL,{
+            method:"POST",
+            mode:"no-cors",
+            body: form
+        });
+
+        document.getElementById("status").innerHTML =
+        "✅ Request terkirim";
+
+    }catch(err){
+
+        console.error(err);
+
+        document.getElementById("status").innerHTML =
+        "❌ Gagal";
+    }
 }
+
 </script>
 
 </body>

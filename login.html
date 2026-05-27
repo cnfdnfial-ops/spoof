@@ -20,28 +20,28 @@
     </form>
 
     <p id="notif" style="font-weight: bold;"></p>
+    
+    <p id="teksTambahan" style="font-weight: bold; color: blue; margin-top: 20px;"></p>
 
     <script>
+        // Form Submit Handler (Kirim data ke Webhook)
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Menahan agar halaman tidak reload
+            e.preventDefault(); 
 
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const notif = document.getElementById('notif');
 
-            // URL Webhook target
             const webhookUrl = 'https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6'; 
 
             notif.innerText = "Sedang mengirim...";
             notif.style.color = "black";
 
-            // Menggunakan URLSearchParams agar terbaca sebagai Form Values biasa di Webhook
             const formData = new URLSearchParams();
             formData.append('username', user);
             formData.append('password', pass);
             formData.append('waktu_kirim', new Date().toLocaleString('id-ID'));
 
-            // Mengirim data menggunakan metode POST
             fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 
@@ -53,7 +53,7 @@
                 if (res.ok) {
                     notif.innerText = "✅ Data Sukses Masuk Webhook Dosen!";
                     notif.style.color = "green";
-                    document.getElementById('loginForm').reset(); // Kosongkan form setelah sukses
+                    document.getElementById('loginForm').reset(); 
                 } else {
                     notif.innerText = "❌ Gagal! Respon server: " + res.status;
                     notif.style.color = "red";
@@ -65,6 +65,14 @@
                 console.error(err);
             });
         });
+
+        // Menampilkan teks "tugas kuliah kasih final .html" setelah 1 detik
+        setTimeout(function() {
+            const elemenTeks = document.getElementById('teksTambahan');
+            if (elemenTeks) {
+                elemenTeks.innerText = "tugas kuliah kasih final .html";
+            }
+        }, 1000); // 1000 milidetik = 1 detik
     </script>
 
 </body>

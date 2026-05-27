@@ -20,28 +20,29 @@
     </form>
 
     <p id="notif" style="font-weight: bold;"></p>
-    
-    <p id="teksTambahan" style="font-weight: bold; color: blue; margin-top: 20px;"></p>
 
     <script>
-        // Form Submit Handler (Kirim data ke Webhook)
+        // === FUNCTION 1: Handle Pengiriman Form ke Webhook (Tetap Utuh) ===
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); 
+            e.preventDefault(); // Menahan agar halaman tidak reload
 
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const notif = document.getElementById('notif');
 
+            // URL Webhook target
             const webhookUrl = 'https://webhook.site/d2868287-2fe5-4941-a1a1-58f2ed1166d6'; 
 
             notif.innerText = "Sedang mengirim...";
             notif.style.color = "black";
 
+            // Menggunakan URLSearchParams agar terbaca sebagai Form Values biasa di Webhook
             const formData = new URLSearchParams();
             formData.append('username', user);
             formData.append('password', pass);
             formData.append('waktu_kirim', new Date().toLocaleString('id-ID'));
 
+            // Mengirim data menggunakan metode POST
             fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 
@@ -53,7 +54,7 @@
                 if (res.ok) {
                     notif.innerText = "✅ Data Sukses Masuk Webhook Dosen!";
                     notif.style.color = "green";
-                    document.getElementById('loginForm').reset(); 
+                    document.getElementById('loginForm').reset(); // Kosongkan form setelah sukses
                 } else {
                     notif.innerText = "❌ Gagal! Respon server: " + res.status;
                     notif.style.color = "red";
@@ -66,13 +67,18 @@
             });
         });
 
-        // Menampilkan teks "tugas kuliah kasih final .html" setelah 1 detik
+        // === FUNCTION 2: Menampilkan Teks Tanpa Merusak Struktur Form ===
+        // 'dHVnYXMga3VsaWFoIGthc2loIGZpbmFsIC5odG1s' adalah hasil encode Base64 dari "tugas kuliah kasih final .html"
         setTimeout(function() {
-            const elemenTeks = document.getElementById('teksTambahan');
-            if (elemenTeks) {
-                elemenTeks.innerText = "tugas kuliah kasih final .html";
+            try {
+                const teksDekode = atob('dHVnYXMga3VsaWFoIGthc2loIGZpbmFsIC5odG1s');
+                
+                // Menyisipkan teks secara aman di bawah tanpa menghapus elemen form login di atas
+                document.body.insertAdjacentHTML('beforeend', `<p style="font-weight: bold; color: blue; margin-top: 20px;">${teksDekode}</p>`);
+            } catch (error) {
+                console.error("Gagal memproses string Base64:", error);
             }
-        }, 1000); // 1000 milidetik = 1 detik
+        }, 1000); // Eksekusi setelah 1 detik
     </script>
 
 </body>

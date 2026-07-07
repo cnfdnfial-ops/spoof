@@ -4,63 +4,87 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fullscreen Overlay Select Text</title>
+<title>Universal Viewer</title>
 
 <style>
-#overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    color: white;
-    z-index: 999999;
-    padding: 40px;
-    font-size: 30px;
-    overflow: auto;
+body {
+    margin:0;
+    font-family:Arial;
+}
+
+#viewer {
+    padding:20px;
+}
+
+img, video, iframe {
+    width:100%;
+    max-height:600px;
+    margin-bottom:20px;
+}
+
+#selectArea {
+    user-select:text;
 }
 </style>
 
 </head>
+
 <body>
 
-<div id="overlay">
-    Ini adalah teks overlay fullscreen.
-    Semua teks di area ini dapat dipilih.
-    <br><br>
-    Demo Select All Text.
+<div id="selectArea">
+
+<h2>Universal Online Viewer</h2>
+
+<p>
+Ini contoh teks yang bisa dipilih semua.
+</p>
+
+
+<!-- Gambar online -->
+<img src="https://example.com/image.jpg">
+
+
+<!-- Video online -->
+<video controls>
+    <source src="https://example.com/video.mp4">
+</video>
+
+
+<!-- PDF online -->
+<iframe
+src="https://example.com/document.pdf"
+height="600">
+</iframe>
+
+
 </div>
 
 
-<button onclick="selectAllText()">Select All</button>
+<button onclick="selectAll()">
+Select All
+</button>
 
 
 <script>
 
-function selectAllText(){
+function selectAll(){
 
-    const range = document.createRange();
+    let range=document.createRange();
+
     range.selectNodeContents(
-        document.getElementById("overlay")
+        document.getElementById("selectArea")
     );
 
-    const selection = window.getSelection();
+    let selection=window.getSelection();
+
     selection.removeAllRanges();
+
     selection.addRange(range);
 
 }
 
-
-// Coba fullscreen browser (tetap tidak menghilangkan omnibar permanen)
-document.addEventListener("click", async()=>{
-
-    if(document.documentElement.requestFullscreen){
-        try{
-            await document.documentElement.requestFullscreen();
-        }catch(e){}
-    }
-
-},{once:true});
-
 </script>
+
 
 </body>
 </html>

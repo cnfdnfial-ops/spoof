@@ -3,33 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTS + Redirect POC</title>
+<title>TTS + Web Share API</title>
+
+<style>
+#voiceBtn, #shareBtn {
+    position: fixed;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px #0005;
+}
+
+#voiceBtn {
+    bottom: 90px;
+    background: #007bff;
+}
+
+#shareBtn {
+    bottom: 20px;
+    background: #28a745;
+}
+</style>
+
 </head>
+
 <body>
 
-<button onclick="start()">Klik Mulai</button>
+<h2>Demo Voice + Share API</h2>
+
+<p>
+Ini adalah contoh halaman dengan Text To Speech dan Web Share API.
+</p>
+
+
+<button id="voiceBtn">🔊</button>
+<button id="shareBtn">📤</button>
+
 
 <script>
-function start() {
 
-    // Buka tujuan di tab baru
-    window.open("https://example.com", "_blank");
+// Text To Speech
+document.getElementById("voiceBtn").onclick = () => {
 
-    // Jalankan TTS di halaman ini
-    const teks = `
-    Halo, ini adalah percobaan Text to Speech.
-    Halaman tujuan sudah dibuka.
-    Suara tetap berjalan karena halaman ini belum ditutup.
+    const text = `
+    Halo.
+    Ini adalah demo Text to Speech.
+    Tombol suara berhasil dijalankan menggunakan browser.
     `;
 
-    const speech = new SpeechSynthesisUtterance(teks);
+    const speech = new SpeechSynthesisUtterance(text);
+
     speech.lang = "id-ID";
     speech.rate = 1;
     speech.pitch = 1;
     speech.volume = 1;
 
+    speechSynthesis.cancel();
     speechSynthesis.speak(speech);
-}
+};
+
+
+// Web Share API
+document.getElementById("shareBtn").onclick = async () => {
+
+    const shareData = {
+        title: "Demo Voice Web",
+        text: "Coba fitur Text to Speech dan Web Share API ini.",
+        url: window.location.href
+    };
+
+
+    if (navigator.share) {
+
+        try {
+            await navigator.share(shareData);
+            console.log("Berhasil share");
+
+        } catch(err) {
+            console.log("Share dibatalkan");
+        }
+
+    } else {
+
+        alert("Browser tidak mendukung Web Share API");
+
+    }
+
+};
+
 </script>
 
 </body>

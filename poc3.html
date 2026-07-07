@@ -3,35 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTS + Redirect</title>
+<title>TTS + Redirect POC</title>
 </head>
 <body>
 
-<button id="start">Mulai</button>
+<button onclick="start()">Klik Mulai</button>
 
 <script>
-document.getElementById("start").addEventListener("click", () => {
+function start() {
 
-    const text = `
-    Halo.
-    Ini adalah demonstrasi Text to Speech menggunakan Web Speech API.
-    Setelah seluruh kalimat selesai dibacakan,
-    browser akan mengarahkan halaman ke example.com.
-    Terima kasih.
+    // Buka tujuan di tab baru
+    window.open("https://example.com", "_blank");
+
+    // Jalankan TTS di halaman ini
+    const teks = `
+    Halo, ini adalah percobaan Text to Speech.
+    Halaman tujuan sudah dibuka.
+    Suara tetap berjalan karena halaman ini belum ditutup.
     `;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "id-ID";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+    const speech = new SpeechSynthesisUtterance(teks);
+    speech.lang = "id-ID";
+    speech.rate = 1;
+    speech.pitch = 1;
+    speech.volume = 1;
 
-    utterance.onend = () => {
-        window.open("https://example.com", "_self");
-    };
-
-    speechSynthesis.speak(utterance);
-});
+    speechSynthesis.speak(speech);
+}
 </script>
 
 </body>

@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Speech</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beep & Redirect</title>
 </head>
 <body>
 
-<button onclick="mulaiTTS()">Mulai TTS</button>
+<button onclick="playAndRedirect()">Buka Example</button>
 
 <script>
-function mulaiTTS() {
-    const teks = "Halo, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini, selamat datang di website ini.";
+function playAndRedirect() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    const suara = new SpeechSynthesisUtterance(teks);
-    suara.lang = "id-ID";
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
 
-    suara.onend = function () {
+    oscillator.type = "sine";
+    oscillator.frequency.value = 1000;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    gainNode.gain.value = 0.2;
+
+    oscillator.start();
+
+    setTimeout(() => {
+        oscillator.stop();
+        audioCtx.close();
+
         window.open("https://example.com", "_self");
-    };
-
-    speechSynthesis.speak(suara);
+    }, 500); // Bunyi 0,5 detik lalu redirect
 }
 </script>
 

@@ -3,98 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TTS + Web Share API</title>
+<title>TTS Share Redirect</title>
 
 <style>
-#voiceBtn, #shareBtn {
-    position: fixed;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    color: white;
-    font-size: 25px;
+button {
+    padding: 15px 25px;
+    margin: 10px;
+    font-size: 18px;
     cursor: pointer;
-    box-shadow: 0 4px 10px #0005;
-}
-
-#voiceBtn {
-    bottom: 90px;
-    background: #007bff;
-}
-
-#shareBtn {
-    bottom: 20px;
-    background: #28a745;
 }
 </style>
 
 </head>
-
 <body>
 
-<h2>Demo Voice + Share API</h2>
+<h2>POC TTS + Web Share + Redirect</h2>
 
-<p>
-Ini adalah contoh halaman dengan Text To Speech dan Web Share API.
-</p>
-
-
-<button id="voiceBtn">🔊</button>
-<button id="shareBtn">📤</button>
-
+<button onclick="start()">Mulai</button>
 
 <script>
 
-// Text To Speech
-document.getElementById("voiceBtn").onclick = () => {
+async function start() {
 
-    const text = `
+    const teks = `
     Halo.
-    Ini adalah demo Text to Speech.
-    Tombol suara berhasil dijalankan menggunakan browser.
+    Ini adalah demo Text To Speech.
+    Setelah suara selesai, halaman akan diarahkan.
     `;
 
-    const speech = new SpeechSynthesisUtterance(text);
 
+    // Jalankan TTS
+    const speech = new SpeechSynthesisUtterance(teks);
     speech.lang = "id-ID";
     speech.rate = 1;
     speech.pitch = 1;
     speech.volume = 1;
 
-    speechSynthesis.cancel();
-    speechSynthesis.speak(speech);
-};
+
+    speech.onend = async () => {
+
+        // Web Share
+        if (navigator.share) {
+
+            try {
+                await navigator.share({
+                    title: "Demo TTS",
+                    text: "Coba demo Text To Speech dan Web Share API",
+                    url: window.location.href
+                });
+
+            } catch(e) {
+                console.log("Share dibatalkan");
+            }
+
+        }
 
 
-// Web Share API
-document.getElementById("shareBtn").onclick = async () => {
-
-    const shareData = {
-        title: "Demo Voice Web",
-        text: "Coba fitur Text to Speech dan Web Share API ini.",
-        url: window.location.href
+        // Redirect setelah selesai
+        window.open(
+            "https://example.com",
+            "_self"
+        );
     };
 
 
-    if (navigator.share) {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(speech);
 
-        try {
-            await navigator.share(shareData);
-            console.log("Berhasil share");
-
-        } catch(err) {
-            console.log("Share dibatalkan");
-        }
-
-    } else {
-
-        alert("Browser tidak mendukung Web Share API");
-
-    }
-
-};
+}
 
 </script>
 

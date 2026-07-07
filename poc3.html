@@ -3,36 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beep & Redirect</title>
+<title>TTS + Redirect</title>
 </head>
 <body>
 
-<button onclick="playAndRedirect()">Buka , selamat datang di website ini, selamat datang di website ini, selamat datang di website iniExample</button>
+<button id="start">Mulai</button>
 
 <script>
-function playAndRedirect() {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+document.getElementById("start").addEventListener("click", () => {
 
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    const text = `
+    Halo.
+    Ini adalah demonstrasi Text to Speech menggunakan Web Speech API.
+    Setelah seluruh kalimat selesai dibacakan,
+    browser akan mengarahkan halaman ke example.com.
+    Terima kasih.
+    `;
 
-    oscillator.type = "sine";
-    oscillator.frequency.value = 1000;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "id-ID";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    gainNode.gain.value = 0.2;
-
-    oscillator.start();
-
-    setTimeout(() => {
-        oscillator.stop();
-        audioCtx.close();
-
+    utterance.onend = () => {
         window.open("https://example.com", "_self");
-    }, 500); // Bunyi 0,5 detik lalu redirect
-}
+    };
+
+    speechSynthesis.speak(utterance);
+});
 </script>
 
 </body>
